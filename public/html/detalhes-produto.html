@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Produto - Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/inicial.css">
+  <link rel="stylesheet" href="../css/detalhes-produto.css">
+</head>
+
+<body>
+
+  <!-- Linha amarela superior com avisos -->
+  <div class="top-line">
+    <div class="promo-container" id="promo-container">
+      <p class="promo-message">🍻 Promoção: Na compra de 3 cervejas, ganhe 1 de brinde!</p>
+      <p class="promo-message">🚚 Frete grátis acima de R$100,00!</p>
+      <p class="promo-message">🔥 Happy Hour: 20% OFF das 18h às 20h!</p>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="center-section">
+      <!-- Logo -->
+      <div class="logo">
+        <a href="/">
+          <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+        </a>
+      </div>
+
+      <!-- Barra de pesquisa com lupa -->
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar produtos..." id="searchInput">
+        <img src="../images/search-interface-symbol.png" alt="Buscar" id="searchButton">
+
+        <!-- Div para sugestões -->
+        <div class="search-suggestions" id="searchSuggestions"></div>
+      </div>
+
+      <!-- Boas-vindas -->
+      <div class="welcome">
+        <p id="notLoggedIn" style="display: block;">
+          Olá!, bem-vindo! <br>
+          <a href="/login">Entre</a> ou <a href="/registrar">Cadastre-se</a>
+        </p>
+        <p id="loggedIn" style="display: none;">
+          Olá! bem-vindo! <br> <span id="logged"></span>
+          <a href="/perfil" id="profile-link">
+            <img src="http://i.imgur.com/qALv4pX.png" alt="Perfil" class="profile-icon">
+          </a>
+        </p>
+      </div>
+
+
+
+      <!-- Carrinho -->
+      <div class="cart" id="cart-button">
+        <img src="../images/shopping-cart.png" alt="Carrinho de compras">
+        <span class="cart-count" id="cart-count">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar do carrinho -->
+  <div class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h3>Seu Carrinho</h3>
+      <span class="close-cart" id="close-cart">&times;</span>
+    </div>
+    <div class="cart-items">
+      <!-- Produtos adicionados -->
+      <p>Seu carrinho está vazio.</p>
+    </div>
+    <div class="cart-footer">
+
+      <div class="cart-summary">
+        <p>Total de itens: <span id="summary-items">0</span></p>
+        <p>Quantidade total: <span id="summary-quantity">0</span></p>
+        <p>Valor total: <span id="summary-total">R$ 0,00</span></p>
+      </div>
+
+      <!-- Cupom -->
+      <div class="cart-coupon">
+        <input type="text" id="coupon-code" placeholder="Digite seu cupom">
+        <button id="apply-coupon">Aplicar</button>
+      </div>
+
+
+      <button class="checkout-btn">Finalizar Compra</button>
+    </div>
+  </div>
+
+  <!-- Overlay para escurecer fundo -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+
+  <!-- Nav Bar de Categorias -->
+  <nav class="categories-nav">
+    <div class="nav-container">
+      <button class="nav-toggle">☰</button>
+      <ul class="categories-list">
+        <li><a href="/categoria?categoria=parceria_icechopp">PARCERIA - ICECHOPP</a></li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=torres">TORRES <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=torres_de_terere">Torres de Tereré</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp">Torres de Chopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp_360">Torres de Chopp 360</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp_icechopp">Torres de Chopp IceChopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_terere_360">Torres de Tereré 360</a></li>
+            <li><a href="/categoria?categoria=torres_de_terere_icechopp">Torres de Tereré IceChopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_drinks">Torres de Drinks</a></li>
+          </ul>
+        </li>
+
+        <li><a href="/categoria?categoria=combos">COMBOS</a></li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=acessorios">ACESSÓRIOS <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=acessorios_para_torre_icechopp">Acessórios para Torre IceChopp</a></li>
+            <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a>
+            </li>
+            <li><a href="/categoria?categoria=baldes_de_gelo">Baldes de Gelo</a></li>
+            <li><a href="/categoria?categoria=canudos_inox">Canudos Inox</a></li>
+            <li><a href="/categoria?categoria=torneiras">Torneiras</a></li>
+          </ul>
+        </li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=marcas">MARCAS <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=doutor_beer">Doutor Beer</a></li>
+            <li><a href="/categoria?categoria=icechopp">IceChopp</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Container Produto -->
+  <div class="produto-container">
+    <!-- Imagens -->
+    <div class="produto-imagens">
+      <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
+      <div class="miniaturas">
+        <img src="" alt="Miniatura 1" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 2" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 3" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 4" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 5" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 6" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 7" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 8" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 9" onclick="mudarImagem(this)">
+        <img src="" alt="Miniatura 10" onclick="mudarImagem(this)">
+      </div>
+    </div>
+
+    <!-- Detalhes -->
+    <div class="produto-detalhes">
+      <h1></h1>
+      <p class="preco">
+        <span class="antigo"></span>
+        <span class="novo"></span>
+      </p>
+
+      <!-- Seletor de quantidade -->
+      <div class="quantidade-container">
+        <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
+        <input type="number" id="quantidade" value="1" min="1">
+        <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
+      </div>
+
+      <button class="btn-carrinho">Adicionar ao carrinho</button>
+      <button class="btn-comprar">Comprar Agora</button>
+      <div class="frete-container">
+        <input type="text" id="cepInput" placeholder="Digite seu CEP">
+        <button id="calcularFrete">Calcular Frete</button>
+      </div>
+
+      <div id="freteResultado"></div>
+
+      <div class="descricao">
+        <h3>Descrição</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Produtos Relacionados -->
+  <section class="relacionados">
+    <h2>Produtos Relacionados</h2>
+    <div class="produtos-grid">
+
+    </div>
+  </section>
+
+  <!-- Botão de voltar ao topo -->
+  <a href="#" id="btnTop">
+    <img src="../images/arrow.png" alt="Voltar ao topo">
+  </a>
+
+  <!-- Botão WhatsApp -->
+  <a href="https://api.whatsapp.com/send?phone=5511965764852&text=Ol%C3%A1,%20vamos%20vender%20mais?" target="_blank"
+    id="btnWhats">
+    <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
+  </a>
+
+  <script src="../js/detalhes-produto.js"></script>
+
+</body>
+
+</html>

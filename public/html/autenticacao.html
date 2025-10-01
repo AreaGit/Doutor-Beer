@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autenticação de 2 Fatores - Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!--<link rel="stylesheet" href="/css/inicial.css"-->
+  <link rel="stylesheet" href="../css/autenticacao.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Cabeçalho -->
+  <header class="header">
+    <div class="logo">
+      <a href="/">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      </a>
+    </div>
+  </header>
+
+  
+  <!-- Container 2FA -->
+  <div class="registro-container">
+    <img src="../images/cyber-security.png" alt="Cadeado" class="cadeado-img">
+    <h2>Verificação em 2 Etapas</h2>
+    <p class="descricao">
+      Digite o código que enviamos para o seu e-mail
+    </p>
+
+    <!-- Mensagem de feedback -->
+    <div id="mensagem2FA" class="mensagem2FA"></div>
+
+    <form id="form2FA" class="form-otp">
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" class="otp" required>
+        <input type="text" maxlength="1" class="otp" required>
+        <input type="text" maxlength="1" class="otp" required>
+        <input type="text" maxlength="1" class="otp" required>
+        <input type="text" maxlength="1" class="otp" required>
+        <input type="text" maxlength="1" class="otp" required>
+      </div>
+
+      <button type="submit" class="btn-confirmar">Confirmar</button>
+    </form>
+
+    <p class="login-link">
+      Não recebeu o código? <a href="#" id="reenviarCodigo">Reenviar</a>
+    </p>
+  </div>
+
+  <script src="../js/autenticacao.js"></script>
+    
+</body>
+</html>

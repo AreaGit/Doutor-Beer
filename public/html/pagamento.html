@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finalizar Compra - Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="../css/pagamento.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="logo">
+      <a href="inicial.html">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      </a>
+    </div>
+  </header>
+
+  <!-- Conteúdo Checkout -->
+  <div class="checkout-container">
+
+    <!-- Métodos de Pagamento -->
+    <div class="checkout-form">
+      <h2>Escolha sua forma de pagamento</h2>
+      <div class="payment-options">
+
+        <!-- Pix -->
+        <div class="payment-card" data-method="pix">
+          <img src="../images/pix.png" alt="Pix">
+          <h3>Pix</h3>
+        </div>
+
+        <!-- Boleto -->
+        <div class="payment-card" data-method="boleto">
+          <img src="../images/Boleto.png" alt="Boleto">
+          <h3>Boleto</h3>
+        </div>
+
+        <!-- Cartão -->
+        <div class="payment-card" data-method="cartao">
+          <img src="../images/Credit Card.png" alt="Cartão de Crédito">
+          <h3>Cartão de Crédito</h3>
+        </div>
+
+      </div>
+      <button type="button" class="confirm-btn">Confirmar pagamento</button>
+    </div>
+
+    <!-- Resumo do Pedido -->
+    <div class="checkout-summary">
+      <h3>Resumo do pedido</h3>
+      <ul class="produtos-summary">
+        <li>
+          <span>Produto 1</span>
+          <span>R$ 264,99 x1</span>
+        </li>
+        <li>
+          <span>Produto 2</span>
+          <span>R$ 220,00 x1</span>
+        </li>
+      </ul>
+      <p class="subtotal">Subtotal: R$ 484,99</p>
+      <p class="frete">Frete: R$ 20,00</p>
+      <p class="total">Total: R$ 504,99</p>
+    </div>
+
+  </div>
+
+  <script>
+    // Seleção de método de pagamento
+    const cards = document.querySelectorAll('.payment-card');
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        cards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+:root {
+  --primary: #F9B000;
+  --dark: #4d1818;
+  --light: #fff;
+  --gray: #f5f5f5;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  background-color: #f9f9f9;
+}
+
+/* ==== HEADER ==== */
+.header {
+  width: 100%;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+.logo img {
+  height: 130px;
+  width: auto;
+  display: block;
+}
+
+/* ==== CONTAINER DE REGISTRO ==== */
+.registro-container {
+  max-width: 900px; /* aumentei para comportar 2 colunas */
+  margin: 60px auto;
+  background-color: var(--light);
+  padding: 45px 30px;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.registro-container h2 {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 35px;
+  font-weight: 700;
+}
+
+/* ==== FORMULÁRIO 2 COLUNAS ==== */
+form.form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* duas colunas iguais */
+  gap: 30px; /* espaçamento entre as colunas e linhas */
+  align-items: start;
+}
+
+/* cada coluna empilha seus elementos */
+form.form-columns .column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+form.form-columns > button {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+/* ==== FORMULÁRIO ==== */
+.form-group {
+  position: relative;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 14px 15px;
+  border: 2px solid #ddd;
+  border-radius: 30px;
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(249, 176, 0, 0.25);
+}
+
+/* ==== LABELS FLUTUANTES ==== */
+.form-group label {
+  position: absolute;
+  top: 5%;
+  left: 20px;
+  transform: translateY(-50%);
+  background-color: var(--light);
+  padding: 0 5px;
+  color: #aaa;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.form-group input:focus + label,
+.form-group input:not(:placeholder-shown) + label,
+.form-group select:focus + label,
+.form-group select:not(:placeholder-shown) + label {
+  top: -10px;
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+/* ==== SENHA ==== */
+.senha-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.senha-wrapper input {
+  flex: 1;
+  padding-right: 35px; /* espaço pro ícone */
+}
+
+.senha-wrapper img.toggle-senha {
+  position: absolute;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.senha-wrapper img.toggle-senha.animar {
+  transform: scale(1.2);
+  opacity: 0.7;
+}
+
+/* ==== BOTÃO DE CADASTRO ==== */
+button {
+  padding: 14px 0;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--primary), #d99800);
+  color: var(--light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
+}
+
+/* ==== LINK PARA LOGIN ==== */
+.login-link {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.login-link a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+label .required {
+  color: red;
+  font-weight: bold;
+}
+
+label .opcional {
+  font-size: 0.85rem;
+  color: #777;
+  font-weight: normal;
+}
+
+.erro-msg {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+  opacity: 0;
+  animation: aparecer 0.3s forwards;
+}
+
+input.erro, select.erro {
+  border-color: red !important;
+  animation: tremer 0.2s ease-in-out 3;
+}
+
+@keyframes tremer {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(90deg, #4BB543, #2E8B57);
+  color: var(--light);
+  padding: 15px 25px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.5s ease;
+  z-index: 2000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==== RESPONSIVIDADE ==== */
+@media (max-width: 768px) {
+  form.form-columns {
+    flex-direction: column;
+  }
+
+  form.form-columns .column {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .registro-container {
+    margin: 40px 20px;
+    padding: 35px 20px;
+  }
+
+  .registro-container h2 {
+    font-size: 1.6rem;
+  }
+}

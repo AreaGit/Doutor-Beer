@@ -1,0 +1,227 @@
+:root {
+  --primary: #F9B000;
+  --dark: #4d1818;
+  --light: #fff;
+  --gray: #f5f5f5;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  background-color: #f9f9f9;
+}
+
+/* ==== HEADER ==== */
+.header {
+  width: 100%;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+.logo img {
+  height: 130px;
+  width: auto;
+  display: block;
+}
+
+/* ==== CONTAINER DE LOGIN ==== */
+.registro-container {
+  max-width: 450px; 
+  margin: 60px auto;
+  background-color: var(--light);
+  padding: 45px 30px;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.registro-container h2 {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 35px;
+  font-weight: 700;
+}
+
+
+
+/* ==== FORMULÁRIO ==== */
+.form-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 15px;
+  border: 2px solid #ddd;
+  border-radius: 30px;
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(249, 176, 0, 0.25);
+}
+
+/* ==== LABELS FLUTUANTES ==== */
+.form-group label {
+  position: absolute;
+  top: 5%;
+  left: 20px;
+  transform: translateY(-50%);
+  background-color: var(--light);
+  padding: 0 5px;
+  color: #aaa;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.form-group input:focus + label,
+.form-group input:not(:placeholder-shown) + label {
+  top: -10px;
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+/* ==== SENHA ==== */
+.senha-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.senha-wrapper input {
+  flex: 1;
+  padding-right: 35px; /* espaço pro ícone */
+}
+
+.senha-wrapper img.toggle-senha {
+  position: absolute;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.senha-wrapper img.toggle-senha.animar {
+  transform: scale(1.2);
+  opacity: 0.7;
+}
+
+/* ==== BOTÃO ==== */
+button {
+  padding: 14px 0;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--primary), #d99800);
+  color: var(--light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
+}
+
+/* ==== LINKS ==== */
+.login-link {
+  margin-top: 20px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.login-link a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+#caixaErro {
+  background-color: #fdecea;
+  color: #b71c1c;
+  border: 1px solid #f5c6cb;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+
+/* Tela de Loading */
+
+/* ==== OVERLAY LOADING ==== */
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: none; /* fica escondido até ativar */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Spinner animado */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid var(--gray);
+  border-top: 6px solid var(--primary);
+  border-radius: 50%;
+  animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==== RESPONSIVIDADE ==== */
+@media (max-width: 480px) {
+  .registro-container {
+    margin: 40px 20px;
+    padding: 35px 20px;
+  }
+
+  .registro-container h2 {
+    font-size: 1.6rem;
+  }
+}

@@ -1,0 +1,264 @@
+/* CONTAINER PRINCIPAL */
+.category-page {
+  display: flex;
+  gap: 40px;
+  max-width: 1500px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* ==== SIDEBAR DE FILTROS ==== */
+.filters {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  height: fit-content;
+}
+
+.filters h3 {
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  color: var(--dark);
+}
+
+.filter-group {
+  margin-bottom: 20px;
+}
+
+.filter-group h4 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.filter-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.filter-btn:hover {
+  background: #e0a600;
+}
+
+/* ==== LINKS DE FILTRO ==== */
+.filter-link {
+  display: block;
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: #444;
+  padding: 5px 0;
+  transition: color 0.3s ease, padding-left 0.3s ease;
+}
+
+.filter-link h4 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  color: var(--primary);
+  transition: color 0.3s ease;
+}
+
+.filter-link:hover {
+  color: var(--primary);
+  padding-left: 5px; /* efeito sutil ao passar o mouse */
+}
+
+.filter-link:hover h4 {
+  color: #e0a600; /* cor mais intensa no hover do título */
+}
+
+/* ==== CONTEÚDO PRINCIPAL ==== */
+.category-content {
+  flex: 3;
+}
+
+/* HEADER DA CATEGORIA */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.category-header h2 {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
+.sort {
+  padding: 8px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ==== GRADE DE PRODUTOS ==== */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 25px;
+  justify-items: center;
+}
+
+/* ===== PRODUTO ===== */
+.produto {
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.produto img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.produto h3 {
+  margin: 10px 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.preco {
+  margin: 10px 0 15px;
+}
+
+.preco .antigo {
+  text-decoration: line-through;
+  color: #999;
+  margin-right: 8px;
+}
+
+.preco .novo {
+  color: #F9B000;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.produto:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.produto:hover img {
+  transform: scale(1.05);
+}
+
+/* DIVISOR */
+.divisor {
+  border: none;
+  border-top: 1px solid #cacaca;
+  margin: 40px auto;
+  width: 50%;
+}
+
+/* ===== Botão Voltar ao Topo ===== */
+    #btnTop {
+      position: fixed;
+      bottom: 90px; /* fica acima do WhatsApp */
+      right: 30px;
+      z-index: 99;
+      background-color: #F9B000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+      width: 48px;
+      height: 48px;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #btnTop img {
+      width: 60%;
+      height: 60%;
+      display: block;
+      margin: auto;
+    }
+
+    #btnTop:hover {
+      background-color: #d99800;
+      
+    }
+    /* Mostrar botão quando rolar a página */
+    #btnTop.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ===== Botão WhatsApp ===== */
+    #btnWhats {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 98;
+      background-color: #25D366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+      width: 48px;
+      height: 48px;
+    }
+
+    #btnWhats img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      margin: auto;
+    }
+
+    #btnWhats:hover {
+      background-color: #1ebe5d;
+    }
+
+/* ==== RESPONSIVIDADE ==== */
+@media (max-width: 900px) {
+  .category-page {
+    flex-direction: column;
+  }
+
+  .filters {
+    order: 2;
+  }
+
+  .category-content {
+    order: 1;
+  }
+}

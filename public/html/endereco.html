@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finalizar compra - Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="../css/endereco.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="logo">
+      <a href="/">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      </a>
+    </div>
+  </header>
+
+  <!-- Conteúdo Checkout -->
+  <div class="checkout-container">
+    
+    <!-- Formulário de Endereço -->
+    <div class="checkout-form">
+      <h2>Endereço de entrega</h2>
+      <form action="endereco.html" method="post">
+        
+        <div class="form-group">
+          <input type="text" name="nome" id="nome" placeholder=" " required>
+          <label for="nome">Nome completo</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="cep" id="cep" placeholder=" " required>
+          <label for="cep">CEP</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="rua" id="rua" placeholder=" " required>
+          <label for="rua">Rua</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="numero" id="numero" placeholder=" " required>
+          <label for="numero">Número</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="complemento" id="complemento" placeholder=" ">
+          <label for="complemento">Complemento</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="cidade" id="cidade" placeholder=" " required>
+          <label for="cidade">Cidade</label>
+        </div>
+
+        <div class="form-group">
+          <input type="text" name="estado" id="estado" placeholder=" " required>
+          <label for="estado">Estado</label>
+        </div>
+
+        <button type="submit">Continuar para pagamento</button>
+      </form>
+    </div>
+
+    <!-- Resumo do Pedido -->
+    <div class="checkout-summary">
+      <h3>Resumo do pedido</h3>
+      <ul class="produtos-summary">
+        <li>
+          <span>Produto 1</span>
+          <span>R$ 264,99 x1</span>
+        </li>
+        <li>
+          <span>Produto 2</span>
+          <span>R$ 220,00 x1</span>
+        </li>
+      </ul>
+      <p class="subtotal">Subtotal: R$ 484,99</p>
+      <p class="frete">Frete: R$ 20,00</p>
+      <p class="total">Total: R$ 504,99</p>
+    </div>
+
+  </div>
+
+</body>
+</html>

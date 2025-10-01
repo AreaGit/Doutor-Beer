@@ -1,0 +1,247 @@
+:root {
+  --primary: #F9B000;
+  --dark: #4d1818;
+  --light: #fff;
+  --gray: #f5f5f5;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ==== HEADER ==== */
+.header {
+  width: 100%;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+.logo img {
+  height: 130px;
+  width: auto;
+  display: block;
+}
+
+:root {
+  --primary: #F9B000;
+  --dark: #4d1818;
+  --light: #fff;
+  --gray: #f5f5f5;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ==== HEADER ==== */
+.header {
+  width: 100%;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+.logo img {
+  height: 120px;
+  width: auto;
+  display: block;
+}
+
+/* ==== CONTAINER 2FA ==== */
+.registro-container {
+  max-width: 500px;
+  margin: 60px auto;
+  background-color: var(--light);
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.cadeado-img {
+  width: 140px;
+  margin-bottom: 15px;
+}
+
+.registro-container h2 {
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.descricao {
+  margin-bottom: 25px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.mensagem2FA {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  display: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.mensagem2FA.sucesso {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.mensagem2FA.erro {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+
+
+/* ==== OTP INPUTS ==== */
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: nowrap; /* garante que não quebrem linha */
+}
+
+.otp {
+  width: 50px;
+  height: 60px;
+  font-size: 22px;
+  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+  flex-shrink: 0; /* impede que encolham demais */
+}
+
+.otp:focus {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(249, 176, 0, 0.25);
+}
+
+/* ==== BOTÃO CONFIRMAR ==== */
+button {
+  padding: 14px 0;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--primary), #d99800);
+  color: var(--light);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 400px; /* evita ficar gigante em telas largas */
+  margin: 0 auto;
+  display: block;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
+}
+
+/* ==== LINK REENVIAR ==== */
+.login-link {
+  margin-top: 15px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.login-link a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ==== RESPONSIVO ==== */
+@media (max-width: 480px) {
+  .registro-container {
+    margin: 40px 20px;
+    padding: 35px 20px;
+  }
+
+  .registro-container h2 {
+    font-size: 1.6rem;
+  }
+
+  .otp {
+    width: 40px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp {
+    width: 35px;
+    height: 45px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 320px) {
+  .otp {
+    width: 30px; /* mantém 6 inputs lado a lado */
+    height: 42px;
+    font-size: 16px;
+  }
+}

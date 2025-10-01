@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/inicial.css">
+</head>
+
+<body>
+
+  <!-- Linha amarela superior com avisos -->
+  <div class="top-line">
+    <div class="promo-container" id="promo-container">
+      <p class="promo-message">🍻 Promoção: Na compra de 3 cervejas, ganhe 1 de brinde!</p>
+      <p class="promo-message">🚚 Frete grátis acima de R$100,00!</p>
+      <p class="promo-message">🔥 Happy Hour: 20% OFF das 18h às 20h!</p>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="center-section">
+      <!-- Logo -->
+      <div class="logo">
+        <a href="/">
+          <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+        </a>
+      </div>
+
+      <!-- Barra de pesquisa com lupa -->
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar produtos..." id="searchInput">
+        <img src="../images/search-interface-symbol.png" alt="Buscar" id="searchButton">
+
+        <!-- Div para sugestões -->
+        <div class="search-suggestions" id="searchSuggestions"></div>
+      </div>
+
+      <!-- Boas-vindas -->
+      <div class="welcome">
+        <p id="notLoggedIn" style="display: block;">
+          Olá!, bem-vindo! <br>
+          <a href="/login">Entre</a> ou <a href="/registrar">Cadastre-se</a>
+        </p>
+        <p id="loggedIn" style="display: none;">
+          Olá! bem-vindo! <br> <span id="logged"></span>
+          <a href="/perfil" id="profile-link">
+            <img src="http://i.imgur.com/qALv4pX.png" alt="Perfil" class="profile-icon">
+          </a>
+        </p>
+      </div>
+
+           <!-- Carrinho -->
+      <div class="cart" id="cart-button">
+        <img src="../images/shopping-cart.png" alt="Carrinho de compras">
+        <span class="cart-count" id="cart-count">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar do carrinho -->
+  <div class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h3>Seu Carrinho</h3>
+      <span class="close-cart" id="close-cart">&times;</span>
+    </div>
+    <div class="cart-items">
+      <!-- Produtos adicionados -->
+      <p>Seu carrinho está vazio.</p>
+    </div>
+    <div class="cart-footer">
+
+      <div class="cart-summary">
+        <p>Total de itens: <span id="summary-items">0</span></p>
+        <p>Quantidade total: <span id="summary-quantity">0</span></p>
+        <p>Valor total: <span id="summary-total">R$ 0,00</span></p>
+      </div>
+
+      <!-- Cupom -->
+      <div class="cart-coupon">
+        <input type="text" id="coupon-code" placeholder="Digite seu cupom">
+        <button id="apply-coupon">Aplicar</button>
+      </div>
+
+
+      <button class="checkout-btn">Finalizar Compra</button>
+    </div>
+  </div>
+
+  <!-- Overlay para escurecer fundo -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <!-- Nav Bar de Categorias -->
+  <nav class="categories-nav">
+    <div class="nav-container">
+      <button class="nav-toggle">☰</button>
+      <ul class="categories-list">
+        <li><a href="/categoria?categoria=parceria_icechopp">PARCERIA - ICECHOPP</a></li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=torres">TORRES <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=torres_de_terere">Torres de Tereré</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp">Torres de Chopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp_360">Torres de Chopp 360</a></li>
+            <li><a href="/categoria?categoria=torres_de_chopp_icechopp">Torres de Chopp IceChopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_terere_360">Torres de Tereré 360</a></li>
+            <li><a href="/categoria?categoria=torres_de_terere_icechopp">Torres de Tereré IceChopp</a></li>
+            <li><a href="/categoria?categoria=torres_de_drinks">Torres de Drinks</a></li>
+          </ul>
+        </li>
+
+        <li><a href="/categoria?categoria=combos">COMBOS</a></li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=acessorios">ACESSÓRIOS <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=acessorios_para_torre_icechopp">Acessórios para Torre IceChopp</a></li>
+            <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a></li>
+            <li><a href="/categoria?categoria=baldes_de_gelo">Baldes de Gelo</a></li>
+            <li><a href="/categoria?categoria=canudos_inox">Canudos Inox</a></li>
+            <li><a href="/categoria?categoria=torneiras">Torneiras</a></li>
+          </ul>
+        </li>
+
+        <li class="has-sub">
+          <a href="/categoria?categoria=marcas">MARCAS <span class="arrow">▾</span></a>
+          <ul class="sub-menu">
+            <li><a href="/categoria?categoria=doutor_beer">Doutor Beer</a></li>
+            <li><a href="/categoria?categoria=icechopp">IceChopp</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Slider Banner -->
+  <section class="slider">
+    <div class="slides">
+      <div class="slide active">
+        <img src="../images/Banner 1.webp" alt="Banner 1">
+      </div>
+      <div class="slide">
+        <img src="../images/Banner 2.webp" alt="Banner 2">
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <button class="prev">&#10094;</button>
+    <button class="next">&#10095;</button>
+
+    <!-- Indicadores -->
+    <div class="dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+    </div>
+  </section>
+
+  <!-- Seção de Caixinhas -->
+  <section class="caixinhas">
+    <a href="#" class="caixa">
+      <img src="../images/Torre 3,5.webp" alt="Torre 3,5">
+    </a>
+    <a href="#" class="caixa">
+      <img src="../images/Tubos Gelantes.webp" alt="Tubos Gelantes">
+    </a>
+    <a href="#" class="caixa">
+      <img src="../images/Torre 2,.webp" alt="Torre 2,5">
+    </a>
+  </section>
+
+  <!-- Seção de Lançamentos -->
+  <section class="secao">
+    <h2>Lançamentos</h2>
+    <div class="products-cards">
+      <div id="secao-lancamentos" class="produtos-container"></div>
+    </div>
+  </section>
+
+  <hr class="divisor">
+
+  <!-- Seção de Mais Vendidos-->
+
+  <section class="secao">
+    <h2>Mais Vendidos</h2>
+    <div class="products-cards">
+      <div id="secao-mais-vendidos" class="produtos-container"></div>
+    </div>
+  </section>
+
+  <hr class="divisor">
+
+  <!-- Seção de Acessórios -->
+
+  <section class="secao">
+    <h2>Acessórios</h2>
+    <div class="products-cards">
+      <div id="secao-acessorios" class="produtos-container"></div>
+    </div>
+  </section>
+
+  <hr class="divisor">
+
+  <!-- Seção de Avaliações -->
+  <section class="secao-avaliacoes">
+    <h2>O que nossos clientes dizem</h2>
+    <div class="avaliacoes-container">
+
+      <!-- Avaliação 1 -->
+      <div class="avaliacao">
+        <div class="avaliador">
+          <img src="../images/user.png" alt="Cliente 1">
+          <div>
+            <h3>Maria Silva</h3>
+            <p class="estrelas">★★★★★</p>
+          </div>
+        </div>
+        <p class="comentario">
+          "Produto de altíssima qualidade! Entrega rápida e atendimento excelente. Vou comprar novamente."
+        </p>
+      </div>
+
+      <!-- Avaliação 2 -->
+      <div class="avaliacao">
+        <div class="avaliador">
+          <img src="../images/user.png" alt="Cliente 2">
+          <div>
+            <h3>João Victor Fractucello</h3>
+            <p class="estrelas">★★★★☆</p>
+          </div>
+        </div>
+        <p class="comentario">
+          "A torre é incrível, mantém a bebida gelada por muito tempo. rendeu muito na resenha"
+        </p>
+      </div>
+
+      <!-- Avaliação 3 -->
+      <div class="avaliacao">
+        <div class="avaliador">
+          <img src="../images/user.png" alt="Cliente 3">
+          <div>
+            <h3>Ana Costa</h3>
+            <p class="estrelas">★★★★★</p>
+          </div>
+        </div>
+        <p class="comentario">
+          "Excelente experiência de compra! Atendimento rápido no WhatsApp e produto muito bonito."
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divisor">
+
+  <!-- Newsletter -->
+  <section class="newsletter">
+    <h2>Newsletter Doutor Beer</h2>
+    <p>Se inscreva em nossa newsletter para ficar por dentro de todas atualizações!</p>
+
+    <form id="newsletterForm">
+      <input type="email" id="email" placeholder="Digite seu e-mail" required>
+      <button type="submit">Cadastrar</button>
+    </form>
+
+    <!-- botão vermelho de confirmação (invisível no início) -->
+    <button id="confirmarBtn" class="confirmar-btn">Confirmar Cadastro</button>
+
+    <p class="mensagem" id="mensagem"></p>
+  </section>
+
+  <!-- ====== Footer ====== -->
+  <footer class="footer">
+    <div class="footer-container">
+
+      <!-- Coluna Logo + Descrição -->
+
+
+      <!-- Coluna Links Rápidos -->
+      <div class="footer-col">
+        <h3>Institucional</h3>
+        <ul>
+          <li><a href="/sobre">Quem Somos</a></li>
+          <li><a href="/politica-privacidade">Política de Privacidade</a></li>
+          <li><a href="/fale-conosco">Fale Conosco</a></li>
+          <li><a href="/blog">Blog</a></li>
+        </ul>
+      </div>
+
+      <!-- Coluna Contato -->
+      <div class="footer-col">
+        <h3>Contato</h3>
+        <p>Segunda a sexta-feira</p>
+        <p>09h às 17h</p>
+      </div>
+
+      <!-- Coluna Redes Sociais -->
+      <div class="footer-col">
+        <h3>Siga-nos</h3>
+        <div class="socials">
+          <a href="https://web.facebook.com/?locale=pt_BR&_rdc=1&_rdr#"><img src="../images/facebook.png"
+              alt="Facebook"></a>
+          <a href="https://www.instagram.com/accounts/login/?next=%2Fimprimeai.com.br%2F&source=omni_redirect"><img
+              src="../images/instagram.png" alt="Instagram"></a>
+          <a href="https://www.linkedin.com/company/imprimea%C3%AD-plataforma-gr%C3%A1pida-r%C3%A1pida/?_l=pt_BR"><img
+              src="../images/linkedin.png" alt="Linkedin"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Linha inferior -->
+    <div class="footer-bottom">
+      <p>© 2025 Doutor Beer - Todos os direitos reservados 🍻</p>
+    </div>
+  </footer>
+
+  <!-- Botão de voltar ao topo -->
+  <a href="#" id="btnTop">
+    <img src="../images/arrow.png" alt="Voltar ao topo">
+  </a>
+
+  <!-- Botão WhatsApp -->
+  <a href="https://api.whatsapp.com/send?phone=5511965764852&text=Ol%C3%A1,%20vamos%20vender%20mais?" target="_blank"
+    id="btnWhats">
+    <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
+  </a>
+
+  <script src="../js/inicial.js"></script>
+</body>
+
+</html>
