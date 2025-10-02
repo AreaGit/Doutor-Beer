@@ -10,6 +10,7 @@ router.post("/login/2fa", usuarioController.verificar2FA);
 router.post("/login/reenvio", usuarioController.reenviarCodigo2FA);
 router.get("/me", usuarioController.me);
 router.post("/logout", usuarioController.logout);
+router.put("/me", usuarioController.atualizarUsuario);
 
 module.exports = router;
 

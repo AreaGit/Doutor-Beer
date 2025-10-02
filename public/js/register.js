@@ -1,13 +1,9 @@
+// ===================== TOGGLE SENHA =====================
 function toggleSenha(idCampo, img) {
   const campo = document.getElementById(idCampo);
 
-  // adiciona classe de animação
   img.classList.add("animar");
-
-  // remove a classe depois da animação (200ms)
-  setTimeout(() => {
-    img.classList.remove("animar");
-  }, 200);
+  setTimeout(() => img.classList.remove("animar"), 200);
 
   if (campo.type === "password") {
     campo.type = "text";
@@ -20,7 +16,7 @@ function toggleSenha(idCampo, img) {
   }
 }
 
-
+// ===================== VALIDAÇÃO NOME =====================
 const nome = document.getElementById('nome');
 let validNome = false;
 
@@ -36,108 +32,124 @@ nome.addEventListener('keyup', () => {
   }
 });
 
-// Seleciona todos os campos que só podem ter números
+// ===================== MÁSCARAS =====================
 const camposNumericos = ["cpf", "celular", "telefone", "cep", "numero"];
-
 camposNumericos.forEach(id => {
   const campo = document.getElementById(id);
-  campo.addEventListener("input", function () {
-    this.value = this.value.replace(/\D/g, ""); // remove tudo que não é número
-  });
+  campo.addEventListener("input", () => campo.value = campo.value.replace(/\D/g, ""));
 });
 
-// Função para aplicar máscara dinamicamente
 function aplicarMascara(input, tipo) {
-  let valor = input.value.replace(/\D/g, ""); // tira tudo que não é número
+  let valor = input.value.replace(/\D/g, "");
 
-  if (tipo === "cpf") {
-    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-    valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  }
-
-  if (tipo === "celular") {
-    valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
-    valor = valor.replace(/(\d{5})(\d{4})$/, "$1-$2");
-  }
-
-  if (tipo === "telefone") {
-    valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
-    valor = valor.replace(/(\d{4})(\d{4})$/, "$1-$2");
-  }
-
-  if (tipo === "cep") {
-    valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
-  }
-
-  if (tipo === "numero") {
-    valor = valor.replace(/\D/g, ""); // só número puro
+  switch(tipo) {
+    case "cpf":
+      valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+      valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+      valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+      break;
+    case "celular":
+      valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
+      valor = valor.replace(/(\d{5})(\d{4})$/, "$1-$2");
+      break;
+    case "telefone":
+      valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
+      valor = valor.replace(/(\d{4})(\d{4})$/, "$1-$2");
+      break;
+    case "cep":
+      valor = valor.replace(/^(\d{5})(\d)/, "$1-$2");
+      break;
+    case "numero":
+      valor = valor.replace(/\D/g, "");
+      break;
   }
 
   input.value = valor;
 }
 
-// Aplicando em cada campo
-document.getElementById("cpf").addEventListener("input", function () {
-  aplicarMascara(this, "cpf");
-});
+document.getElementById("cpf").addEventListener("input", () => aplicarMascara(document.getElementById("cpf"), "cpf"));
+document.getElementById("celular").addEventListener("input", () => aplicarMascara(document.getElementById("celular"), "celular"));
+document.getElementById("telefone").addEventListener("input", () => aplicarMascara(document.getElementById("telefone"), "telefone"));
+document.getElementById("cep").addEventListener("input", () => aplicarMascara(document.getElementById("cep"), "cep"));
+document.getElementById("numero").addEventListener("input", () => aplicarMascara(document.getElementById("numero"), "numero"));
 
-document.getElementById("celular").addEventListener("input", function () {
-  aplicarMascara(this, "celular");
-});
+// ===================== FUNÇÃO TOAST =====================
+function mostrarToast(mensagem, tipo = "sucesso") {
+  const toast = document.createElement("div");
+  toast.classList.add("toast");
+  if (tipo === "erro") toast.style.background = "linear-gradient(90deg, #E74C3C, #C0392B)";
+  toast.textContent = mensagem;
+  document.body.appendChild(toast);
 
-document.getElementById("telefone").addEventListener("input", function () {
-  aplicarMascara(this, "telefone");
-});
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+}
 
-document.getElementById("cep").addEventListener("input", function () {
-  aplicarMascara(this, "cep");
-});
+// ===================== AUTOCOMPLETE CEP =====================
+async function buscarCEP(cep) {
+  cep = cep.replace(/\D/g, "");
+  if (cep.length !== 8) return;
 
-document.getElementById("numero").addEventListener("input", function () {
-  aplicarMascara(this, "numero");
-});
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
 
-//Alertas
+    if (data.erro) return mostrarToast("CEP não encontrado!", "erro");
 
-document.querySelector("form").addEventListener("submit", function (e) {
+    const campos = {
+      endereco: data.logradouro || "",
+      bairro: data.bairro || "",
+      cidade: data.localidade || "",
+      estado: data.uf || ""
+    };
+
+    for (const [id, valor] of Object.entries(campos)) {
+      const campo = document.getElementById(id);
+      if (campo && !campo.value.trim()) campo.value = valor;
+    }
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao buscar CEP", "erro");
+  }
+}
+
+document.getElementById("cep").addEventListener("blur", () => buscarCEP(document.getElementById("cep").value));
+
+// ===================== VALIDAÇÃO FORMULÁRIO =====================
+document.querySelector("form").addEventListener("submit", e => {
   e.preventDefault();
-
   let valido = true;
 
-  // Remove erros anteriores
   document.querySelectorAll(".erro-msg").forEach(el => el.remove());
-
   const obrigatorios = document.querySelectorAll("input[required], select[required]");
 
   obrigatorios.forEach(campo => {
     if (!campo.value.trim()) {
       valido = false;
-
-      // cria a mensagem de erro
       const erro = document.createElement("small");
       erro.classList.add("erro-msg");
-      erro.textContent = `Este campo é obrigatório`;
-
-      // adiciona no form-group
+      erro.textContent = "Este campo é obrigatório";
       campo.parentElement.appendChild(erro);
 
-      // animação no campo
       campo.classList.add("erro");
       setTimeout(() => campo.classList.remove("erro"), 800);
     }
   });
+
+  if (!valido) return;
 });
 
-// Enviar dados para o backend
-
+// ===================== ENVIO FORMULÁRIO =====================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formRegistro");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // evita o envio tradicional
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
 
-    // Pegando os valores dos campos
     const formData = {
       nome: document.getElementById("nome").value,
       cpf: document.getElementById("cpf").value,
@@ -158,25 +170,6 @@ document.addEventListener("DOMContentLoaded", () => {
       confirmarSenha: document.getElementById("confirmarSenha").value
     };
 
-    // Validar senha
-
-    function mostrarToast(mensagem, tipo = "sucesso") {
-      const toast = document.createElement("div");
-      toast.classList.add("toast");
-      if (tipo === "erro") toast.style.background = "linear-gradient(90deg, #E74C3C, #C0392B)";
-      toast.textContent = mensagem;
-      document.body.appendChild(toast);
-
-      // Forçar reflow para animação
-      setTimeout(() => toast.classList.add("show"), 10);
-
-      // Remover após 3s
-      setTimeout(() => {
-        toast.classList.remove("show");
-        setTimeout(() => toast.remove(), 500);
-      }, 3000);
-    }
-
     if (formData.senha !== formData.confirmarSenha) {
       mostrarToast("As senhas não coincidem!", "erro");
       return;
@@ -192,18 +185,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        mostrarToast(result.message, "sucesso"); // <-- substituído
+        mostrarToast(result.message, "sucesso");
         form.reset();
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
+        setTimeout(() => window.location.href = "/login", 2000);
       } else {
-        mostrarToast(result.message, "erro"); // <-- substituído
+        mostrarToast(result.message, "erro");
       }
 
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
-      alert("Erro ao enviar formulário");
+      mostrarToast("Erro ao enviar formulário", "erro");
     }
   });
 });

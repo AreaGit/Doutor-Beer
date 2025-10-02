@@ -1,4 +1,5 @@
 const Usuario = require("../models/Usuario");
+const Cart = require("../models/carrinho");
 const bcrypt = require("bcrypt");
 const gerarCodigo2FA = require("../utils/gerarCodigo2FA");
 const enviarEmail = require("../utils/email");
@@ -12,22 +13,14 @@ exports.criarUsuario = async (req, res) => {
       bairro, cidade, estado, email, senha
     } = req.body;
 
-    // Check if the email already exists in the database
     const existingEmail = await Usuario.findOne({ where: { email } });
-    if (existingEmail) {
-      return res.status(409).json({ message: "Email já cadastrado" });
-    }
+    if (existingEmail) return res.status(409).json({ message: "Email já cadastrado" });
 
-    // Check if the CPF already exists in the database
     const existingCpf = await Usuario.findOne({ where: { cpf } });
-    if (existingCpf) {
-      return res.status(409).json({ message: "Cpf já cadastrado" });
-    }
+    if (existingCpf) return res.status(409).json({ message: "Cpf já cadastrado" });
 
-    // Criptografar a senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Create the new user
     const novoUsuario = await Usuario.create({
       nome,
       cpf,
@@ -53,9 +46,10 @@ exports.criarUsuario = async (req, res) => {
     res.status(500).json({ message: "Erro ao criar usuário", error });
   }
 };
+
 // ==================== LOGIN PASSO 1 ====================
 exports.login = async (req, res) => {
-  const { email, senha } = req.body;
+  const { email, senha, guestCart = [] } = req.body;
 
   try {
     const usuario = await Usuario.findOne({ where: { email } });
@@ -71,9 +65,8 @@ exports.login = async (req, res) => {
     usuario.expira2FA = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
     await usuario.save();
 
-    req.session.tempLogin = { email, codigo };
-
-    console.log("Sessão Temporária: ", req.session.tempLogin);
+    // Salvar guestCart temporário na sessão para mesclar após 2FA
+    req.session.tempLogin = { email, codigo, guestCart };
 
     res.json({ message: "Código enviado para seu e-mail" });
   } catch (error) {
@@ -86,58 +79,66 @@ exports.login = async (req, res) => {
 exports.verificar2FA = async (req, res) => {
   const { email, codigo } = req.body;
 
-  console.log("📩 Requisição recebida:", req.body);
-  console.log("Sessão Completa: ", req.session);
-
   try {
     const usuario = await Usuario.findOne({ where: { email } });
     if (!usuario) return res.status(400).json({ message: "Usuário não encontrado" });
 
-    // Garantir que expira2FA é Date
     const agora = new Date();
     const expira = usuario.expira2FA ? new Date(usuario.expira2FA) : null;
-
-    console.log("Agora:", agora);
-    console.log("Expira no banco:", usuario.expira2FA);
-
 
     if (!usuario.codigo2FA || !expira || agora > expira) {
       return res.status(400).json({ message: "Código expirado. Faça login novamente." });
     }
 
-    // Corrigido: comparar sempre como string
     if (String(usuario.codigo2FA) !== String(codigo)) {
       return res.status(400).json({ message: "Código inválido." });
     }
 
-    // Código válido: limpa e cria sessão real
+    if (!req.session.tempLogin || req.session.tempLogin.email !== email) {
+      return res.status(400).json({ message: "Fluxo de login inválido." });
+    }
+
+    if (req.session.tempLogin.codigo !== codigo) {
+      return res.status(401).json({ message: "Código 2FA inválido." });
+    }
+
+    // Limpar campos 2FA
     usuario.codigo2FA = null;
     usuario.expira2FA = null;
     await usuario.save();
 
-    if (!req.session.tempLogin || req.session.tempLogin.email !== email) {
-    return res.status(400).json({ message: "Fluxo de login inválido." });
-  }
+    // Criar sessão do usuário
+    req.session.user = { id: usuario.id, nome: usuario.nome, email };
 
-  if (req.session.tempLogin.codigo !== codigo) {
-    return res.status(401).json({ message: "Código 2FA inválido." });
-  }
+    // ==================== Mesclar carrinho do guest ====================
+    const guestCart = req.session.tempLogin.guestCart || [];
+    if (guestCart.length > 0) {
+      for (const item of guestCart) {
+        const existente = await Cart.findOne({
+          where: { usuarioId: usuario.id, produtoId: item.id }
+        });
+        if (existente) {
+          existente.quantidade += item.quantidade;
+          await existente.save();
+        } else {
+          await Cart.create({
+            usuarioId: usuario.id,
+            produtoId: item.id,
+            quantidade: item.quantidade
+          });
+        }
+      }
+    }
 
-  // Agora o login é válido: criamos a sessão do usuário
-  req.session.user = { id: usuario.id, nome: usuario.nome, email };
+    // Limpar tempLogin
+    delete req.session.tempLogin;
 
-  // Limpamos o tempLogin
-  delete req.session.tempLogin;
-
-    console.log(`✅ Usuário ${usuario.email} logado com sucesso!`);
-    console.log(`✅ Sessão do Usuário ${req.session.user} logado com sucesso!`);
     res.json({ message: "Login realizado com sucesso!" });
   } catch (error) {
     console.error("Erro ao verificar 2FA:", error);
     res.status(500).json({ message: "Erro ao verificar código", error });
   }
 };
-
 
 // ==================== REENVIO DE CÓDIGO 2FA ====================
 exports.reenviarCodigo2FA = async (req, res) => {
@@ -147,7 +148,6 @@ exports.reenviarCodigo2FA = async (req, res) => {
     const usuario = await Usuario.findOne({ where: { email } });
     if (!usuario) return res.status(400).json({ message: "Usuário não encontrado." });
 
-    // Gerar novo código e enviar para o e-mail
     await gerarCodigo2FA(usuario);
 
     res.json({ message: "Código reenviado para seu e-mail." });
@@ -159,11 +159,9 @@ exports.reenviarCodigo2FA = async (req, res) => {
 
 // ==================== SABER QUEM ESTÁ LOGADO ====================
 exports.me = async (req, res) => {
-  if(!req.session.user) {
-    return res.status(401).json({error: "Não foi possível capturar a sessão"});
-  }
+  if (!req.session.user) return res.status(401).json({ error: "Não foi possível capturar a sessão" });
 
-  const usuario = await Usuario.findByPk(req.session.user.id); // buscar todos os dados do usuário
+  const usuario = await Usuario.findByPk(req.session.user.id);
 
   res.json({
     id: usuario.id,
@@ -182,12 +180,43 @@ exports.me = async (req, res) => {
     estado: usuario.estado,
     cep: usuario.cep
   });
-}
+};
+
+// ==================== ATUALIZAR DADOS DO USUÁRIO ====================
+exports.atualizarUsuario = async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ message: "Não autenticado" });
+
+  try {
+    const usuario = await Usuario.findByPk(req.session.user.id);
+    if (!usuario) return res.status(404).json({ message: "Usuário não encontrado" });
+
+    // Campos que podem ser atualizados (não alterar cpf e email)
+    const camposAtualizaveis = [
+      "nome", "celular", "telefone", "sexo", "data_de_nascimento",
+      "cep", "endereco", "numero", "complemento", "referencia",
+      "bairro", "cidade", "estado"
+    ];
+
+    camposAtualizaveis.forEach(campo => {
+      if (req.body[campo] !== undefined) {
+        usuario[campo] = req.body[campo];
+      }
+    });
+
+    await usuario.save();
+
+    res.json({ message: "Dados atualizados com sucesso!", usuario });
+  } catch (error) {
+    console.error("Erro ao atualizar usuário:", error);
+    res.status(500).json({ message: "Erro ao atualizar usuário", error });
+  }
+};
+
 
 // ==================== LOGOUT ====================
 exports.logout = async (req, res) => {
   req.session.destroy(() => {
     res.clearCookie("connect.sid");
-    res.json({ message: "Logout realizado com sucesso!" })
-  })
-}
+    res.json({ message: "Logout realizado com sucesso!" });
+  });
+};

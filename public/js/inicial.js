@@ -116,56 +116,92 @@ function initMenu() {
 }
 
 /* ==================== Módulo: Carrinho Página Inicial ==================== */
-async function initCartHome() {
+async function initCart() {
   const cartButton = document.getElementById('cart-button');
   const cartSidebar = document.getElementById('cart-sidebar');
   const closeCart = document.getElementById('close-cart');
   const cartOverlay = document.getElementById('cart-overlay');
   const cartCount = document.getElementById("cart-count");
   const cartItemsContainer = document.querySelector(".cart-items");
+
   const summaryItems = document.getElementById("summary-items");
   const summaryQuantity = document.getElementById("summary-quantity");
   const summaryTotal = document.getElementById("summary-total");
 
+  let isLoggedIn = false;
+  let cartItems = [];
+
+  // ================== Detectar login ==================
+  try {
+    const res = await fetch("/api/auth/me", { method: "GET", credentials: "include" });
+    isLoggedIn = res.ok;
+  } catch {}
+
+  // ================== Pegar carrinho ==================
   async function fetchCart() {
-    try {
-      const res = await fetch("/api/carrinho", { credentials: "include" });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.map(item => ({
-        produtoId: item.Produto?.id,
-        nome: item.Produto?.nome,
-        preco: item.Produto?.precoPromocional || item.Produto?.preco || 0,
-        imagem: item.Produto?.imagem?.[0] || "",
-        quantidade: item.quantidade
-      }));
-    } catch (err) {
-      console.error("[Carrinho] Erro:", err);
-      return [];
+    if (isLoggedIn) {
+      try {
+        const resp = await fetch("/api/carrinho", { credentials: "include" });
+        if (!resp.ok) throw new Error("Erro ao carregar carrinho");
+        return await resp.json();
+      } catch (err) {
+        console.error("[Carrinho] Erro:", err);
+        return [];
+      }
+    } else {
+      const localCart = localStorage.getItem("guestCart");
+      return localCart ? JSON.parse(localCart) : [];
     }
   }
 
-  let cartItems = await fetchCart();
+  function saveCart() {
+    if (!isLoggedIn) localStorage.setItem("guestCart", JSON.stringify(cartItems));
+  }
 
+  // ================== Mesclar carrinho do guest após login ==================
+  async function mergeGuestCart() {
+    if (!isLoggedIn) return;
+
+    const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
+    if (!guestCart.length) return;
+
+    for (const item of guestCart) {
+      await fetch("/api/carrinho/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ produtoId: item.id, quantidade: item.quantidade })
+      });
+    }
+    localStorage.removeItem("guestCart");
+  }
+
+  if (isLoggedIn) await mergeGuestCart();
+  cartItems = await fetchCart();
+
+  // ================== Renderizar carrinho ==================
   async function renderCart() {
     cartItemsContainer.innerHTML = "";
+
     if (!cartItems.length) {
       cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
       cartCount.textContent = 0;
-      summaryItems && (summaryItems.textContent = 0);
-      summaryQuantity && (summaryQuantity.textContent = 0);
-      summaryTotal && (summaryTotal.textContent = "R$ 0,00");
+      if (summaryItems) summaryItems.textContent = 0;
+      if (summaryQuantity) summaryQuantity.textContent = 0;
+      if (summaryTotal) summaryTotal.textContent = "R$ 0,00";
       return;
     }
 
     cartItems.forEach((item, index) => {
+      const preco = item.precoPromocional ?? item.preco ?? 0;
+
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
       itemDiv.innerHTML = `
-        <img src="${item.imagem}" alt="${item.nome}">
+        <img src="${item.imagem || ''}" alt="${item.nome}">
         <div class="cart-item-info">
           <h4>${item.nome}</h4>
-          <p>R$ ${item.preco.toFixed(2)}</p>
+          <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
           <div class="cart-quantity">
             <button class="qty-btn minus" data-index="${index}">-</button>
             <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
@@ -177,14 +213,13 @@ async function initCartHome() {
       cartItemsContainer.appendChild(itemDiv);
     });
 
-    // Eventos de quantidade e remoção
     document.querySelectorAll(".qty-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const idx = parseInt(btn.dataset.index);
         const novoValor = btn.classList.contains("plus")
           ? cartItems[idx].quantidade + 1
           : Math.max(1, cartItems[idx].quantidade - 1);
-        await updateQuantity(cartItems[idx].produtoId, novoValor);
+        await updateQuantity(idx, novoValor);
       });
     });
 
@@ -193,75 +228,99 @@ async function initCartHome() {
         const idx = parseInt(input.dataset.index);
         let novaQtd = parseInt(input.value);
         if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
-        await updateQuantity(cartItems[idx].produtoId, novaQtd);
+        await updateQuantity(idx, novaQtd);
       });
     });
 
     document.querySelectorAll(".remove-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const idx = parseInt(btn.dataset.index);
-        await removeItem(cartItems[idx].produtoId);
+        await removeItem(idx);
       });
     });
 
-    updateCartSummary();
+    updateSummary();
   }
 
-  function updateCartSummary() {
-    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+  function updateSummary() {
     const totalItems = cartItems.length;
-    const totalPrice = cartItems.reduce((acc, i) => acc + i.preco * i.quantidade, 0);
+    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+    const totalPrice = cartItems.reduce((acc, i) => acc + (i.precoPromocional ?? i.preco ?? 0) * i.quantidade, 0);
 
     cartCount.textContent = totalQuantity;
-    summaryItems && (summaryItems.textContent = totalItems);
-    summaryQuantity && (summaryQuantity.textContent = totalQuantity);
-    summaryTotal && (summaryTotal.textContent = `R$ ${totalPrice.toFixed(2)}`);
+    if (summaryItems) summaryItems.textContent = totalItems;
+    if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
+    if (summaryTotal) summaryTotal.textContent = totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  async function updateQuantity(produtoId, quantidade) {
-    await fetch("/api/carrinho/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ produtoId, quantidade })
-    });
-    cartItems = await fetchCart();
+  async function updateQuantity(idx, quantidade) {
+    cartItems[idx].quantidade = quantidade;
+
+    if (isLoggedIn) {
+      await fetch("/api/carrinho/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
+      });
+    } else {
+      saveCart();
+    }
+
     renderCart();
   }
 
-  async function removeItem(produtoId) {
-    await fetch("/api/carrinho/remove", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ produtoId })
-    });
-    cartItems = await fetchCart();
+  async function removeItem(idx) {
+    const produtoId = cartItems[idx].id;
+    cartItems.splice(idx, 1);
+
+    if (isLoggedIn) {
+      await fetch("/api/carrinho/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ produtoId })
+      });
+    } else {
+      saveCart();
+    }
+
     renderCart();
   }
 
-  window.addToCart = async function (produto) {
-    await fetch("/api/carrinho/add", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade })
-    });
-    cartItems = await fetchCart();
+  // ================== Adicionar produto ==================
+  window.addToCart = async function(produto) {
+    const existing = cartItems.find(i => i.id === produto.id);
+    if (existing) {
+      existing.quantidade += produto.quantidade;
+    } else {
+      cartItems.push({ ...produto });
+    }
+
+    if (isLoggedIn) {
+      await fetch("/api/carrinho/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade })
+      });
+    } else {
+      saveCart();
+    }
+
     renderCart();
   };
 
-  // Abrir / Fechar
-  cartButton?.addEventListener('click', async () => {
-    await renderCart();
+  // ================== Abrir/Fechar carrinho ==================
+  cartButton.addEventListener('click', () => {
     cartSidebar.classList.add('active');
     cartOverlay.classList.add('active');
   });
-  closeCart?.addEventListener('click', () => {
+  closeCart.addEventListener('click', () => {
     cartSidebar.classList.remove('active');
     cartOverlay.classList.remove('active');
   });
-  cartOverlay?.addEventListener('click', () => {
+  cartOverlay.addEventListener('click', () => {
     cartSidebar.classList.remove('active');
     cartOverlay.classList.remove('active');
   });
@@ -348,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initPromocoes();
   initBusca();
   initMenu();
-  initCartHome();
+  initCart();
   initSlider();
   initBtnTopo();
 

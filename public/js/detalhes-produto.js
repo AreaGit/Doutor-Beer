@@ -131,8 +131,17 @@ async function initCart() {
   const summaryQuantity = document.getElementById("summary-quantity");
   const summaryTotal = document.getElementById("summary-total");
 
+  const couponInput = document.getElementById("coupon-code");
+  const applyCouponBtn = document.getElementById("apply-coupon");
+
   let isLoggedIn = false;
   let cartItems = [];
+  let appliedCoupon = null;
+  const validCoupons = {
+    "DESCONTO10": 0.10,
+    "FRETEGRATIS": 0.15,
+    "JORGERAMOS69": 0.69
+  };
 
   // ================== Detectar login ==================
   try {
@@ -163,6 +172,8 @@ async function initCart() {
 
   // ================== Mesclar carrinho do guest após login ==================
   async function mergeGuestCart() {
+    if (!isLoggedIn) return;
+
     const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
     if (!guestCart.length) return;
 
@@ -174,7 +185,7 @@ async function initCart() {
         body: JSON.stringify({ produtoId: item.id, quantidade: item.quantidade })
       });
     }
-    localStorage.removeItem("guestCart"); // Limpa o carrinho temporário
+    localStorage.removeItem("guestCart");
   }
 
   if (isLoggedIn) await mergeGuestCart();
@@ -186,10 +197,7 @@ async function initCart() {
 
     if (!cartItems.length) {
       cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-      cartCount.textContent = 0;
-      if (summaryItems) summaryItems.textContent = 0;
-      if (summaryQuantity) summaryQuantity.textContent = 0;
-      if (summaryTotal) summaryTotal.textContent = "R$ 0,00";
+      updateResumo();
       return;
     }
 
@@ -240,20 +248,26 @@ async function initCart() {
       });
     });
 
-    updateSummary();
+    updateResumo();
   }
 
-  function updateSummary() {
+  // ================== Atualizar resumo ==================
+  function updateResumo() {
     const totalItems = cartItems.length;
     const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
-    const totalPrice = cartItems.reduce((acc, i) => acc + (i.precoPromocional ?? i.preco ?? 0) * i.quantidade, 0);
+    let totalPrice = cartItems.reduce((acc, i) => acc + (i.precoPromocional ?? i.preco ?? 0) * i.quantidade, 0);
+
+    if (appliedCoupon) {
+      totalPrice = totalPrice * (1 - appliedCoupon.desconto);
+    }
 
     cartCount.textContent = totalQuantity;
-    if (summaryItems) summaryItems.textContent = totalItems;
-    if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
-    if (summaryTotal) summaryTotal.textContent = totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    summaryItems.textContent = totalItems;
+    summaryQuantity.textContent = totalQuantity;
+    summaryTotal.textContent = totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  // ================== Atualizar quantidade ==================
   async function updateQuantity(idx, quantidade) {
     cartItems[idx].quantidade = quantidade;
 
@@ -271,6 +285,7 @@ async function initCart() {
     renderCart();
   }
 
+  // ================== Remover item ==================
   async function removeItem(idx) {
     const produtoId = cartItems[idx].id;
     cartItems.splice(idx, 1);
@@ -326,34 +341,76 @@ async function initCart() {
     cartOverlay.classList.remove('active');
   });
 
-  renderCart();
+  // ================== Aplicar cupom ==================
+ function mostrarToast(mensagem, tipo = "sucesso") {
+  const toast = document.createElement("div");
+  toast.classList.add("toast");
+
+  // Estilos base
+  toast.style.position = "fixed";
+  toast.style.bottom = "20px";
+  toast.style.right = "20px";
+  toast.style.padding = "15px 25px";
+  toast.style.color = "#fff";
+  toast.style.fontWeight = "bold";
+  toast.style.borderRadius = "10px";
+  toast.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
+  toast.style.opacity = "0";
+  toast.style.transform = "translateY(20px)";
+  toast.style.transition = "all 0.4s ease";
+  toast.style.zIndex = "9999";
+  toast.style.display = "flex";
+  toast.style.alignItems = "center";
+  toast.style.gap = "10px";
+
+  // Ícones
+  let icon = "";
+  if (tipo === "sucesso") {
+    toast.style.background = "linear-gradient(90deg, #2ecc71, #27ae60)";
+    icon = "✔️"; // check
+  } else {
+    toast.style.background = "linear-gradient(90deg, #e74c3c, #c0392b)";
+    icon = "❌"; // x
+  }
+
+  toast.innerHTML = `<span>${icon}</span> <span>${mensagem}</span>`;
+  document.body.appendChild(toast);
+
+  // Mostrar e animar
+  setTimeout(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  }, 10);
+
+  // Remover após 3 segundos
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(20px)";
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
 }
 
-/* ================== Animação de adicionar ao carrinho ================== */
-async function animarEAdicionarAoCarrinho(produto, irParaCheckout = false) {
-  try {
-    const imgFly = document.createElement("img");
-    imgFly.src = produto.imagem;
-    imgFly.className = "fly-to-cart";
-    document.body.appendChild(imgFly);
+  function aplicarCupom(codigo) {
+    const valorInput = codigo.trim().toUpperCase();
 
-    const imgRect = document.getElementById("imagemPrincipal").getBoundingClientRect();
-    imgFly.style.left = imgRect.left + "px";
-    imgFly.style.top = imgRect.top + "px";
+    if (!valorInput) return mostrarToast("Digite um cupom!", "erro");
 
-    const cartRect = document.getElementById("cart-button").getBoundingClientRect();
-    imgFly.getBoundingClientRect(); // reflow
-    imgFly.style.transform = `translate(${cartRect.left - imgRect.left}px, ${cartRect.top - imgRect.top}px) scale(0.1)`;
-    imgFly.style.opacity = 0.5;
+    if (validCoupons[valorInput]) {
+      appliedCoupon = { codigo: valorInput, desconto: validCoupons[valorInput] };
+      mostrarToast(`Cupom ${valorInput} aplicado!`, "sucesso");
+    } else {
+      appliedCoupon = null;
+      mostrarToast("Cupom inválido!", "erro");
+    }
 
-    await new Promise(resolve => setTimeout(resolve, 800));
-    imgFly.remove();
-
-    await addToCart(produto);
-    if (irParaCheckout) window.location.href = "/endereco";
-  } catch {
-    alert("Não foi possível adicionar o produto ao carrinho.");
+    updateResumo();
   }
+
+  applyCouponBtn.addEventListener("click", () => {
+    aplicarCupom(couponInput.value);
+  });
+
+  renderCart();
 }
 
 /* ================== Botão Voltar ao Topo ================== */

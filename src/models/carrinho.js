@@ -26,7 +26,14 @@ const Cart = sequelize.define("Cart", {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 1
+  },
+  cupom: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
+
+
+
 }, {
   tableName: "carrinhos",
   timestamps: true

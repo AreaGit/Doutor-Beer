@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/css/perfil.css">
 </head>
-
 <body>
 
   <!-- Cabeçalho -->
@@ -21,98 +19,99 @@
     </div>
   </header>
 
-  <!-- CONTAINER PERFIL -->
-  <div class="perfil-container">
-    <h2>Meu Perfil</h2>
+  <!-- Container principal -->
+  <main class="perfil-container" aria-labelledby="titulo-perfil">
+    <h2 id="titulo-perfil">Meu Perfil</h2>
 
     <!-- Navegação em abas -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="dados">Meus Dados</button>
-      <button class="tab-btn" data-tab="pedidos">Meus Pedidos</button>
-    </div>
+    <nav class="tabs" aria-label="Seções do perfil">
+      <button class="tab-btn active" data-tab="dados" aria-controls="dados">Meus Dados</button>
+      <button class="tab-btn" data-tab="pedidos" aria-controls="pedidos">Meus Pedidos</button>
+    </nav>
 
-    <!-- Conteúdo da aba "Meus Dados" -->
-    <div class="tab-content active" id="dados">
+    <!-- Aba "Meus Dados" -->
+    <section class="tab-content active" id="dados">
       <h3>Informações da Conta</h3>
-      <form class="dados-form">
+      <form class="dados-form" autocomplete="on">
         <div class="form-column">
           <div class="form-group">
             <label for="nome">Nome completo</label>
-            <input type="text" id="nome" disabled>
+            <input type="text" id="nome" name="nome" disabled autocomplete="name">
           </div>
 
           <div class="form-group">
             <label for="cpf">CPF</label>
-            <input type="text" id="cpf" maxlength="14" disabled data-readonly="true">
+            <input type="text" id="cpf" name="cpf" maxlength="14" disabled>
           </div>
 
           <div class="form-group">
             <label for="email">E-mail</label>
-            <input type="email" id="email" disabled data-readonly="true">
+            <input type="email" id="email" name="email" disabled autocomplete="email">
           </div>
 
           <div class="form-group">
             <label for="celular">Celular</label>
-            <input type="text" id="celular" maxlength="15" disabled>
+            <input type="tel" id="celular" name="celular" maxlength="15" disabled autocomplete="tel">
           </div>
 
           <div class="form-group">
             <label for="endereco">Endereço</label>
-            <input type="text" id="endereco" disabled>
+            <input type="text" id="endereco" name="endereco" disabled autocomplete="street-address">
           </div>
 
           <div class="form-group">
             <label for="cep">CEP</label>
-            <input type="text" id="cep" maxlength="9" disabled>
+            <input type="text" id="cep" name="cep" maxlength="9" disabled autocomplete="postal-code">
           </div>
         </div>
 
         <div class="form-column">
           <div class="form-group">
             <label for="numero">Número</label>
-            <input type="number" id="numero" disabled>
+            <input type="number" id="numero" name="numero" disabled>
           </div>
 
           <div class="form-group">
             <label for="complemento">Complemento</label>
-            <input type="text" id="complemento" disabled>
+            <input type="text" id="complemento" name="complemento" disabled>
           </div>
 
           <div class="form-group">
             <label for="bairro">Bairro</label>
-            <input type="text" id="bairro" disabled>
+            <input type="text" id="bairro" name="bairro" disabled>
           </div>
 
           <div class="form-group">
             <label for="cidade">Cidade</label>
-            <input type="text" id="cidade" disabled>
+            <input type="text" id="cidade" name="cidade" disabled>
           </div>
 
           <div class="form-group">
             <label for="estado">Estado</label>
-            <input type="text" id="estado" disabled>
+            <input type="text" id="estado" name="estado" disabled>
           </div>
         </div>
 
         <!-- Botão Editar/Salvar -->
         <button type="button" id="btn-editar" data-editando="false">Editar Dados</button>
       </form>
-    </div>
+    </section>
 
-    <!-- Conteúdo da aba "Meus Pedidos" -->
-    <div class="tab-content" id="pedidos">
+    <!-- Aba "Meus Pedidos" -->
+    <section class="tab-content" id="pedidos">
       <h3>Histórico de Pedidos</h3>
-      <div id="pedidos-container">
-        <!-- Pedidos vão ser inseridos aqui pelo JS -->
+      <div id="pedidos-container" aria-live="polite">
+        <p class="loading">Carregando pedidos...</p>
       </div>
-    </div>
-
-  </div>
+    </section>
+  </main>
 
   <!-- Botão flutuante de logout -->
-  <button class="logout-floating-btn logout-btn">Sair da Conta</button>
+  <button class="logout-floating-btn logout-btn" aria-label="Sair da conta">Sair</button>
 
-  <script src="../js/perfil.js"></script>
+  <!-- Toast notifications -->
+  <div id="toast-container" aria-live="assertive"></div>
 
+  <script src="/js/perfil.js"></script>
 </body>
 </html>

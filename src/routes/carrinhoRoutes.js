@@ -1,17 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const cartController = require("../controllers/carrinhoControllers");
+const carrinhoController = require("../controllers/carrinhoControllers");
 
-// Adicionar produto ao carrinho
-router.post("/add", cartController.addToCart);
+// Pegar carrinho
+router.get("/", carrinhoController.getCart);
 
-// Remover produto do carrinho
-router.post("/remove", cartController.removeFromCart);
+// Adicionar produto
+router.post("/add", carrinhoController.addToCart);
 
 // Atualizar quantidade
-router.post("/update", cartController.updateCartItem);
+router.post("/update", carrinhoController.updateCart);
 
-// Pegar carrinho do usuário
-router.get("/", cartController.getCart);
+// Remover produto
+router.post("/remove", carrinhoController.removeFromCart);
 
 module.exports = router;
