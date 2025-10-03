@@ -15,7 +15,6 @@ const Admin = sequelize.define("Admin", {
   email: {
     type: DataTypes.STRING(150),
     allowNull: false,
-    unique: true
   },
   senha: {
     type: DataTypes.STRING(200), // senha já criptografada (hash)

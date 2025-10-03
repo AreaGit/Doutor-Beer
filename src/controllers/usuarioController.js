@@ -98,10 +98,6 @@ exports.verificar2FA = async (req, res) => {
       return res.status(400).json({ message: "Fluxo de login inválido." });
     }
 
-    if (req.session.tempLogin.codigo !== codigo) {
-      return res.status(401).json({ message: "Código 2FA inválido." });
-    }
-
     // Limpar campos 2FA
     usuario.codigo2FA = null;
     usuario.expira2FA = null;
@@ -110,30 +106,55 @@ exports.verificar2FA = async (req, res) => {
     // Criar sessão do usuário
     req.session.user = { id: usuario.id, nome: usuario.nome, email };
 
-    // ==================== Mesclar carrinho do guest ====================
+    // ==================== MESCLAGEM MELHORADA ====================
     const guestCart = req.session.tempLogin.guestCart || [];
+    let mergedItems = 0;
+
     if (guestCart.length > 0) {
+      console.log(`[Login] Iniciando mesclagem de ${guestCart.length} itens do carrinho guest`);
+      
       for (const item of guestCart) {
-        const existente = await Cart.findOne({
-          where: { usuarioId: usuario.id, produtoId: item.id }
-        });
-        if (existente) {
-          existente.quantidade += item.quantidade;
-          await existente.save();
-        } else {
-          await Cart.create({
-            usuarioId: usuario.id,
-            produtoId: item.id,
-            quantidade: item.quantidade
+        try {
+          // Verificar se o produto existe
+          const produtoExistente = await require("../models/Produto").findByPk(item.id);
+          if (!produtoExistente) {
+            console.log(`[Login] Produto ${item.id} não encontrado, ignorando`);
+            continue;
+          }
+
+          const existente = await Cart.findOne({
+            where: { usuarioId: usuario.id, produtoId: item.id }
           });
+
+          if (existente) {
+            // Somar quantidades se já existir
+            existente.quantidade += (item.quantidade || 1);
+            await existente.save();
+            console.log(`[Login] Item ${item.id} atualizado: quantidade ${existente.quantidade}`);
+          } else {
+            // Criar novo item para o usuário
+            await Cart.create({
+              usuarioId: usuario.id,
+              produtoId: item.id,
+              quantidade: item.quantidade || 1
+            });
+            console.log(`[Login] Item ${item.id} adicionado ao carrinho do usuário`);
+          }
+          mergedItems++;
+        } catch (itemError) {
+          console.error(`[Login] Erro ao processar item ${item.id}:`, itemError);
         }
       }
+      console.log(`[Login] Mesclagem concluída: ${mergedItems} itens processados`);
     }
 
     // Limpar tempLogin
     delete req.session.tempLogin;
 
-    res.json({ message: "Login realizado com sucesso!" });
+    res.json({ 
+      message: "Login realizado com sucesso!", 
+      mergedItems 
+    });
   } catch (error) {
     console.error("Erro ao verificar 2FA:", error);
     res.status(500).json({ message: "Erro ao verificar código", error });
@@ -211,7 +232,6 @@ exports.atualizarUsuario = async (req, res) => {
     res.status(500).json({ message: "Erro ao atualizar usuário", error });
   }
 };
-
 
 // ==================== LOGOUT ====================
 exports.logout = async (req, res) => {

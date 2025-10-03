@@ -430,6 +430,21 @@ body {
   background-color: #e0a600;
 }
 
+.coupon-message {
+  font-size: 0.9em;
+  margin-top: 6px;
+  display: none;
+  transition: all 0.3s ease;
+}
+.coupon-message.success {
+  color: #27ae60;
+  display: block;
+}
+.coupon-message.error {
+  color: #e74c3c;
+  display: block;
+}
+
 
 
 .checkout-btn {
