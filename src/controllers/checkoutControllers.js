@@ -3,6 +3,8 @@
 const { calcularFrete } = require("../services/melhorEnvio"); // função que você já criou
 const Cart = require("./carrinhoControllers").Cart; // seu model de carrinho
 const Produto = require("../models/Produto");
+const Pedido = require("../models/Pedido");
+const PedidoItem = require("../models/PedidoItem");
 
 // ================== Função auxiliar para pegar itens do carrinho ==================
 async function getCartItems(usuarioId) {
@@ -57,5 +59,69 @@ exports.calcularFreteHandler = async (req, res) => {
   } catch (err) {
     console.error("[Checkout] Erro ao calcular frete:", err);
     res.status(500).json({ error: "Falha ao calcular frete" });
+  }
+};
+
+// ================== Confirmar Pedido ==================
+
+exports.confirmarPagamentoHandler = async (req, res) => {
+  const usuarioId = req.session.user?.id;
+  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
+
+  const { enderecoEntrega, metodoPagamento, cupom, frete } = req.body;
+
+  try {
+    // 1️⃣ Pega itens do carrinho
+    const itensCarrinho = await Cart.findAll({
+      where: { usuarioId },
+      include: [{ model: Produto, as: "Produto" }]
+    });
+
+    if (!itensCarrinho.length) {
+      return res.status(400).json({ error: "Carrinho vazio" });
+    }
+
+    // 2️⃣ Calcula total (produtos + frete)
+    let total = 0;
+    itensCarrinho.forEach(item => {
+      total += item.quantidade * (item.Produto.precoPromocional || item.Produto.preco);
+    });
+    total += frete || 0;
+
+    // 3️⃣ Cria o pedido
+    const pedido = await Pedido.create({
+      usuarioId,
+      status: "Pago", // ou "Pendente"
+      total,
+      frete: frete || 0, // <-- aqui salvamos o frete
+      enderecoEntrega: JSON.stringify(enderecoEntrega),
+      metodoPagamento,
+      cupom
+    });
+
+    // 4️⃣ Cria os itens do pedido
+    const itensPedido = itensCarrinho.map(item => ({
+      pedidoId: pedido.id,
+      produtoId: item.produtoId,
+      quantidade: item.quantidade,
+      precoUnitario: item.Produto.precoPromocional || item.Produto.preco
+    }));
+
+    await PedidoItem.bulkCreate(itensPedido);
+
+    // 5️⃣ Limpa carrinho
+    await Cart.destroy({ where: { usuarioId } });
+
+    // 6️⃣ Retorna sucesso
+    return res.json({
+      sucesso: true,
+      message: "Pedido confirmado com sucesso!",
+      pedidoId: pedido.id,
+      codigo: `PED${pedido.id.toString().padStart(6, '0')}`
+    });
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao confirmar pagamento:", err);
+    return res.status(500).json({ error: "Falha ao processar pedido" });
   }
 };

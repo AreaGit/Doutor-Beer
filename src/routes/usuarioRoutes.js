@@ -11,6 +11,7 @@ router.post("/login/reenvio", usuarioController.reenviarCodigo2FA);
 router.get("/me", usuarioController.me);
 router.post("/logout", usuarioController.logout);
 router.put("/me", usuarioController.atualizarUsuario);
+router.get("/me/pedidos", usuarioController.mePedidos);
 
 module.exports = router;
 

@@ -53,7 +53,7 @@
         </p>
       </div>
 
-           <!-- Carrinho -->
+      <!-- Carrinho -->
       <div class="cart" id="cart-button">
         <img src="../images/shopping-cart.png" alt="Carrinho de compras">
         <span class="cart-count" id="cart-count">0</span>
@@ -86,7 +86,7 @@
       </div>
 
 
-      <button class="checkout-btn">Finalizar Compra</button>
+      <button class="checkout-btn" id="finalizar">Finalizar Compra</button>
     </div>
   </div>
 
@@ -118,7 +118,8 @@
           <a href="/categoria?categoria=acessorios">ACESSÓRIOS <span class="arrow">▾</span></a>
           <ul class="sub-menu">
             <li><a href="/categoria?categoria=acessorios_para_torre_icechopp">Acessórios para Torre IceChopp</a></li>
-            <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a></li>
+            <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a>
+            </li>
             <li><a href="/categoria?categoria=baldes_de_gelo">Baldes de Gelo</a></li>
             <li><a href="/categoria?categoria=canudos_inox">Canudos Inox</a></li>
             <li><a href="/categoria?categoria=torneiras">Torneiras</a></li>
@@ -326,6 +327,29 @@
     id="btnWhats">
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
+
+   <!-- ================= Modal de Login ================= -->
+<div id="modalLogin" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Você precisa estar logado</h2>
+    <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
+    <div class="modal-actions">
+      <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
+      <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Modal Carrinho Vazio ================= -->
+<div id="modalCarrinhoVazio" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Seu carrinho está vazio</h2>
+    <p>Adicione produtos antes de finalizar a compra.</p>
+    <div class="modal-actions modal-actions-center">
+      <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
 
   <script src="../js/inicial.js"></script>
 </body>

@@ -12,7 +12,8 @@ const produtoRoutes = require("./src/routes/produtoRoutes");
 const adminRoutes   = require("./src/routes/adminRoutes"); 
 const carrinhoRoutes = require("./src/routes/carrinhoRoutes");
 const freteRoutes = require("./src/routes/freteRoutes");
-
+const checkoutRoutes = require("./src/routes/checkoutRoutes");
+const pedidoRoutes = require("./src/routes/pedidoRoutes")
 // ================= Middleware =================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,6 +46,8 @@ app.use("/api/produtos", produtoRoutes);
 app.use("/api/admin", adminRoutes); 
 app.use("/api/carrinho", carrinhoRoutes);
 app.use("/api/frete", freteRoutes);
+app.use("/checkout", checkoutRoutes);
+app.use("/api/pedido", pedidoRoutes);
 
 // ================= Middleware para Guest Cart =================
 // Opcional: se quiser adicionar um middleware global para guest cart

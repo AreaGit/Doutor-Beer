@@ -88,7 +88,7 @@
       </div>
 
 
-      <button class="checkout-btn">Finalizar Compra</button>
+      <button class="checkout-btn" id ="finalizar">Finalizar Compra</button>
     </div>
   </div>
 
@@ -225,6 +225,29 @@
     id="btnWhats">
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
+
+ <!-- ================= Modal de Login ================= -->
+<div id="modalLogin" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Você precisa estar logado</h2>
+    <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
+    <div class="modal-actions">
+      <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
+      <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Modal Carrinho Vazio ================= -->
+<div id="modalCarrinhoVazio" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Seu carrinho está vazio</h2>
+    <p>Adicione produtos antes de finalizar a compra.</p>
+    <div class="modal-actions modal-actions-center">
+      <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
 
   <script src="../js/categoria.js"></script>
 </body>

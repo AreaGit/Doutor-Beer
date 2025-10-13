@@ -1,5 +1,6 @@
 /* ================== Variáveis Globais ================== */
 let produtoAtual = null;
+let quantidadeDeProdutosNoCarrinho = 0;
 
 /* ================== Promoções ================== */
 const promoMessages = document.querySelectorAll('.promo-message');
@@ -131,15 +132,11 @@ async function initCart() {
   const summaryQuantity = document.getElementById("summary-quantity");
   const summaryTotal = document.getElementById("summary-total");
 
-  const couponInput = document.getElementById("coupon-code");
-  const applyCouponBtn = document.getElementById("apply-coupon");
-
   let isLoggedIn = false;
   let cartItems = [];
-  let appliedCoupon = null;
   let guestId = null;
 
-  // ================== Utilitários ==================
+  /* ================== Utilitários ================== */
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -153,12 +150,21 @@ async function initCart() {
     document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}`;
   }
 
-  // ================== Detectar login ==================
+  function saveGuestCartToLocalStorage() {
+    localStorage.setItem('guestCart', JSON.stringify(cartItems));
+  }
+
+  function loadGuestCartFromLocalStorage() {
+    const data = localStorage.getItem('guestCart');
+    return data ? JSON.parse(data) : [];
+  }
+
+  /* ================== Detectar login ================== */
   async function checkLoginStatus() {
     try {
-      const res = await fetch("/api/auth/me", { 
-        method: "GET", 
-        credentials: "include" 
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include"
       });
       isLoggedIn = res.ok;
       return isLoggedIn;
@@ -169,7 +175,7 @@ async function initCart() {
     }
   }
 
-  // ================== Gerenciar Guest ID ==================
+  /* ================== Guest ID ================== */
   async function ensureGuestId() {
     if (isLoggedIn) {
       guestId = null;
@@ -177,253 +183,67 @@ async function initCart() {
     }
 
     guestId = getCookie("guestId");
-    
+
     if (!guestId) {
-      try {
-        const resp = await fetch("/api/carrinho/guest", { 
-          method: "POST",
-          credentials: "include"
-        });
-        
-        if (resp.ok) {
-          const data = await resp.json();
-          guestId = data.guestId;
-          setCookie("guestId", guestId, 30);
-          console.log("[Carrinho] Novo guestId criado:", guestId);
-        }
-      } catch (err) {
-        console.error("[Carrinho] Erro ao criar guestId:", err);
-      }
+      guestId = `guest-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      setCookie("guestId", guestId, 30);
+      console.log("[Carrinho] Novo guestId criado:", guestId);
     } else {
       console.log("[Carrinho] GuestId recuperado:", guestId);
     }
-    
+
     return guestId;
   }
 
-  // ================== MESCLAR CARRINHO GUEST → USUÁRIO ==================
+  /* ================== MESCLAR CARRINHO GUEST → USUÁRIO ================== */
   async function mergeGuestCart() {
-    if (!isLoggedIn || !guestId) return false;
-    
+    if (!isLoggedIn) return false;
+
+    const guestCart = loadGuestCartFromLocalStorage();
+    if (!guestCart.length) return false;
+
     try {
-      const resp = await fetch("/api/carrinho/merge-guest", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "X-Guest-Id": guestId 
-        },
-        credentials: "include"
-      });
-      
-      if (resp.ok) {
-        const result = await resp.json();
-        console.log("[Carrinho] Mesclagem realizada:", result.merged, "itens");
-        
-        // Limpar guestId após mesclagem bem-sucedida
-        guestId = null;
-        document.cookie = "guestId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        
-        return true;
-      }
-      return false;
+      await Promise.all(guestCart.map(item =>
+        fetch("/api/carrinho/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: item.id, quantidade: item.quantidade })
+        })
+      ));
+
+      localStorage.removeItem('guestCart');
+      console.log("[Carrinho] Carrinho do guest mesclado ao usuário");
+      return true;
     } catch (err) {
-      console.error("[Carrinho] Erro na mesclagem:", err);
+      console.error("[Carrinho] Erro ao mesclar carrinho guest:", err);
       return false;
     }
   }
 
-  // ================== Headers para requisições ==================
-  function getHeaders() {
-    const headers = {
-      "Content-Type": "application/json"
-    };
-    
-    if (!isLoggedIn && guestId) {
-      headers["X-Guest-Id"] = guestId;
-    }
-    
-    return headers;
-  }
-
-  // ================== Buscar carrinho do servidor ==================
+  /* ================== Buscar carrinho ================== */
   async function fetchCart() {
-    try {
-      const headers = getHeaders();
-      const resp = await fetch("/api/carrinho", { 
-        headers, 
-        credentials: "include" 
-      });
-      
-      if (resp.ok) {
-        const data = await resp.json();
-        console.log("[Carrinho] Carrinho carregado:", data.length, "itens");
-        
-        // Verificar se há cupom aplicado nos itens
-        checkAppliedCoupon(data);
-        
-        return data;
-      }
-      return [];
-    } catch (error) {
-      console.error("[Carrinho] Erro ao buscar carrinho:", error);
-      return [];
-    }
-  }
-
-  // ================== Verificar cupom aplicado ==================
-  function checkAppliedCoupon(items) {
-    if (items.length === 0) {
-      appliedCoupon = null;
-      return;
-    }
-    
-    // Verificar se todos os itens têm o mesmo cupom
-    const cupons = items.map(item => item.cupom).filter(Boolean);
-    if (cupons.length > 0) {
-      const cupomUnico = cupons[0];
-      const todosIguais = cupons.every(cupom => cupom === cupomUnico);
-      
-      if (todosIguais) {
-        const validCoupons = {
-          "DESCONTO10": 0.10,
-          "FRETEGRATIS": 0.15,
-          "JORGERAMOS69": 0.69,
-          "DOUTOR10": 0.10,
-          "BEER20": 0.20
-        };
-        
-        const desconto = validCoupons[cupomUnico];
-        if (desconto) {
-          appliedCoupon = {
-            codigo: cupomUnico,
-            desconto: desconto
-          };
-          console.log("[Carrinho] Cupom detectado:", appliedCoupon.codigo);
+    if (isLoggedIn) {
+      try {
+        const resp = await fetch("/api/carrinho", { credentials: "include" });
+        if (resp.ok) {
+          const data = await resp.json();
+          return data;
         }
+        return [];
+      } catch (err) {
+        console.error("[Carrinho] Erro ao buscar carrinho do servidor:", err);
+        return [];
       }
     } else {
-      appliedCoupon = null;
+      return loadGuestCartFromLocalStorage();
     }
   }
 
-  // ================== CUPOM DE DESCONTO ==================
-async function aplicarCupom() {
-  const codigo = couponInput.value.trim();
-  
-  if (!codigo) {
-    alert("Por favor, digite um código de cupom");
-    return;
-  }
-
-  try {
-    const headers = getHeaders();
-    const resp = await fetch("/api/carrinho/cupom/aplicar", {
-      method: "POST",
-      headers,
-      credentials: "include",
-      body: JSON.stringify({ codigo })
-    });
-
-    if (resp.ok) {
-      const result = await resp.json();
-      appliedCoupon = result;
-      
-      // Mostrar mensagem de sucesso
-      alert(result.message);
-      
-      // Atualizar input com código aplicado
-      couponInput.value = result.codigo;
-      couponInput.disabled = true;
-      
-      // Mudar texto e função do botão - CORREÇÃO AQUI
-      applyCouponBtn.textContent = "Remover";
-      applyCouponBtn.removeEventListener('click', aplicarCupom); // Remove listener antigo
-      applyCouponBtn.addEventListener('click', removerCupom);   // Adiciona novo listener
-      
-      // Recarregar carrinho para mostrar descontos
-      cartItems = await fetchCart();
-      renderCart();
-      
-    } else {
-      const error = await resp.json();
-      alert(error.error || "Erro ao aplicar cupom");
-    }
-  } catch (err) {
-    console.error("[Carrinho] Erro ao aplicar cupom:", err);
-    alert("Erro ao aplicar cupom");
-  }
-}
-
-async function removerCupom() {
-  try {
-    const headers = getHeaders();
-    const resp = await fetch("/api/carrinho/cupom/remover", {
-      method: "POST",
-      headers,
-      credentials: "include"
-    });
-
-    if (resp.ok) {
-      appliedCoupon = null;
-      
-      // Resetar input e botão - CORREÇÃO AQUI
-      couponInput.value = "";
-      couponInput.disabled = false;
-      applyCouponBtn.textContent = "Aplicar";
-      applyCouponBtn.removeEventListener('click', removerCupom); // Remove listener antigo
-      applyCouponBtn.addEventListener('click', aplicarCupom);   // Adiciona novo listener
-      
-      // Recarregar carrinho
-      cartItems = await fetchCart();
-      renderCart();
-      
-      alert("Cupom removido com sucesso");
-    } else {
-      const error = await resp.json();
-      alert(error.error || "Erro ao remover cupom");
-    }
-  } catch (err) {
-    console.error("[Carrinho] Erro ao remover cupom:", err);
-    alert("Erro ao remover cupom");
-  }
-}
-
-  // ================== INICIALIZAÇÃO ATUALIZADA ==================
-  async function initializeCart() {
-    // 1. Verificar status de login ANTES
-    const wasLoggedIn = isLoggedIn;
-    await checkLoginStatus();
-    
-    // 2. Garantir que temos guestId (se não logado)
-    await ensureGuestId();
-    
-    // 3. SE o usuário ACABOU DE FAZER LOGIN, mesclar carrinhos
-    if (isLoggedIn && !wasLoggedIn && guestId) {
-      console.log("[Carrinho] Usuário fez login, mesclando carrinhos...");
-      await mergeGuestCart();
-    }
-    
-    // 4. Buscar carrinho do servidor
-    cartItems = await fetchCart();
-    
-    // 5. Configurar cupom se já estiver aplicado
-    if (appliedCoupon) {
-      couponInput.value = appliedCoupon.codigo;
-      couponInput.disabled = true;
-      applyCouponBtn.textContent = "Remover";
-      applyCouponBtn.onclick = removerCupom;
-    }
-    
-    // 6. Renderizar
-    renderCart();
-    
-    console.log("[Carrinho] Inicializado - Logado:", isLoggedIn, "Itens:", cartItems.length);
-  }
-
-  // ================== Renderizar carrinho ==================
-  async function renderCart() {
+  /* ================== Renderizar carrinho ================== */
+  function renderCart() {
     cartItemsContainer.innerHTML = "";
-    
+
     if (!cartItems.length) {
       cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
       updateResumo();
@@ -431,36 +251,27 @@ async function removerCupom() {
     }
 
     cartItems.forEach((item, index) => {
-      const precoFinal = item.precoFinal || item.precoPromocional || item.preco || 0;
-      const precoOriginal = item.precoPromocional || item.preco || 0;
-      const temDesconto = item.precoFinal && item.precoFinal !== precoOriginal;
-      
+      const preco = item.precoPromocional ?? item.preco ?? 0;
+
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
       itemDiv.innerHTML = `
-        <img src="${item.imagem || ''}" alt="${item.nome}" onerror="this.style.display='none'">
-        <div class="cart-item-info">
-          <h4>${item.nome}</h4>
-          ${temDesconto ? `
-            <p class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9em;">
-              ${precoOriginal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </p>
-          ` : ''}
-          <p class="final-price" style="color: #e74c3c; font-weight: bold;">
-            ${precoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </p>
-          <div class="cart-quantity">
-            <button class="qty-btn minus" data-index="${index}">-</button>
-            <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
-            <button class="qty-btn plus" data-index="${index}">+</button>
-          </div>
-          <button class="remove-btn" data-index="${index}">Remover</button>
-        </div>
-      `;
+    <img src="${item.imagem || ''}" alt="${item.nome}">
+    <div class="cart-item-info">
+      <h4>${item.nome}</h4>
+      <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+      <div class="cart-quantity">
+        <button class="qty-btn minus" data-index="${index}">-</button>
+        <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
+        <button class="qty-btn plus" data-index="${index}">+</button>
+      </div>
+      <button class="remove-btn" data-index="${index}">Remover</button>
+    </div>
+  `;
       cartItemsContainer.appendChild(itemDiv);
     });
 
-    // Event listeners para controles de quantidade
+    // Controles de quantidade e remover
     document.querySelectorAll(".qty-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const idx = parseInt(btn.dataset.index);
@@ -490,166 +301,164 @@ async function removerCupom() {
     updateResumo();
   }
 
-  // ================== Atualizar resumo ==================
+  /* ================== Atualizar resumo ================== */
   function updateResumo() {
     const totalItems = cartItems.length;
     const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
-    
-    // Calcular totais
-    let subtotal = cartItems.reduce((acc, i) => {
-      const precoBase = i.precoPromocional || i.preco || 0;
-      return acc + (precoBase * i.quantidade);
-    }, 0);
-    
-    let totalComDesconto = cartItems.reduce((acc, i) => {
-      const precoFinal = i.precoFinal || i.precoPromocional || i.preco || 0;
-      return acc + (precoFinal * i.quantidade);
-    }, 0);
-    
-    let desconto = subtotal - totalComDesconto;
-    
+    const total = cartItems.reduce((acc, i) => acc + ((i.precoPromocional || i.preco || 0) * i.quantidade), 0);
+
     cartCount.textContent = totalQuantity;
     summaryItems.textContent = totalItems;
     summaryQuantity.textContent = totalQuantity;
-    summaryTotal.textContent = totalComDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    
-    // Mostrar desconto se houver
-    const discountElement = document.getElementById("summary-discount");
-    const subtotalElement = document.getElementById("summary-subtotal");
-    
-    if (!discountElement && desconto > 0) {
-      // Criar elemento de desconto se não existir
-      const cartSummary = document.querySelector(".cart-summary");
-      const discountLine = document.createElement("p");
-      discountLine.id = "summary-discount";
-      discountLine.innerHTML = `Desconto: <span style="color: #e74c3c;">-${desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`;
-      cartSummary.insertBefore(discountLine, summaryTotal.parentElement);
-    } else if (discountElement) {
-      if (desconto > 0) {
-        discountElement.innerHTML = `Desconto: <span style="color: #e74c3c;">-${desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`;
-        discountElement.style.display = "block";
-      } else {
-        discountElement.style.display = "none";
-      }
-    }
+    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    if (!isLoggedIn) saveGuestCartToLocalStorage();
   }
 
-  // ================== Atualizar quantidade ==================
+  /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
     if (idx < 0 || idx >= cartItems.length) return;
-    
+
     cartItems[idx].quantidade = quantidade;
-    
-    try {
-      const headers = getHeaders();
-      await fetch("/api/carrinho/update", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ 
-          produtoId: cartItems[idx].id, 
-          quantidade 
-        })
-      });
-    } catch (err) {
-      console.error("[Carrinho] Erro ao atualizar quantidade:", err);
+
+    if (isLoggedIn) {
+      try {
+        await fetch("/api/carrinho/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao atualizar quantidade:", err);
+      }
+    } else {
+      saveGuestCartToLocalStorage();
     }
-    
+
     renderCart();
   }
 
-  // ================== Remover item ==================
+  /* ================== Remover item ================== */
   async function removeItem(idx) {
     if (idx < 0 || idx >= cartItems.length) return;
-    
+
     const produtoId = cartItems[idx].id;
     cartItems.splice(idx, 1);
-    
-    try {
-      const headers = getHeaders();
-      await fetch("/api/carrinho/remove", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ produtoId })
-      });
-    } catch (err) {
-      console.error("[Carrinho] Erro ao remover item:", err);
+
+    if (isLoggedIn) {
+      try {
+        await fetch("/api/carrinho/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao remover item:", err);
+      }
+    } else {
+      saveGuestCartToLocalStorage();
     }
-    
+
     renderCart();
   }
 
-  // ================== Adicionar produto ==================
-  window.addToCart = async function(produto) {
-    if (!produto || !produto.id) {
-      console.error("[Carrinho] Produto inválido:", produto);
-      return;
-    }
+  /* ================== Adicionar produto ================== */
+  window.addToCart = async function (produto) {
+    if (!produto || !produto.id) return;
 
-    // Verificar se já está no carrinho
     const existingIndex = cartItems.findIndex(i => i.id === produto.id);
-    
     if (existingIndex >= 0) {
       cartItems[existingIndex].quantidade += (produto.quantidade || 1);
     } else {
-      cartItems.push({ 
-        ...produto, 
-        quantidade: produto.quantidade || 1 
-      });
+      cartItems.push({ ...produto, quantidade: produto.quantidade || 1 });
     }
 
-    try {
-      const headers = getHeaders();
-      await fetch("/api/carrinho/add", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ 
-          produtoId: produto.id, 
-          quantidade: produto.quantidade || 1 
-        })
-      });
-      
-      console.log("[Carrinho] Produto adicionado:", produto.id);
-    } catch (err) {
-      console.error("[Carrinho] Erro ao adicionar produto:", err);
+    if (isLoggedIn) {
+      try {
+        await fetch("/api/carrinho/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade || 1 })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao adicionar produto:", err);
+      }
+    } else {
+      saveGuestCartToLocalStorage();
     }
 
     renderCart();
   };
 
-  // ================== Abrir/Fechar carrinho ==================
-  cartButton.addEventListener('click', () => { 
-    cartSidebar.classList.add('active'); 
-    cartOverlay.classList.add('active'); 
-  });
-  
-  closeCart.addEventListener('click', () => { 
-    cartSidebar.classList.remove('active'); 
-    cartOverlay.classList.remove('active'); 
-  });
-  
-  cartOverlay.addEventListener('click', () => { 
-    cartSidebar.classList.remove('active'); 
-    cartOverlay.classList.remove('active'); 
+  /* ================== Abrir/Fechar carrinho ================== */
+  cartButton.addEventListener('click', () => {
+    cartSidebar.classList.add('active');
+    cartOverlay.classList.add('active');
   });
 
-  // ================== EVENT LISTENERS PARA CUPOM ==================
-  if (applyCouponBtn && couponInput) {
-    // Aplicar cupom ao clicar no botão
-    applyCouponBtn.addEventListener('click', aplicarCupom);
-    
-    // Aplicar cupom ao pressionar Enter
-    couponInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        aplicarCupom();
-      }
-    });
+  closeCart.addEventListener('click', () => {
+    cartSidebar.classList.remove('active');
+    cartOverlay.classList.remove('active');
+  });
+
+  cartOverlay.addEventListener('click', () => {
+    cartSidebar.classList.remove('active');
+    cartOverlay.classList.remove('active');
+  });
+
+  /* ================== Inicializar ================== */
+  async function initializeCart() {
+    const wasLoggedIn = isLoggedIn;
+    await checkLoginStatus();
+    await ensureGuestId();
+
+    if (isLoggedIn && !wasLoggedIn) {
+      await mergeGuestCart();
+    }
+
+    cartItems = await fetchCart();
+    renderCart();
+
+    console.log("[Carrinho] Inicializado - Logado:", isLoggedIn, "Itens:", cartItems.length);
   }
 
-  // ================== INICIALIZAR ==================
   await initializeCart();
+
+ /* ================== Finalizar Compra ================== */
+const finalizar = document.getElementById("finalizar");
+
+finalizar.addEventListener("click", async () => {
+  try {
+    // Revalida login no momento do clique
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+    const aindaLogado = res.ok;
+
+    if (!aindaLogado) {
+      const modal = document.getElementById("modalLogin");
+      modal.classList.add("show");
+      document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
+      document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
+      return;
+    }
+
+    // Verifica se o carrinho tem itens válidos
+    if (!cartItems || cartItems.length === 0) {
+      const modal = document.getElementById("modalCarrinhoVazio");
+      modal.classList.add("show");
+      document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
+      return;
+    }
+
+    // Tudo certo → segue para checkout
+    window.location.href = "/endereco";
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao finalizar compra:", err);
+  }
+});
 }
 
 // Inicializar quando o DOM estiver pronto
@@ -705,11 +514,44 @@ async function animarEAdicionarAoCarrinho(produto, irParaCheckout = false) {
 }
 
 /* ================== Botões Comprar e Adicionar ================== */
-document.querySelector(".btn-comprar").addEventListener("click", () => {
+document.querySelector(".btn-comprar").addEventListener("click", async () => {
   if (!produtoAtual) return alert("Produto não carregado.");
-  const produto = { ...produtoAtual, quantidade: parseInt(document.getElementById("quantidade").value), imagem: document.getElementById("imagemPrincipal").src };
-  animarEAdicionarAoCarrinho(produto, true);
+
+  try {
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+
+    if (!res.ok) {
+      // Mostra modal em vez de redirecionar direto
+      const modal = document.getElementById("modalLogin");
+      modal.classList.add("show");
+
+      // Botão ir para login
+      document.getElementById("btnIrLogin").onclick = () => {
+        window.location.href = "/login";
+      };
+
+      // Botão fechar
+      document.getElementById("btnFecharModal").onclick = () => {
+        modal.classList.remove("show");
+      };
+
+      return;
+    }
+
+    // Usuário logado → continua o fluxo
+    const produto = {
+      ...produtoAtual,
+      quantidade: parseInt(document.getElementById("quantidade").value),
+      imagem: document.getElementById("imagemPrincipal").src
+    };
+    animarEAdicionarAoCarrinho(produto, true);
+  } catch (err) {
+    console.error("Erro ao verificar login:", err);
+    window.location.href = "/login";
+  }
 });
+
+
 
 document.querySelector(".btn-carrinho").addEventListener("click", () => {
   if (!produtoAtual) return alert("Produto não carregado.");
@@ -722,52 +564,91 @@ document.getElementById("calcularFrete").addEventListener("click", async () => {
   const cep = document.getElementById("cepInput").value.trim();
   const resultadoDiv = document.getElementById("freteResultado");
 
-  if (!cep) return resultadoDiv.textContent = "Digite um CEP válido.";
-  if (!produtoAtual) return resultadoDiv.textContent = "Produto não carregado.";
+  resultadoDiv.innerHTML = ""; // limpa resultados anteriores
+
+  if (!cep) {
+    resultadoDiv.innerHTML = `<p style="color:red;">Digite um CEP válido.</p>`;
+    return;
+  }
+
+  if (!produtoAtual) {
+    resultadoDiv.innerHTML = `<p style="color:red;">Produto não carregado.</p>`;
+    return;
+  }
 
   try {
-    const produtos = [{
+    const insuranceValue = produtoAtual.precoPromocional ?? produtoAtual.preco;
+
+    const produtoParaFrete = {
       id: String(produtoAtual.id),
-      width: produtoAtual.largura || 20,
-      height: produtoAtual.altura || 20,
-      length: produtoAtual.comprimento || 20,
-      weight: produtoAtual.peso || 1,
-      insurance_value: produtoAtual.precoPromocional || produtoAtual.preco || 50,
+      width: parseFloat(produtoAtual.largura) || 20,
+      height: parseFloat(produtoAtual.altura) || 20,
+      length: parseFloat(produtoAtual.comprimento) || 20,
+      weight: parseFloat(produtoAtual.peso) || 1,
+      insurance_value: insuranceValue != null ? parseFloat(insuranceValue) : 0,
       quantity: parseInt(document.getElementById("quantidade").value) || 1
-    }];
+    };
+
+    console.log("Produto para frete:", produtoParaFrete);
 
     const resp = await fetch("/api/frete/calcular", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cepDestino: cep, produtos })
+      body: JSON.stringify({ cepDestino: cep, produtos: [produtoParaFrete] })
     });
 
     if (!resp.ok) throw new Error("Erro ao calcular frete");
-
     const opcoes = await resp.json();
 
-    if (!opcoes.length) return resultadoDiv.textContent = "Nenhuma opção de frete encontrada.";
+    const opcoesValidas = (opcoes || []).filter(o => o.price && !o.error);
 
-    // Corrige campos faltantes
-    resultadoDiv.innerHTML = opcoes.map(o => {
-      const nomeEmpresa = o.company?.name || o.empresa || "Transportadora";
-      const nomeFrete = o.name || o.servico || "Serviço";
-      const valor = parseFloat(o.price || o.valor) || 0;
-      const prazo = o.delivery_time || o.prazo || "N/A";
+    if (!opcoesValidas.length) {
+      resultadoDiv.innerHTML = `<p>Nenhuma opção de frete válida encontrada.</p>`;
+      return;
+    }
 
-      return `
-        <p>
-          <strong>${nomeEmpresa} - ${nomeFrete}</strong><br>
-          Valor: ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} <br>
-          Prazo: ${prazo} dias úteis
-        </p>
-      `;
-    }).join("");
+    // Renderiza cards estilizados
+    resultadoDiv.innerHTML = opcoesValidas
+      .map((o, index) => {
+        const nomeEmpresa = o.company?.name || "Transportadora";
+        const nomeFrete = o.name || "Serviço";
+        const valor = parseFloat(o.price);
+        const prazo = o.delivery_time || "N/A";
+        const logo = o.company?.picture || "/images/default-shipping.png";
+
+        return `
+          <div class="frete-card" data-index="${index}">
+            <img src="${logo}" alt="${nomeEmpresa}" class="frete-logo">
+            <div class="frete-info">
+              <h4>${nomeEmpresa} - ${nomeFrete}</h4>
+              <p>Valor: <strong>${valor.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</strong></p>
+              <p>Prazo: <strong>${prazo} dias úteis</strong></p>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    // Torna os cards clicáveis
+    document.querySelectorAll(".frete-card").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
+        card.classList.add("selecionado");
+
+        const index = card.dataset.index;
+        const freteSelecionado = opcoesValidas[index];
+
+        console.log("Frete selecionado:", freteSelecionado);
+        // opcional: salve para uso posterior
+        window.freteSelecionado = freteSelecionado;
+      });
+    });
   } catch (err) {
     console.error("[Frete] Erro:", err);
-    resultadoDiv.textContent = "Não foi possível calcular o frete. Tente novamente.";
+    resultadoDiv.innerHTML = `<p style="color:red;">Não foi possível calcular o frete. Tente novamente.</p>`;
   }
 });
+
 
 /* ================== Carregar Produto ================== */
 async function carregarProduto() {
@@ -794,8 +675,6 @@ async function carregarProduto() {
     document.querySelector(".produto-detalhes .descricao").innerHTML = `
       <h3>Descrição</h3>
       <p>${produto.descricao}</p>
-      <p>${produto.caracteristicas}</p>
-      <p>${produto.informacoesTecnicas}</p>
     `;
 
     // Produtos relacionados

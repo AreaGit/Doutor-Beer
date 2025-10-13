@@ -1,3 +1,5 @@
+
+
 /* ================================================
    PROMOÇÕES ROTATIVAS
 ================================================ */
@@ -216,65 +218,119 @@ async function initCart() {
 
   let isLoggedIn = false;
   let cartItems = [];
+  let guestId = null;
 
-  // ================== Detectar login ==================
-  try {
-    const res = await fetch("/api/auth/me", { method: "GET", credentials: "include" });
-    isLoggedIn = res.ok;
-  } catch {}
+  /* ================== Utilitários ================== */
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
 
-  // ================== Pegar carrinho ==================
+  function setCookie(name, value, days = 30) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}`;
+  }
+
+  function saveGuestCartToLocalStorage() {
+    localStorage.setItem('guestCart', JSON.stringify(cartItems));
+  }
+
+  function loadGuestCartFromLocalStorage() {
+    const data = localStorage.getItem('guestCart');
+    return data ? JSON.parse(data) : [];
+  }
+
+  /* ================== Detectar login ================== */
+  async function checkLoginStatus() {
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include"
+      });
+      isLoggedIn = res.ok;
+      return isLoggedIn;
+    } catch (error) {
+      console.error("[Carrinho] Erro ao verificar login:", error);
+      isLoggedIn = false;
+      return false;
+    }
+  }
+
+  /* ================== Guest ID ================== */
+  async function ensureGuestId() {
+    if (isLoggedIn) {
+      guestId = null;
+      return null;
+    }
+
+    guestId = getCookie("guestId");
+
+    if (!guestId) {
+      guestId = `guest-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      setCookie("guestId", guestId, 30);
+      console.log("[Carrinho] Novo guestId criado:", guestId);
+    } else {
+      console.log("[Carrinho] GuestId recuperado:", guestId);
+    }
+
+    return guestId;
+  }
+
+  /* ================== MESCLAR CARRINHO GUEST → USUÁRIO ================== */
+  async function mergeGuestCart() {
+    if (!isLoggedIn) return false;
+
+    const guestCart = loadGuestCartFromLocalStorage();
+    if (!guestCart.length) return false;
+
+    try {
+      await Promise.all(guestCart.map(item =>
+        fetch("/api/carrinho/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: item.id, quantidade: item.quantidade })
+        })
+      ));
+
+      localStorage.removeItem('guestCart');
+      console.log("[Carrinho] Carrinho do guest mesclado ao usuário");
+      return true;
+    } catch (err) {
+      console.error("[Carrinho] Erro ao mesclar carrinho guest:", err);
+      return false;
+    }
+  }
+
+  /* ================== Buscar carrinho ================== */
   async function fetchCart() {
     if (isLoggedIn) {
       try {
         const resp = await fetch("/api/carrinho", { credentials: "include" });
-        if (!resp.ok) throw new Error("Erro ao carregar carrinho");
-        return await resp.json();
+        if (resp.ok) {
+          const data = await resp.json();
+          return data;
+        }
+        return [];
       } catch (err) {
-        console.error("[Carrinho] Erro:", err);
+        console.error("[Carrinho] Erro ao buscar carrinho do servidor:", err);
         return [];
       }
     } else {
-      const localCart = localStorage.getItem("guestCart");
-      return localCart ? JSON.parse(localCart) : [];
+      return loadGuestCartFromLocalStorage();
     }
   }
 
-  function saveCart() {
-    if (!isLoggedIn) localStorage.setItem("guestCart", JSON.stringify(cartItems));
-  }
-
-  // ================== Mesclar carrinho do guest após login ==================
-  async function mergeGuestCart() {
-    if (!isLoggedIn) return;
-
-    const guestCart = JSON.parse(localStorage.getItem("guestCart") || "[]");
-    if (!guestCart.length) return;
-
-    for (const item of guestCart) {
-      await fetch("/api/carrinho/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ produtoId: item.id, quantidade: item.quantidade })
-      });
-    }
-    localStorage.removeItem("guestCart");
-  }
-
-  if (isLoggedIn) await mergeGuestCart();
-  cartItems = await fetchCart();
-
-  // ================== Renderizar carrinho ==================
-  async function renderCart() {
+  /* ================== Renderizar carrinho ================== */
+  function renderCart() {
     cartItemsContainer.innerHTML = "";
 
     if (!cartItems.length) {
       cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-      cartCount.textContent = 0;
-      if (summaryItems) summaryItems.textContent = 0;
-      if (summaryQuantity) summaryQuantity.textContent = 0;
-      if (summaryTotal) summaryTotal.textContent = "R$ 0,00";
+      updateResumo();
       return;
     }
 
@@ -284,21 +340,22 @@ async function initCart() {
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
       itemDiv.innerHTML = `
-        <img src="${item.imagem || ''}" alt="${item.nome}">
-        <div class="cart-item-info">
-          <h4>${item.nome}</h4>
-          <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-          <div class="cart-quantity">
-            <button class="qty-btn minus" data-index="${index}">-</button>
-            <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
-            <button class="qty-btn plus" data-index="${index}">+</button>
-          </div>
-          <button class="remove-btn" data-index="${index}">Remover</button>
-        </div>
-      `;
+    <img src="${item.imagem || ''}" alt="${item.nome}">
+    <div class="cart-item-info">
+      <h4>${item.nome}</h4>
+      <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+      <div class="cart-quantity">
+        <button class="qty-btn minus" data-index="${index}">-</button>
+        <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
+        <button class="qty-btn plus" data-index="${index}">+</button>
+      </div>
+      <button class="remove-btn" data-index="${index}">Remover</button>
+    </div>
+  `;
       cartItemsContainer.appendChild(itemDiv);
     });
 
+    // Controles de quantidade e remover
     document.querySelectorAll(".qty-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const idx = parseInt(btn.dataset.index);
@@ -325,94 +382,176 @@ async function initCart() {
       });
     });
 
-    updateSummary();
+    updateResumo();
   }
 
-  function updateSummary() {
+  /* ================== Atualizar resumo ================== */
+  function updateResumo() {
     const totalItems = cartItems.length;
     const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
-    const totalPrice = cartItems.reduce((acc, i) => acc + (i.precoPromocional ?? i.preco ?? 0) * i.quantidade, 0);
+    const total = cartItems.reduce((acc, i) => acc + ((i.precoPromocional || i.preco || 0) * i.quantidade), 0);
 
     cartCount.textContent = totalQuantity;
-    if (summaryItems) summaryItems.textContent = totalItems;
-    if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
-    if (summaryTotal) summaryTotal.textContent = totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    summaryItems.textContent = totalItems;
+    summaryQuantity.textContent = totalQuantity;
+    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    if (!isLoggedIn) saveGuestCartToLocalStorage();
   }
 
+  /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
+    if (idx < 0 || idx >= cartItems.length) return;
+
     cartItems[idx].quantidade = quantidade;
 
     if (isLoggedIn) {
-      await fetch("/api/carrinho/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
-      });
+      try {
+        await fetch("/api/carrinho/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao atualizar quantidade:", err);
+      }
     } else {
-      saveCart();
+      saveGuestCartToLocalStorage();
     }
 
     renderCart();
   }
 
+  /* ================== Remover item ================== */
   async function removeItem(idx) {
+    if (idx < 0 || idx >= cartItems.length) return;
+
     const produtoId = cartItems[idx].id;
     cartItems.splice(idx, 1);
 
     if (isLoggedIn) {
-      await fetch("/api/carrinho/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ produtoId })
-      });
+      try {
+        await fetch("/api/carrinho/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao remover item:", err);
+      }
     } else {
-      saveCart();
+      saveGuestCartToLocalStorage();
     }
 
     renderCart();
   }
 
-  // ================== Adicionar produto ==================
-  window.addToCart = async function(produto) {
-    const existing = cartItems.find(i => i.id === produto.id);
-    if (existing) {
-      existing.quantidade += produto.quantidade;
+  /* ================== Adicionar produto ================== */
+  window.addToCart = async function (produto) {
+    if (!produto || !produto.id) return;
+
+    const existingIndex = cartItems.findIndex(i => i.id === produto.id);
+    if (existingIndex >= 0) {
+      cartItems[existingIndex].quantidade += (produto.quantidade || 1);
     } else {
-      cartItems.push({ ...produto });
+      cartItems.push({ ...produto, quantidade: produto.quantidade || 1 });
     }
 
     if (isLoggedIn) {
-      await fetch("/api/carrinho/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade })
-      });
+      try {
+        await fetch("/api/carrinho/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade || 1 })
+        });
+      } catch (err) {
+        console.error("[Carrinho] Erro ao adicionar produto:", err);
+      }
     } else {
-      saveCart();
+      saveGuestCartToLocalStorage();
     }
 
     renderCart();
   };
 
-  // ================== Abrir/Fechar carrinho ==================
+  /* ================== Abrir/Fechar carrinho ================== */
   cartButton.addEventListener('click', () => {
     cartSidebar.classList.add('active');
     cartOverlay.classList.add('active');
   });
+
   closeCart.addEventListener('click', () => {
     cartSidebar.classList.remove('active');
     cartOverlay.classList.remove('active');
   });
+
   cartOverlay.addEventListener('click', () => {
     cartSidebar.classList.remove('active');
     cartOverlay.classList.remove('active');
   });
 
-  renderCart();
+  /* ================== Inicializar ================== */
+  async function initializeCart() {
+    const wasLoggedIn = isLoggedIn;
+    await checkLoginStatus();
+    await ensureGuestId();
+
+    if (isLoggedIn && !wasLoggedIn) {
+      await mergeGuestCart();
+    }
+
+    cartItems = await fetchCart();
+    renderCart();
+
+    console.log("[Carrinho] Inicializado - Logado:", isLoggedIn, "Itens:", cartItems.length);
+  }
+
+  await initializeCart();
+
+ /* ================== Finalizar Compra ================== */
+const finalizar = document.getElementById("finalizar");
+
+finalizar.addEventListener("click", async () => {
+  try {
+    // Revalida login no momento do clique
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+    const aindaLogado = res.ok;
+
+    if (!aindaLogado) {
+      const modal = document.getElementById("modalLogin");
+      modal.classList.add("show");
+      document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
+      document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
+      return;
+    }
+
+    // Verifica se o carrinho tem itens válidos
+    if (!cartItems || cartItems.length === 0) {
+      const modal = document.getElementById("modalCarrinhoVazio");
+      modal.classList.add("show");
+      document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
+      return;
+    }
+
+    // Tudo certo → segue para checkout
+    window.location.href = "/endereco";
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao finalizar compra:", err);
+  }
+});
 }
+
+// Inicializar quando o DOM estiver pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCart);
+} else {
+  initCart();
+}
+
 
 /* ================================================
    INICIALIZAÇÃO

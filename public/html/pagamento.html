@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Finalizar Compra - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
-  <link rel="stylesheet" href="../css/pagamento.css">
+  <!--<link rel="stylesheet" href="../css/pagamento.css">-->
+  <link rel="stylesheet" href="../css/checkout.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
 
   <!-- Cabeçalho -->
@@ -43,6 +46,30 @@
         <div class="payment-card" data-method="cartao">
           <img src="../images/Credit Card.png" alt="Cartão de Crédito">
           <h3>Cartão de Crédito</h3>
+
+          <!-- Formulário do cartão (inicialmente escondido) -->
+          <div class="card-form-container" style="display:none;">
+            <div class="card-input-group">
+              <label for="cardNome">Nome no cartão</label>
+              <input type="text" id="cardNome" placeholder="Nome completo">
+            </div>
+
+            <div class="card-input-group card-input-inline">
+              <div>
+                <label for="cardNumero">Número do cartão</label>
+                <input type="text" id="cardNumero" placeholder="1234 5678 9012 3456">
+              </div>
+              <div>
+                <label for="cardValidade">Validade</label>
+                <input type="text" id="cardValidade" placeholder="MM/AA">
+              </div>
+            </div>
+
+            <div class="card-input-group card-cvv">
+              <label for="cardCVV">CVV</label>
+              <input type="text" id="cardCVV" placeholder="123">
+            </div>
+          </div>
         </div>
 
       </div>
@@ -52,32 +79,15 @@
     <!-- Resumo do Pedido -->
     <div class="checkout-summary">
       <h3>Resumo do pedido</h3>
-      <ul class="produtos-summary">
-        <li>
-          <span>Produto 1</span>
-          <span>R$ 264,99 x1</span>
-        </li>
-        <li>
-          <span>Produto 2</span>
-          <span>R$ 220,00 x1</span>
-        </li>
-      </ul>
-      <p class="subtotal">Subtotal: R$ 484,99</p>
-      <p class="frete">Frete: R$ 20,00</p>
-      <p class="total">Total: R$ 504,99</p>
+      <ul class="produtos-summary"></ul>
+      <p class="subtotal">Subtotal: R$ <span id="subtotal">0,00</span></p>
+      <p class="frete">Frete: R$ <span id="frete">0,00</span></p>
+      <p class="total">Total: R$ <span id="total">0,00</span></p>
     </div>
 
   </div>
 
-  <script>
-    // Seleção de método de pagamento
-    const cards = document.querySelectorAll('.payment-card');
-    cards.forEach(card => {
-      card.addEventListener('click', () => {
-        cards.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-      });
-    });
-  </script>
+  <script src="../js/checkout.js"></script>
 </body>
+
 </html>

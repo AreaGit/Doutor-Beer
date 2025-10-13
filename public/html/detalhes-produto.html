@@ -90,7 +90,7 @@
       </div>
 
 
-      <button class="checkout-btn">Finalizar Compra</button>
+      <button class="checkout-btn" id ="finalizar">Finalizar Compra</button>
     </div>
   </div>
 
@@ -142,54 +142,59 @@
     </div>
   </nav>
 
-  <!-- Container Produto -->
-  <div class="produto-container">
-    <!-- Imagens -->
-    <div class="produto-imagens">
-      <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
-      <div class="miniaturas">
-        <img src="" alt="Miniatura 1" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 2" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 3" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 4" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 5" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 6" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 7" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 8" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 9" onclick="mudarImagem(this)">
-        <img src="" alt="Miniatura 10" onclick="mudarImagem(this)">
+<!-- Container Produto -->
+<div class="produto-container">
+  <!-- Imagens -->
+  <div class="produto-imagens">
+    <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
+    <div class="miniaturas"></div>
+  </div>
+
+  <!-- Detalhes -->
+  <div class="produto-detalhes">
+    <h1></h1>
+    <p class="preco">
+      <span class="antigo"></span>
+      <span class="novo"></span>
+    </p>
+
+    <!-- Seletor de quantidade -->
+    <div class="quantidade-container">
+      <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
+      <input type="number" id="quantidade" value="1" min="1">
+      <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
+    </div>
+
+    <!-- Campos extras para torres -->
+    <div class="extras-torres" id="extrasTorres" style="display:none;">
+      <div class="cores-container">
+        <label for="corSelect">Cor:</label>
+        <select id="corSelect"></select>
+      </div>
+      <div class="torneira-container">
+        <label for="torneiraSelect">Torneira:</label>
+        <select id="torneiraSelect"></select>
+      </div>
+      <div class="litragem-container">
+        <label>Litragem:</label>
+        <span id="litragem"></span>
       </div>
     </div>
 
-    <!-- Detalhes -->
-    <div class="produto-detalhes">
-      <h1></h1>
-      <p class="preco">
-        <span class="antigo"></span>
-        <span class="novo"></span>
-      </p>
+    <button class="btn-carrinho">Adicionar ao carrinho</button>
+    <button class="btn-comprar">Comprar Agora</button>
+    <div class="frete-container">
+      <input type="text" id="cepInput" placeholder="Digite seu CEP">
+      <button id="calcularFrete">Calcular Frete</button>
+    </div>
 
-      <!-- Seletor de quantidade -->
-      <div class="quantidade-container">
-        <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
-        <input type="number" id="quantidade" value="1" min="1">
-        <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
-      </div>
+    <div id="freteResultado"></div>
 
-      <button class="btn-carrinho">Adicionar ao carrinho</button>
-      <button class="btn-comprar">Comprar Agora</button>
-      <div class="frete-container">
-        <input type="text" id="cepInput" placeholder="Digite seu CEP">
-        <button id="calcularFrete">Calcular Frete</button>
-      </div>
-
-      <div id="freteResultado"></div>
-
-      <div class="descricao">
-        <h3>Descrição</h3>
-      </div>
+    <div class="descricao">
+      <h3>Descrição</h3>
     </div>
   </div>
+</div>
 
   <!-- Produtos Relacionados -->
   <section class="relacionados">
@@ -209,6 +214,31 @@
     id="btnWhats">
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
+
+  <!-- ================= Modal de Login ================= -->
+<div id="modalLogin" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Você precisa estar logado</h2>
+    <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
+    <div class="modal-actions">
+      <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
+      <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Modal Carrinho Vazio ================= -->
+<div id="modalCarrinhoVazio" class="modal-login">
+  <div class="modal-content">
+    <h2>⚠️ Seu carrinho está vazio</h2>
+    <p>Adicione produtos antes de finalizar a compra.</p>
+    <div class="modal-actions modal-actions-center">
+      <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
 
   <script src="../js/detalhes-produto.js"></script>
 

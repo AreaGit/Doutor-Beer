@@ -1,0 +1,207 @@
+/* Reset e fonte */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
+body { background:#f4f6f9; color:#333; line-height:1.6; }
+
+.container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1, h2, h3 { color: #1a1a1a; }
+h1 span { color: #ffffff; }
+
+.pedido-topo {
+  background: linear-gradient(90deg, #F9B000, #FFC65C);
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: #fff;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.status-container {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: color 0.4s ease;
+}
+
+.status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.4s ease;
+}
+
+.status.pendente { background-color: #FF9800; }
+.status.pago { background-color: #4CAF50; }
+.status.cancelado { background-color: #f44336; }
+
+.pedido-detalhes {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.detalhe-card {
+  flex: 1;
+  min-width: 250px;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardAppear 0.5s forwards;
+}
+
+@keyframes cardAppear {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.detalhe-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.detalhe-card i { font-size: 1.5rem; color: #F9B000; margin-top: 4px; }
+
+.lista-itens {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.lista-itens li {
+  display: flex;
+  align-items: center;
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: itemAppear 0.5s forwards;
+}
+
+@keyframes itemAppear {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.produto-item img {
+  width: 80px; height: 80px;
+  object-fit: cover; border-radius: 10px;
+  margin-right: 1rem;
+  border: 1px solid #e0e0e0;
+}
+
+.produto-item span { flex: 1; font-weight: 500; }
+.produto-item strong { font-weight: 700; color: #1a1a1a; }
+
+.resumo-pedido {
+  margin-top: 2rem;
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+.resumo-item { display:flex; justify-content:space-between; padding:0.6rem 0; font-size:1rem; }
+.resumo-item.total { font-size:1.2rem; font-weight:700; color:#F9B000; border-top:1px solid #ddd; margin-top:0.5rem; padding-top:1rem; }
+
+.acoes {
+  display:flex;
+  justify-content:flex-end;
+  gap: 1rem;
+  margin-top:1.2rem;
+}
+
+.btn {
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  padding:0.7rem 1.2rem;
+  background:#F9B000;
+  color:#fff;
+  font-weight:600;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.3s;
+  position: relative;
+}
+
+.btn i { font-size:1rem; }
+
+.btn:hover { background:#e6a000; transform: translateY(-2px); }
+
+.btn.imprimir { background:#1976D2; }
+.btn.imprimir:hover { background:#1565C0; transform: translateY(-2px); }
+
+/* Tooltip simples */
+.btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.btn:hover::after {
+  opacity: 1;
+}
+
+/* ==== BOTÃO VOLTAR ==== */
+.voltar-home {
+  text-align: center;
+  margin: 2rem 0 3rem;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, #F9B000, #ffce44);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.9rem 1.8rem;
+  border-radius: 40px;
+  text-decoration: none;
+  font-size: 1.05rem;
+  box-shadow: 0 8px 20px rgba(249,176,0,0.35);
+  transition: all 0.3s ease;
+}
+
+.btn-voltar i {
+  font-size: 1.1rem;
+}
+
+.btn-voltar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(249,176,0,0.5);
+  background: linear-gradient(90deg, #f2a600, #ffbf00);
+}
+

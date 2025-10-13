@@ -1,240 +1,371 @@
-/* ================== ENDEREÇO ================== */
-
-/* ================== Preencher Endereço com Dados do Usuário ================== */
+// ================== checkout.js ==================
 document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const res = await fetch("/api/auth/me", { credentials: "include" });
-    if (!res.ok) {
-      console.warn("[Checkout] Usuário não logado — redirecionando para login");
+  const cepInput = document.getElementById("cep");
+  const freteContainer = document.getElementById("freteResultado");
+  const subtotalEl = document.getElementById("subtotal");
+  const freteEl = document.getElementById("frete");
+  const totalEl = document.getElementById("total");
+  const formEndereco = document.getElementById("formEndereco");
+
+  let subtotal = 0;
+  let freteSelecionado = 0;
+  let cart = [];
+
+  // ================== Função utilitária: carregar dados do usuário ==================
+  async function carregarUsuario() {
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (!res.ok) throw new Error("Usuário não logado");
+      const user = await res.json();
+
+      if (formEndereco) {
+        const campos = {
+          nome: user.nome,
+          cep: user.cep,
+          rua: user.endereco,
+          numero: user.numero,
+          complemento: user.complemento,
+          cidade: user.cidade,
+          estado: user.estado
+        };
+        for (const [id, valor] of Object.entries(campos)) {
+          const input = document.getElementById(id);
+          if (input && valor) input.value = valor;
+        }
+      }
+
+      console.log("[Checkout] Dados de endereço carregados com sucesso");
+    } catch (err) {
+      console.error("[Checkout] Erro ao carregar dados do usuário:", err);
       window.location.href = "/login";
+    }
+  }
+
+  await carregarUsuario();
+
+  // ================== Autocompletar CEP ==================
+  if (cepInput) {
+    cepInput.addEventListener("blur", async () => {
+      const cep = cepInput.value.replace(/\D/g, "");
+      if (cep.length !== 8) return;
+
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (data.erro) return;
+
+        document.getElementById("rua").value = data.logradouro || "";
+        document.getElementById("cidade").value = data.localidade || "";
+        document.getElementById("estado").value = data.uf || "";
+        document.getElementById("numero")?.focus();
+
+        await calcularFrete(cep);
+      } catch (err) {
+        console.error("[Checkout] Erro ao buscar CEP:", err);
+      }
+    });
+  }
+
+  // ================== Submeter endereço e atualizar frete ==================
+  if (formEndereco) {
+    formEndereco.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const dados = {
+        nome: formEndereco.nome.value,
+        cep: formEndereco.cep.value,
+        endereco: formEndereco.rua.value,
+        numero: formEndereco.numero.value,
+        complemento: formEndereco.complemento.value,
+        cidade: formEndereco.cidade.value,
+        estado: formEndereco.estado.value
+      };
+
+      try {
+        const res = await fetch("/api/auth/me", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(dados)
+        });
+        if (!res.ok) throw new Error("Erro ao atualizar endereço");
+
+        await calcularFrete(dados.cep);
+      } catch (err) {
+        console.error("[Checkout] Erro ao salvar endereço:", err);
+      }
+    });
+  }
+
+  // ================== Função: carregar resumo ==================
+  async function carregarResumo() {
+    const ulResumo = document.querySelector(".produtos-summary");
+    if (!ulResumo || !subtotalEl || !freteEl || !totalEl) return;
+
+    try {
+      const res = await fetch("/api/carrinho", { credentials: "include" });
+      if (!res.ok) throw new Error("Erro ao buscar carrinho");
+      cart = await res.json();
+
+      ulResumo.innerHTML = "";
+      subtotal = 0;
+
+      cart.forEach(item => {
+        const produto = item.Produto || {};
+        const precoUnit = item.precoPromocional ?? item.preco ?? 0;
+        const precoTotal = precoUnit * (item.quantidade || 1);
+        subtotal += precoTotal;
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="produto-item">
+            <img src="${item.imagem}" alt="${produto.nome || item.nome}" class="img-produto">
+            <span class="nome-produto">${produto.nome || item.nome} x${item.quantidade || 1}</span>
+            <strong class="preco-produto">R$ ${precoTotal.toFixed(2).replace(".", ",")}</strong>
+          </div>
+        `;
+        ulResumo.appendChild(li);
+      });
+
+      subtotalEl.textContent = subtotal.toFixed(2).replace(".", ",");
+      freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
+      totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
+    } catch (err) {
+      console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
+    }
+  }
+
+  // ================== Função: calcular frete ==================
+  async function calcularFrete(cep) {
+    if (!freteContainer) return;
+    freteContainer.innerHTML = "<p>Calculando frete...</p>";
+    if (!cart.length) {
+      freteContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
       return;
     }
 
-    const user = await res.json();
-
-    const map = {
-      nome: user.nome,
-      cep: user.cep,
-      rua: user.endereco,
-      numero: user.numero,
-      complemento: user.complemento,
-      cidade: user.cidade,
-      estado: user.estado
-    };
-
-    for (const [campo, valor] of Object.entries(map)) {
-      const input = document.getElementById(campo);
-      if (input && valor) input.value = valor;
-    }
-
-    console.log("[Checkout] Dados de endereço carregados com sucesso");
-
-    // Se o CEP já estiver preenchido, calcula frete automaticamente
-    if (user.cep) {
-      atualizarFrete(user.cep);
-    }
-
-  } catch (err) {
-    console.error("[Checkout] Erro ao carregar dados do usuário:", err);
-    showToast("⚠️ Erro ao carregar seu endereço. Tente novamente mais tarde.");
-  }
-});
-
-/* ================== Submeter Formulário ================== */
-const form = document.getElementById("formEndereco");
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const dados = {
-    nome: form.nome.value,
-    cep: form.cep.value,
-    endereco: form.rua.value,
-    numero: form.numero.value,
-    complemento: form.complemento.value,
-    cidade: form.cidade.value,
-    estado: form.estado.value
-  };
-
-  try {
-    const res = await fetch("/api/usuario/me", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(dados)
-    });
-
-    if (!res.ok) throw new Error("Erro ao atualizar endereço");
-
-    // Atualiza frete ao salvar endereço
-    atualizarFrete(dados.cep);
-
-  } catch (err) {
-    console.error("[Checkout] Erro ao salvar endereço:", err);
-    showToast("⚠️ Erro ao salvar seu endereço. Tente novamente.");
-  }
-});
-
-/* ================== Autocompletar Endereço pelo CEP ================== */
-const cepInput = document.getElementById("cep");
-if (cepInput) {
-  cepInput.addEventListener("input", (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, "$1-$2");
-    e.target.value = value;
-  });
-
-  cepInput.addEventListener("blur", async () => {
-    const cep = cepInput.value.replace(/\D/g, "");
-    if (cep.length !== 8) return;
-
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
+      const produtosParaFrete = cart.map(item => {
+        const produto = item.Produto || {};
+        return {
+          width: produto.width || 20,
+          height: produto.height || 20,
+          length: produto.length || 20,
+          weight: produto.weight || 0.3,
+          insurance_value: produto.precoPromocional ?? produto.preco ?? 0,
+          quantity: item.quantidade || 1
+        };
+      });
 
-      if (data.erro) {
-        showToast("❌ CEP não encontrado.");
+      const resp = await fetch("/api/frete/calcular", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cepDestino: cep, produtos: produtosParaFrete })
+      });
+      if (!resp.ok) throw new Error("Erro ao calcular frete");
+      const opcoes = await resp.json();
+      if (!opcoes.length) {
+        freteContainer.innerHTML = "<p>Nenhuma opção de frete disponível.</p>";
         return;
       }
 
-      document.getElementById("rua").value = data.logradouro || "";
-      document.getElementById("cidade").value = data.localidade || "";
-      document.getElementById("estado").value = data.uf || "";
-      document.getElementById("numero")?.focus();
-
-      showToast("✅ Endereço preenchido automaticamente!");
-
-      // Atualiza frete ao preencher CEP
-      atualizarFrete(cep);
-
-    } catch (err) {
-      console.error("[Checkout] Erro ao buscar CEP:", err);
-      showToast("⚠️ Erro ao buscar CEP. Tente novamente mais tarde.");
-    }
-  });
-}
-
-/* ================== Toast de feedback ================== */
-function showToast(message) {
-  let toast = document.querySelector(".toast-message");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.className = "toast-message";
-    document.body.appendChild(toast);
-  }
-  toast.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
-}
-
-/* ================== Carregar Resumo do Pedido ================== */
-async function carregarResumo() {
-  const ulResumo = document.querySelector(".produtos-summary");
-  const subtotalSpan = document.getElementById("subtotal");
-  const totalSpan = document.getElementById("total");
-  const freteSpan = document.getElementById("frete");
-
-  if (!ulResumo || !subtotalSpan || !totalSpan || !freteSpan) return;
-
-  try {
-    const res = await fetch("/api/carrinho");
-    const carrinho = await res.json();
-
-    ulResumo.innerHTML = "";
-    let subtotal = 0;
-
-    carrinho.forEach(item => {
-      const precoUnit = item.precoPromocional || item.preco;
-      const precoTotal = precoUnit * item.quantidade;
-      subtotal += precoTotal;
-
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${item.nome}</span>
-        <span>R$ ${precoUnit.toFixed(2).replace(".", ",")} x${item.quantidade}</span>
-      `;
-      ulResumo.appendChild(li);
-    });
-
-    subtotalSpan.textContent = subtotal.toFixed(2).replace(".", ",");
-    const frete = parseFloat(freteSpan.textContent.replace(",", ".")) || 0;
-    totalSpan.textContent = (subtotal + frete).toFixed(2).replace(".", ",");
-
-  } catch (err) {
-    console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
-  }
-}
-
-/* ================== Calcular e Renderizar Frete ================== */
-async function atualizarFrete(cepDestino) {
-  const resultadoDiv = document.getElementById("freteResultado");
-  if (!resultadoDiv) return;
-
-  resultadoDiv.innerHTML = "<p>Calculando frete...</p>";
-
-  try {
-    const res = await fetch("/api/checkout/frete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ cepDestino })
-    });
-
-    if (!res.ok) throw new Error("Falha ao calcular frete");
-    const opcoes = await res.json();
-
-    const opcoesValidas = (opcoes || []).filter(o => o.price && !o.error);
-
-    if (!opcoesValidas.length) {
-      resultadoDiv.innerHTML = `<p>Nenhuma opção de frete disponível para este CEP.</p>`;
-      return;
-    }
-
-    // Renderiza cards
-    resultadoDiv.innerHTML = opcoesValidas
-      .map((o, index) => {
-        const nomeEmpresa = o.company?.name || "Transportadora";
-        const nomeFrete = o.name || "Serviço";
-        const valor = parseFloat(o.price);
-        const prazo = o.delivery_time || "N/A";
+      freteContainer.innerHTML = opcoes.map(o => {
+        const empresa = o.company?.name || "Transportadora";
         const logo = o.company?.picture || "/images/default-shipping.png";
+        const nomeServico = o.name || "Serviço";
+        const preco = parseFloat(o.price);
+        const prazo = o.delivery_time || "N/A";
 
         return `
-          <div class="frete-card" data-index="${index}">
-            <img src="${logo}" alt="${nomeEmpresa}" class="frete-logo">
+          <div class="frete-card" data-valor="${preco}">
+            <img src="${logo}" alt="${empresa}" class="frete-logo">
             <div class="frete-info">
-              <h4>${nomeEmpresa} - ${nomeFrete}</h4>
-              <p>Valor: <strong>${valor.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</strong></p>
+              <h4>${empresa} - ${nomeServico}</h4>
+              <p>Valor: <strong>${preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></p>
               <p>Prazo: <strong>${prazo} dias úteis</strong></p>
             </div>
           </div>
         `;
-      })
-      .join("");
+      }).join("");
 
-    // Torna clicáveis
-    document.querySelectorAll(".frete-card").forEach(card => {
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
-        card.classList.add("selecionado");
+      document.querySelectorAll(".frete-card").forEach(card => {
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
+          card.classList.add("selecionado");
 
-        const index = card.dataset.index;
-        const freteSelecionado = opcoesValidas[index];
-        window.freteSelecionado = freteSelecionado;
+          freteSelecionado = parseFloat(card.dataset.valor);
+          window.freteSelecionado = freteSelecionado;
+          freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
+          totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
+        });
+      });
 
-        const subtotal = parseFloat(document.getElementById("subtotal").textContent.replace(",", ".")) || 0;
-        document.getElementById("frete").textContent = freteSelecionado.price.toFixed(2).replace(".", ",");
-        document.getElementById("total").textContent = (subtotal + freteSelecionado.price).toFixed(2).replace(".", ",");
+    } catch (err) {
+      console.error("[Checkout] Erro ao calcular frete:", err);
+      freteContainer.innerHTML = "<p>Não foi possível calcular o frete. Tente novamente.</p>";
+    }
+  }
+
+  // ================== Página de endereço ==================
+  if (formEndereco) {
+    await carregarResumo();
+    if (cepInput && cepInput.value.replace(/\D/g, "").length === 8) {
+      await calcularFrete(cepInput.value.replace(/\D/g, ""));
+    }
+
+    formEndereco.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!window.freteSelecionado) {
+        alert("Selecione uma opção de frete antes de continuar.");
+        return;
+      }
+
+      const dados = {
+        endereco: {
+          nome: formEndereco.nome.value,
+          cep: formEndereco.cep.value,
+          rua: formEndereco.rua.value,
+          numero: formEndereco.numero.value,
+          complemento: formEndereco.complemento.value,
+          cidade: formEndereco.cidade.value,
+          estado: formEndereco.estado.value
+        },
+        frete: window.freteSelecionado
+      };
+
+      try {
+        const res = await fetch("/checkout/salvar-endereco-frete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(dados)
+        });
+        if (!res.ok) throw new Error("Erro ao salvar endereço e frete");
+        window.location.href = "/pagamento";
+      } catch (err) {
+        console.error("[Checkout] Erro ao enviar dados:", err);
+        alert("Não foi possível continuar. Tente novamente.");
+      }
+    });
+  }
+
+  // ================== Página de pagamento ==================
+  if (window.location.pathname.includes("/pagamento")) {
+    // Função para carregar resumo do pedido
+    async function carregarResumoPedido() {
+      try {
+        const res = await fetch("/checkout/resumo", { credentials: "include" });
+        if (!res.ok) throw new Error("Erro ao carregar resumo do pedido");
+        const dados = await res.json();
+
+        const ul = document.querySelector(".produtos-summary");
+        if (!ul) return;
+        ul.innerHTML = "";
+
+        dados.produtos.forEach(p => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <div class="produto-item">
+              <img src="${p.imagem || '/images/no-image.png'}" alt="${p.nome}" class="img-produto">
+              <span class="nome-produto">${p.nome} x${p.quantidade}</span>
+              <strong class="preco-produto">R$ ${(p.preco * p.quantidade).toFixed(2).replace(".", ",")}</strong>
+            </div>
+          `;
+          ul.appendChild(li);
+        });
+
+        document.querySelector("#subtotal").textContent = dados.subtotal.toFixed(2).replace(".", ",");
+        document.querySelector("#frete").textContent = dados.frete.toFixed(2).replace(".", ",");
+        document.querySelector("#total").textContent = dados.total.toFixed(2).replace(".", ",");
+
+        console.log("[Pagamento] Resumo carregado com sucesso:", dados);
+      } catch (err) {
+        console.error("[Pagamento] Erro ao carregar resumo:", err);
+      }
+    }
+
+    await carregarResumoPedido();
+
+    const cards = document.querySelectorAll('.payment-card');
+    const confirmBtn = document.querySelector('.confirm-btn');
+
+    if (!confirmBtn) {
+      console.warn("[Checkout] Botão de confirmação não encontrado.");
+      return;
+    }
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        cards.forEach(c => {
+          c.classList.remove('active');
+          const form = c.querySelector('.card-form-container');
+          if (form) form.style.display = 'none';
+        });
+
+        card.classList.add('active');
+
+        if (card.dataset.method === 'cartao') {
+          const form = card.querySelector('.card-form-container');
+          if (form) form.style.display = 'block';
+        }
       });
     });
 
-    // Seleciona automaticamente o primeiro
-    document.querySelector(".frete-card")?.click();
+   // ================== Confirmar pedido ==================
+confirmBtn.addEventListener('click', async () => {
+  const metodo = document.querySelector('.payment-card.active')?.dataset.method;
+  if (!metodo) return alert('Selecione uma forma de pagamento.');
+
+  // Validação simples se for cartão
+  if (metodo === 'cartao') {
+    const nome = document.getElementById('cardNome').value.trim();
+    const numero = document.getElementById('cardNumero').value.trim();
+    const validade = document.getElementById('cardValidade').value.trim();
+    const cvv = document.getElementById('cardCVV').value.trim();
+
+    if (!nome || !numero || !validade || !cvv) {
+      return alert('Preencha todos os dados do cartão.');
+    }
+  }
+
+  try {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Processando...";
+    confirmBtn.style.backgroundColor = "#FFC107"; // amarelo para processando
+
+    // ================== Envia o pedido para o backend ==================
+    const res = await fetch("/checkout/finalizar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ 
+        metodoPagamento: metodo,
+        frete: window.freteSelecionado || 0 // <-- envia o frete selecionado
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.sucesso) {
+      throw new Error(data.error || "Erro ao finalizar pedido");
+    }
+
+    // Feedback visual
+    confirmBtn.textContent = "Pedido confirmado!";
+    confirmBtn.style.backgroundColor = "#4CAF50"; // verde para sucesso
+
+    // Redireciona para a nova página de pedido
+    window.location.href = `/pedido/${data.pedidoId}`;
 
   } catch (err) {
-    console.error("[Checkout] Erro ao calcular frete:", err);
-    resultadoDiv.innerHTML = `<p style="color:red;">Não foi possível calcular o frete.</p>`;
+    console.error("[Checkout] Erro ao finalizar pedido:", err);
+    alert("Erro ao processar pedido. Tente novamente.");
+    confirmBtn.textContent = "Confirmar Pagamento";
+    confirmBtn.style.backgroundColor = ""; // reseta cor
+  } finally {
+    confirmBtn.disabled = false;
   }
-}
+});
 
-// Executa ao carregar a página
-document.addEventListener("DOMContentLoaded", carregarResumo);
+  }
+});

@@ -300,6 +300,143 @@ body {
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
+/* ================== Opções de Frete ================== */
+#freteResultado {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.frete-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.frete-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+  border-color: var(--primary);
+}
+
+.frete-card.selecionado {
+  border-color: var(--primary);
+  background: linear-gradient(90deg, #fffbe8, #fff9d9);
+  box-shadow: 0 0 10px rgba(249,176,0,0.3);
+}
+
+.frete-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.frete-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--dark);
+}
+
+.frete-info p {
+  margin: 3px 0;
+  font-size: 0.95rem;
+}
+
+/* ================== Modal de Login ================== */
+.modal-login {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none; /* escondido por padrão */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-login.show {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 15px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+
+.modal-content h2 {
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+.modal-content p {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn-modal-login {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-modal-login:hover {
+  background: #d99800;
+  transform: scale(1.05);
+}
+
+.btn-modal-fechar {
+  background: #ccc;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-modal-fechar:hover {
+  background: #bbb;
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* Responsivo */
 
 
@@ -330,7 +467,4 @@ body {
 
 }
 
-@media (max-width: 858px) {
-  
-}
 

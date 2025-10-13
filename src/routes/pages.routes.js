@@ -42,5 +42,7 @@ app.get("/autenticacao", (req, res) => renderPage(res, "autenticacao"));
 
 app.get("/painel-adm", (req, res) => renderPage(res, "painel"));
 
+app.get("/pedido/:id", (req, res) => renderPage(res, "pedido"));
+
 module.exports = app;
 

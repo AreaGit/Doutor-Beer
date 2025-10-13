@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do Pedido</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/pedido.css">
+  <!--<script src="https://kit.fontawesome.com/yourkit.js" crossorigin="anonymous"></script> <!-- Para ícones -->
+</head>
+<body>
+  <main class="container">
+    <section class="pedido-topo">
+      <h1>Pedido <span id="pedidoId">#06969</span></h1>
+      <div class="status-container">
+        <i class="fas fa-info-circle"></i> 
+        Status: <span id="status" class="status pendente">Pendente</span>
+      </div>
+    </section>
+
+    <section class="pedido-detalhes">
+      <div class="detalhe-card">
+        <i class="fas fa-credit-card"></i>
+        <h3>Método de Pagamento</h3>
+        <p id="metodoPagamento">Cartão de Crédito</p>
+      </div>
+      <div class="detalhe-card">
+        <i class="fas fa-truck"></i>
+        <h3>Endereço de Entrega</h3>
+        <p id="enderecoEntrega">Rua Exemplo, 123 - Cidade, Estado - CEP: 00000-000</p>
+      </div>
+    </section>
+
+    <section class="itens-pedido">
+      <h2>Itens do Pedido</h2>
+      <ul id="itensList" class="lista-itens">
+        <!-- Itens via JS -->
+      </ul>
+    </section>
+
+    <section class="resumo-pedido">
+      <h2>Resumo</h2>
+      <div class="resumo-item">
+        <span>Subtotal:</span>
+        <strong id="subtotal">R$ 0,00</strong>
+      </div>
+      <div class="resumo-item">
+        <span>Frete:</span>
+        <strong id="frete">R$ 0,00</strong>
+      </div>
+      <div class="resumo-item total">
+        <span>Total:</span>
+        <strong id="total">R$ 0,00</strong>
+      </div>
+    </section>
+  </main>
+
+    <!-- Botão fora da caixa do pedido -->
+  <div class="voltar-home">
+    <a href="/" class="btn-voltar">
+      <i class="fas fa-arrow-left"></i> Voltar para a Página Inicial
+    </a>
+  </div>
+  <script src="../js/pedido.js"></script>
+</body>
+</html>

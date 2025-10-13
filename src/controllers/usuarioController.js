@@ -2,7 +2,10 @@ const Usuario = require("../models/Usuario");
 const Cart = require("../models/carrinho");
 const bcrypt = require("bcrypt");
 const gerarCodigo2FA = require("../utils/gerarCodigo2FA");
-const enviarEmail = require("../utils/email");
+const enviarEmail = require("../utils/email"); 
+const Pedido = require("../models/Pedido");
+const PedidoItem = require("../models/PedidoItem");
+const Produto = require("../models/Produto");
 
 // ==================== CRIAR USUÁRIO ====================
 exports.criarUsuario = async (req, res) => {
@@ -230,6 +233,54 @@ exports.atualizarUsuario = async (req, res) => {
   } catch (error) {
     console.error("Erro ao atualizar usuário:", error);
     res.status(500).json({ message: "Erro ao atualizar usuário", error });
+  }
+};
+
+// ==================== LISTAR PEDIDOS DO USUÁRIO ====================
+exports.mePedidos = async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: "Não autenticado" });
+
+  try {
+    const pedidos = await Pedido.findAll({
+      where: { usuarioId: req.session.user.id },
+      include: [
+        {
+          model: PedidoItem,
+          as: "Itens",
+          include: [
+            {
+              model: Produto,
+              as: "Produto"
+            }
+          ]
+        }
+      ],
+      order: [["createdAt", "DESC"]]
+    });
+
+    // Formata os pedidos para envio
+    const pedidosFormatados = pedidos.map(pedido => ({
+      id: pedido.id,
+      status: pedido.status,
+      total: pedido.total,
+      frete: pedido.frete,
+      metodoPagamento: pedido.metodoPagamento,
+      enderecoEntrega: pedido.enderecoEntrega,
+      data: pedido.createdAt,
+      itens: pedido.Itens.map(item => ({
+        id: item.produtoId,
+        nome: item.Produto?.nome,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario,
+        imagem: item.Produto?.imagem || null
+      }))
+    }));
+
+    res.json(pedidosFormatados);
+
+  } catch (error) {
+    console.error("Erro ao buscar pedidos do usuário:", error);
+    res.status(500).json({ error: "Erro ao buscar pedidos" });
   }
 };
 

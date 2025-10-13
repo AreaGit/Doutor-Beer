@@ -14,10 +14,9 @@ const Produto = sequelize.define("Produto", {
     type: DataTypes.FLOAT,
     allowNull: false
   },
-
   precoPromocional: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: true
   },
   imagem: {
     type: DataTypes.JSON,
@@ -43,6 +42,10 @@ const Produto = sequelize.define("Produto", {
     type: DataTypes.JSON,
     allowNull: true
   },
+  capacidade: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
   secao: {
     type: DataTypes.STRING,
     allowNull: true
@@ -65,7 +68,12 @@ const Produto = sequelize.define("Produto", {
   }
 });
 
-// Produto.sync({ force: true }); // ⚠️ use só para resetar a tabela
+// Associações
+Produto.associate = (models) => {
+  Produto.hasMany(models.PedidoItem, { foreignKey: "produtoId", as: "ItensPedido" });
+};
+
+// Sincroniza a tabela
 Produto.sync({ alter: true });
 
 module.exports = Produto;

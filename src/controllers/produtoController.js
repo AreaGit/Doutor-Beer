@@ -4,9 +4,7 @@ const { Op } = require("sequelize");
 /* ================== Criar Produto ================== */
 exports.criarProduto = async (req, res) => {
   try {
-    console.log("[ProdutoController] Criando produto:", req.body.nome);
     const produto = await Produto.create(req.body);
-    console.log("[ProdutoController] Produto criado com sucesso:", produto.id);
     res.status(201).json(produto);
   } catch (err) {
     console.error("[ProdutoController] Erro ao criar produto:", err);
@@ -17,7 +15,6 @@ exports.criarProduto = async (req, res) => {
 /* ================== Listar Todos Produtos ================== */
 exports.listarProdutos = async (req, res) => {
   try {
-    console.log("[ProdutoController] Listando todos os produtos");
     const produtos = await Produto.findAll();
     res.json(produtos);
   } catch (err) {
@@ -30,15 +27,8 @@ exports.listarProdutos = async (req, res) => {
 exports.buscarProduto = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("[ProdutoController] Buscando produto ID:", id);
-
     const produto = await Produto.findByPk(id);
-    if (!produto) {
-      console.log("[ProdutoController] Produto não encontrado ID:", id);
-      return res.status(404).json({ erro: "Produto não encontrado" });
-    }
-
-    console.log("[ProdutoController] Produto encontrado:", produto.nome);
+    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
     res.json(produto);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produto:", err);
@@ -50,13 +40,10 @@ exports.buscarProduto = async (req, res) => {
 exports.atualizarProduto = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("[ProdutoController] Atualizando produto ID:", id);
-
     const produto = await Produto.findByPk(id);
     if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
 
     await produto.update(req.body);
-    console.log("[ProdutoController] Produto atualizado:", produto.nome);
     res.json(produto);
   } catch (err) {
     console.error("[ProdutoController] Erro ao atualizar produto:", err);
@@ -68,13 +55,10 @@ exports.atualizarProduto = async (req, res) => {
 exports.deletarProduto = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("[ProdutoController] Deletando produto ID:", id);
-
     const produto = await Produto.findByPk(id);
     if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
 
     await produto.destroy();
-    console.log("[ProdutoController] Produto deletado:", produto.nome);
     res.json({ mensagem: "Produto deletado com sucesso" });
   } catch (err) {
     console.error("[ProdutoController] Erro ao deletar produto:", err);
@@ -86,16 +70,11 @@ exports.deletarProduto = async (req, res) => {
 exports.buscarPorSecao = async (req, res) => {
   try {
     const { secao } = req.params;
-    console.log("[ProdutoController] Buscando produtos na seção:", secao);
-
     const produtos = await Produto.findAll({ where: { secao } });
 
-    if (!produtos || produtos.length === 0) {
-      console.log("[ProdutoController] Nenhum produto encontrado na seção:", secao);
+    if (!produtos || produtos.length === 0)
       return res.status(404).json({ erro: "Nenhum produto encontrado para esta seção." });
-    }
 
-    console.log(`[ProdutoController] Encontrados ${produtos.length} produtos na seção ${secao}`);
     res.json(produtos);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produtos por seção:", err);
@@ -107,26 +86,6 @@ exports.buscarPorSecao = async (req, res) => {
 exports.buscarPorCategoria = async (req, res) => {
   try {
     const { categoria } = req.params;
-    const { ordenar } = req.query;
-    console.log("[ProdutoController] Buscando produtos na categoria:", categoria, "com ordenação:", ordenar);
-
-    let order = [];
-    switch (ordenar) {
-      case "price-low":
-        order = [["precoPromocional", "ASC"]];
-        break;
-      case "price-high":
-        order = [["precoPromocional", "DESC"]];
-        break;
-      case "newest":
-        order = [["createdAt", "DESC"]];
-        break;
-      case "relevance":
-      default:
-        order = [["createdAt", "DESC"]];
-        break;
-    }
-
     const produtos = await Produto.findAll({
       where: {
         [Op.or]: [
@@ -135,15 +94,12 @@ exports.buscarPorCategoria = async (req, res) => {
           { categoria3: categoria }
         ]
       },
-      order
+      order: [["createdAt", "DESC"]]
     });
 
-    if (!produtos || produtos.length === 0) {
-      console.log("[ProdutoController] Nenhum produto encontrado na categoria:", categoria);
+    if (!produtos || produtos.length === 0)
       return res.status(404).json({ erro: "Nenhum produto encontrado para esta categoria." });
-    }
 
-    console.log(`[ProdutoController] Encontrados ${produtos.length} produtos na categoria ${categoria}`);
     res.json(produtos);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produtos por categoria:", err);
@@ -155,12 +111,7 @@ exports.buscarPorCategoria = async (req, res) => {
 exports.buscarProdutos = async (req, res) => {
   try {
     const { query } = req.query;
-    console.log("[ProdutoController] Busca global termo:", query);
-
-    if (!query || !query.trim()) {
-      console.log("[ProdutoController] Termo de busca vazio");
-      return res.status(400).json({ erro: "Informe um termo de busca." });
-    }
+    if (!query || !query.trim()) return res.status(400).json({ erro: "Informe um termo de busca." });
 
     const produtos = await Produto.findAll({
       where: {
@@ -172,15 +123,37 @@ exports.buscarProdutos = async (req, res) => {
       limit: 20
     });
 
-    if (!produtos || produtos.length === 0) {
-      console.log("[ProdutoController] Nenhum produto encontrado para a busca:", query);
+    if (!produtos || produtos.length === 0)
       return res.status(404).json({ erro: "Nenhum produto encontrado." });
-    }
 
-    console.log(`[ProdutoController] Encontrados ${produtos.length} produtos para a busca "${query}"`);
     res.json(produtos);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produtos globalmente:", err);
     res.status(500).json({ erro: "Erro ao buscar produtos." });
+  }
+};
+
+/* ================== Preparar Dados do Produto para Frete ================== */
+exports.getProdutoParaFrete = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const produto = await Produto.findByPk(id);
+
+    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+
+    // Campos obrigatórios para cálculo de frete
+    const dadosFrete = {
+      id: produto.id,
+      width: produto.largura || 20,
+      height: produto.altura || 20,
+      length: produto.comprimento || 20,
+      weight: produto.peso || 1,
+      insurance_value: produto.precoPromocional || produto.preco || 50
+    };
+
+    res.json(dadosFrete);
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao preparar produto para frete:", err);
+    res.status(500).json({ erro: "Erro ao obter dados para frete." });
   }
 };
