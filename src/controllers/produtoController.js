@@ -4,7 +4,9 @@ const { Op } = require("sequelize");
 /* ================== Criar Produto ================== */
 exports.criarProduto = async (req, res) => {
   try {
+    console.log("[DEBUG] Dados recebidos:", req.body); // 👈 log pra ver o que o front está mandando
     const produto = await Produto.create(req.body);
+    console.log("[DEBUG] Produto criado:", produto.toJSON()); // 👈 log pra ver se criou
     res.status(201).json(produto);
   } catch (err) {
     console.error("[ProdutoController] Erro ao criar produto:", err);

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Doutor Beer</title>
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/painel-adm.css">
+</head>
+
+<body>
+
+ <!-- Cabeçalho -->
+  <header class="header">
+    <div class="logo">
+      <a href="/">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      </a>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="painel-container">
+    <h2>Bem-vindo, Administrador 👋</h2>
+    <p>Escolha uma das opções abaixo para gerenciar sua loja:</p>
+
+    <!-- Cards -->
+    <div class="painel-cards">
+      <div class="card" data-tab="cadastro-produto">
+        <i class="fa fa-box-open"></i>
+        <h3>Cadastrar Produto</h3>
+        <p>Adicione novos produtos ao catálogo</p>
+      </div>
+
+      <div class="card" data-tab="produtos">
+        <i class="fas fa-box"></i>
+        <h3>Ver Produtos</h3>
+        <p>Visualize e gerencie os produtos cadastrados</p>
+      </div>
+
+      <!--<div class="card" data-tab="categorias">
+        <i class="fa fa-tags"></i>
+        <h3>Categorias</h3>
+        <p>Gerencie categorias e seções</p>
+      </div>-->
+
+      <div class="card" data-tab="pedidos">
+        <i class="fa fa-shopping-cart"></i>
+        <h3>Pedidos</h3>
+        <p>Acompanhe os pedidos recebidos</p>
+      </div>
+    </div>
+
+    <!-- Aba "Cadastrar Produto" -->
+<div id="cadastro-produto" class="tab-content">
+  <h2>Cadastro de Produto</h2>
+  <p>Preencha as informações do novo produto:</p>
+
+  <form id="formCadastrarProduto" class="form-cadastro">
+    <div class="form-row">
+      <label for="nomeProduto">Nome</label>
+      <input type="text" id="nomeProduto" name="nome" required>
+    </div>
+    <div class="form-row">
+      <label for="descricaoProduto">Descrição</label>
+      <textarea id="descricaoProduto" name="descricao" rows="3" required></textarea>
+    </div>
+    <div class="form-row">
+      <label for="precoProduto">Preço</label>
+      <input type="number" step="0.01" id="precoProduto" name="preco" required>
+    </div>
+    <div class="form-row">
+      <label for="precoPromocionalProduto">Preço Promocional</label>
+      <input type="number" step="0.01" id="precoPromocionalProduto" name="precoPromocional">
+    </div>
+    <div class="form-row">
+      <label for="categoriaProduto">Categoria Principal</label>
+      <input type="text" id="categoriaProduto" name="categoria">
+    </div>
+    <div class="form-row">
+      <label for="categoria2Produto">Categoria 2</label>
+      <input type="text" id="categoria2Produto" name="categoria2">
+    </div>
+    <div class="form-row">
+      <label for="categoria3Produto">Categoria 3</label>
+      <input type="text" id="categoria3Produto" name="categoria3">
+    </div>
+    <div class="form-row">
+      <label for="secaoProduto">Seção</label>
+      <input type="text" id="secaoProduto" name="secao">
+    </div>
+    <div class="form-row">
+      <label for="alturaProduto">Altura</label>
+      <input type="number" step="0.01" id="alturaProduto" name="altura">
+    </div>
+    <div class="form-row">
+      <label for="larguraProduto">Largura</label>
+      <input type="number" step="0.01" id="larguraProduto" name="largura">
+    </div>
+    <div class="form-row">
+      <label for="comprimentoProduto">Comprimento</label>
+      <input type="number" step="0.01" id="comprimentoProduto" name="comprimento">
+    </div>
+    <div class="form-row">
+      <label for="pesoProduto">Peso</label>
+      <input type="number" step="0.01" id="pesoProduto" name="peso">
+    </div>
+    <div class="form-row">
+      <label for="imagemProduto">Imagens (JSON)</label>
+      <textarea id="imagemProduto" name="imagem" rows="2"></textarea>
+    </div>
+    <div class="form-row">
+      <label for="coresProduto">Cores (JSON)</label>
+      <textarea id="coresProduto" name="cores" rows="1"></textarea>
+    </div>
+    <div class="form-row">
+      <label for="torneiraProduto">Torneira (JSON)</label>
+      <textarea id="torneiraProduto" name="torneira" rows="1"></textarea>
+    </div>
+    <div class="form-row">
+      <label for="capacidadeProduto">Capacidade (JSON)</label>
+      <textarea id="capacidadeProduto" name="capacidade" rows="1"></textarea>
+    </div>
+
+    <button type="button" id="btnCadastrarProduto" class="btn-primary">Cadastrar Produto</button>
+  </form>
+</div>
+
+
+    <!-- Aba "Ver Produtos" -->
+<div id="produtos" class="tab-content">
+  <h2>Produtos Cadastrados</h2>
+
+  <!-- Barra de pesquisa -->
+  <div class="search-bar" style="max-width:400px;margin:15px auto;">
+    <input type="text" id="searchProdutoInput" placeholder="Buscar produtos...">
+    <button id="searchProdutoBtn"><i class="fa fa-search"></i></button>
+  </div>
+
+  <!-- Container de produtos -->
+  <div id="listaProdutos" class="produtos-container">
+    <!-- Populado via JS -->
+  </div>
+</div>
+
+    <!-- Conteúdos dinâmicos (tabs) -->
+    <div id="pedidos" class="tab-content">
+      <h2>Pedidos Recentes</h2>
+      <table class="tabela-produtos">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Status</th>
+            <th>Total (R$)</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="listaPedidos">
+          <!-- Populado via JS -->
+        </tbody>
+      </table>
+    </div>
+
+<!-- Modal Editar Produto -->
+<div id="modalEditarProduto" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Editar Produto</h2>
+    <form id="formEditarProduto" class="form-cadastro">
+      <div class="form-row">
+        <label for="editarNome">Nome</label>
+        <input type="text" id="editarNome" name="nome" required>
+      </div>
+      <div class="form-row">
+        <label for="editarDescricao">Descrição</label>
+        <textarea id="editarDescricao" name="descricao" rows="3" required></textarea>
+      </div>
+      <div class="form-row">
+        <label for="editarPreco">Preço</label>
+        <input type="number" step="0.01" id="editarPreco" name="preco" required>
+      </div>
+      <div class="form-row">
+        <label for="editarPrecoPromocional">Preço Promocional</label>
+        <input type="number" step="0.01" id="editarPrecoPromocional" name="precoPromocional">
+      </div>
+      <div class="form-row">
+        <label for="editarCategoria">Categoria Principal</label>
+        <input type="text" id="editarCategoria" name="categoria">
+      </div>
+      <div class="form-row">
+        <label for="editarCategoria2">Categoria 2</label>
+        <input type="text" id="editarCategoria2" name="categoria2">
+      </div>
+      <div class="form-row">
+        <label for="editarCategoria3">Categoria 3</label>
+        <input type="text" id="editarCategoria3" name="categoria3">
+      </div>
+      <div class="form-row">
+        <label for="editarSecao">Seção</label>
+        <input type="text" id="editarSecao" name="secao">
+      </div>
+      <div class="form-row">
+        <label for="editarAltura">Altura</label>
+        <input type="number" step="0.01" id="editarAltura" name="altura">
+      </div>
+      <div class="form-row">
+        <label for="editarLargura">Largura</label>
+        <input type="number" step="0.01" id="editarLargura" name="largura">
+      </div>
+      <div class="form-row">
+        <label for="editarComprimento">Comprimento</label>
+        <input type="number" step="0.01" id="editarComprimento" name="comprimento">
+      </div>
+      <div class="form-row">
+        <label for="editarPeso">Peso</label>
+        <input type="number" step="0.01" id="editarPeso" name="peso">
+      </div>
+      <!-- Imagens, cores, torneira, capacidade podem ser adicionadas como JSON/text -->
+      <div class="form-row">
+        <label for="editarImagem">Imagens (JSON)</label>
+        <textarea id="editarImagem" name="imagem" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <label for="editarCores">Cores (JSON)</label>
+        <textarea id="editarCores" name="cores" rows="1"></textarea>
+      </div>
+      <div class="form-row">
+        <label for="editarTorneira">Torneira (JSON)</label>
+        <textarea id="editarTorneira" name="torneira" rows="1"></textarea>
+      </div>
+      <div class="form-row">
+        <label for="editarCapacidade">Capacidade (JSON)</label>
+        <textarea id="editarCapacidade" name="capacidade" rows="1"></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Salvar Alterações</button>
+    </form>
+  </div>
+</div>
+
+    <!-- Modal de detalhes do pedido -->
+    <div id="modalPedido" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Detalhes do Pedido <span id="modalPedidoId"></span></h2>
+
+        <div class="pedido-info">
+          <p><strong>Cliente:</strong> <span id="modalCliente"></span></p>
+          <p><strong>Status:</strong>
+            <select id="modalStatus"></select>
+          </p>
+          <p><strong>Endereço de Entrega:</strong> <span id="modalEndereco"></span></p>
+          <p><strong>Método de Pagamento:</strong> <span id="modalPagamento"></span></p>
+        </div>
+
+        <h3>Itens do Pedido</h3>
+        <div class="pedido-itens">
+          <!-- Cada item será um card -->
+          <div id="modalItens" class="itens-container"></div>
+        </div>
+
+        <div class="pedido-totais">
+          <p><strong>Subtotal:</strong> R$ <span id="modalSubtotal"></span></p>
+          <p><strong>Frete:</strong> R$ <span id="modalFrete"></span></p>
+          <p><strong>Total:</strong> R$ <span id="modalTotal"></span></p>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+
+  <script src="../js/painel-adm.js"></script>
+</body>
+
+</html>

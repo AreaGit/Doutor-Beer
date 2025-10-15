@@ -47,7 +47,7 @@ const Pedido = sequelize.define("Pedido", {
 
 // Relacionamentos
 Pedido.belongsTo(Usuario, { foreignKey: "usuarioId", as: "Usuario" });
-Pedido.hasMany(PedidoItem, { foreignKey: "pedidoId", as: "Itens" }); // <--- ESSENCIAL
+Pedido.hasMany(PedidoItem, { foreignKey: "pedidoId", as: "Itens" }); 
 
 // Sincroniza tabela
 Pedido.sync({ alter: true });

@@ -40,9 +40,9 @@ app.get("/sobre", (req, res) => renderPage(res, "sobre"));
 
 app.get("/autenticacao", (req, res) => renderPage(res, "autenticacao"));
 
-app.get("/painel-adm", (req, res) => renderPage(res, "painel"));
-
 app.get("/pedido/:id", (req, res) => renderPage(res, "pedido"));
+
+app.get("/painel-adm", (req, res) => renderPage(res, "painel-adm"));
 
 module.exports = app;
 
