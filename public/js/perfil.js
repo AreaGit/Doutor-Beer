@@ -89,7 +89,7 @@ async function carregarPedidosUsuario() {
             ${p.enderecoEntrega.rua || ""}, ${p.enderecoEntrega.numero || ""} - ${p.enderecoEntrega.complemento || ""} ${p.enderecoEntrega.bairro || ""}, ${p.enderecoEntrega.cidade || ""} - ${p.enderecoEntrega.estado || ""} - CEP: ${p.enderecoEntrega.cep || ""}
           </p>
           <h4>Método de pagamento:</h4>
-          <p>${p.metodoPagamento}</p>
+          <p>${p.formaPagamento}</p>
         </div>
       </div>
     `).join("");

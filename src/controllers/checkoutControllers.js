@@ -2,9 +2,13 @@
 
 const { calcularFrete } = require("../services/melhorEnvio"); // função que você já criou
 const Cart = require("./carrinhoControllers").Cart; // seu model de carrinho
+const Carrinho = require("../models/carrinho");
 const Produto = require("../models/Produto");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
+const { cobrancaPixAsaas, obterCodPix, cobrancaBoletoAsaas, obterLinhaBoleto, cobrancaCartaoAsaas } = require("../services/asaas.services");
+const Usuario = require("../models/Usuario");
+const { enviarEmail } = require("../utils/email");
 
 // ================== Função auxiliar para pegar itens do carrinho ==================
 async function getCartItems(usuarioId) {
@@ -61,6 +65,8 @@ exports.calcularFreteHandler = async (req, res) => {
     res.status(500).json({ error: "Falha ao calcular frete" });
   }
 };
+
+
 
 // ================== Confirmar Pedido ==================
 
@@ -123,5 +129,205 @@ exports.confirmarPagamentoHandler = async (req, res) => {
   } catch (err) {
     console.error("[Checkout] Erro ao confirmar pagamento:", err);
     return res.status(500).json({ error: "Falha ao processar pedido" });
+  }
+};
+
+exports.gerarPix = async (req, res) => {
+  try {
+    const { usuarioId, total, endereco, frete, itens } = req.body;
+
+    if (!usuarioId || !total || !endereco || !frete || !itens)
+      return res.status(400).json({ error: "Dados incompletos" });
+
+    const cliente = await Usuario.findOne({ where: { id: usuarioId } });
+    if (!cliente || !cliente.customer_asaas_id)
+      return res.status(404).json({ error: "Cliente não encontrado no Asaas" });
+
+    const externalReference = "pedido_temp_" + Date.now();
+
+    //const pedidoRef = Date.now().toString(); // ou ID temporário
+    const cobranca = await cobrancaPixAsaas({
+      customer: cliente.customer_asaas_id,
+      value: total,
+      dueDate: new Date().toISOString().split("T")[0],
+      externalReference: externalReference,
+      endereco,
+      frete,
+      itens
+    });
+
+    // Obter QR Code PIX
+    const qrCode = await obterCodPix(cobranca.id);
+
+    return res.json({
+      paymentId: cobranca.id, // alterado para alinhar com o frontend
+      valor: cobranca.value,
+      qrCodeImageUrl: qrCode?.encodedImage,
+      qrCodeText: qrCode?.payload || qrCode?.payloadContent,
+      externalReference
+    });
+  } catch (err) {
+    console.error("Erro ao gerar PIX:", err.response?.data || err.message);
+    res.status(500).json({ error: "Erro ao gerar cobrança PIX" });
+  }
+};
+
+exports.gerarBoleto = async (req, res) => {
+  try {
+    const usuarioIdSessao = req.session.user?.id;
+    const {
+      usuarioId: usuarioIdFront,
+      total,
+      endereco,
+      frete,
+      itens
+    } = req.body;
+
+    if (!usuarioIdSessao && !usuarioIdFront) 
+      return res.status(401).json({ error: "Usuário não logado" });
+
+    if (!endereco || !itens?.length)
+      return res.status(400).json({ error: "Dados incompletos." });
+
+    // Normaliza endereço
+    const enderecoEntrega = {
+      nome: endereco.nome || "",
+      cep: endereco.cep || "",
+      rua: endereco.rua || "",
+      numero: endereco.numero || "",
+      complemento: endereco.complemento || "",
+      cidade: endereco.cidade || "",
+      estado: endereco.estado || ""
+    };
+
+    // Calcula subtotal caso não venha do frontend
+    const subtotalCalc = itens.reduce(
+      (acc, item) => acc + Number(item.precoUnitario || 0) * Number(item.quantidade || 0),
+      0
+    );
+
+    // === Criar cobrança no Asaas ===
+    const cliente = await Usuario.findByPk(usuarioIdSessao || usuarioIdFront);
+    if (!cliente || !cliente.customer_asaas_id)
+      return res.status(404).json({ error: "Cliente não encontrado no ASAAS." });
+
+    const externalReference = "pedido_" + Date.now();
+    const cobranca = await cobrancaBoletoAsaas({
+      customer: cliente.customer_asaas_id,
+      value: total || subtotalCalc + Number(frete || 0),
+      dueDate: new Date().toISOString().split("T")[0]
+    });
+
+    const linhaDigitavel = await obterLinhaBoleto(cobranca.id);
+
+    // === Cria o pedido ===
+    const pedido = await Pedido.create({
+      usuarioId: usuarioIdSessao || usuarioIdFront,
+      status: "AGUARDANDO PAGAMENTO",
+      frete: Number(frete || 0),
+      total: Number(total || subtotalCalc + Number(frete || 0)),
+      enderecoEntrega,
+      formaPagamento: "BOLETO",
+      paymentId: cobranca.id,
+      paymentStatus: cobranca.status || "PENDING",
+      externalReference
+    });
+
+    // 🔒 Monta os itens garantindo produtoId válido e existente no banco
+    const produtoIds = itens.map(i => i.produtoId || i.id);
+    const produtosValidos = await Produto.findAll({ where: { id: produtoIds } });
+    const idsValidos = produtosValidos.map(p => p.id);
+
+    const pedidoItems = itens
+      .filter(item => (item.produtoId || item.id) && idsValidos.includes(item.produtoId || item.id))
+      .map(item => ({
+        pedidoId: pedido.id,
+        produtoId: item.produtoId || item.id,
+        quantidade: Number(item.quantidade || 1),
+        precoUnitario: Number(item.precoUnitario || 0),
+        cor: item.cor || null
+      }));
+
+    if (!pedidoItems.length) {
+      await pedido.destroy();
+      return res.status(400).json({ error: "Nenhum produto válido no pedido" });
+    }
+
+    await PedidoItem.bulkCreate(pedidoItems);
+
+    // Limpa carrinho do usuário
+    await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } });
+
+    // Envia e-mail
+    try {
+      await enviarEmail(
+        cliente.email,
+        "🎉 Pedido gerado com sucesso!",
+        `
+          <h2>Olá, ${cliente.nome}!</h2>
+          <p>Seu pedido <strong>#${pedido.id}</strong> foi criado com sucesso e está aguardando o pagamento do boleto.</p>
+          <p>Baixe seu boleto clicando no link abaixo:</p>
+          <p><a href="${cobranca.bankSlipUrl}" target="_blank">Visualizar boleto</a></p>
+          <p>Após o pagamento, o status do seu pedido será atualizado automaticamente.</p>
+          <br>
+          <p>Obrigado por comprar conosco! 💚</p>
+        `
+      );
+    } catch (emailErr) {
+      console.warn("Erro ao enviar e-mail:", emailErr.message);
+    }
+
+    // Retorno
+    return res.status(200).json({
+      sucesso: true,
+      pedidoId: pedido.id,
+      paymentId: cobranca.id,
+      valor: cobranca.value,
+      boletoUrl: cobranca.bankSlipUrl,
+      linhaDigitavel: linhaDigitavel.identificationField,
+      vencimento: cobranca.dueDate,
+      status: cobranca.status
+    });
+  } catch (error) {
+    console.error("Erro ao gerar boleto:", error.response?.data || error.message);
+    return res.status(500).json({ error: "Erro ao gerar boleto." });
+  }
+};
+
+exports.gerarCartao = async (req, res) => {
+  try {
+    const { usuarioId, total, endereco, frete, cartao } = req.body;
+
+    if (!usuarioId || !total || !endereco || !frete || !cartao)
+      return res.status(400).json({ error: "Dados incompletos" });
+
+    const cliente = await Usuario.findByPk(usuarioId);
+    if (!cliente || !cliente.customer_asaas_id)
+      return res.status(404).json({ error: "Cliente não encontrado no Asaas" });
+
+    const cobranca = await cobrancaCartaoAsaas({
+      customer: cliente.customer_asaas_id,
+      value: total,
+      holderName: cartao.holderName,
+      number: cartao.number,
+      expiryMonth: cartao.expiryMonth,
+      expiryYear: cartao.expiryYear,
+      ccv: cartao.cvv,
+      email: cliente.email,
+      cpfCnpj: cliente.cpf,
+      postalCode: endereco.cep,
+      addressNumber: endereco.numero,
+      addressComplement: endereco.complemento,
+      phone: cliente.celular
+    });
+
+    res.status(200).json({
+      paymentId: cobranca.id,
+      status: cobranca.status,
+      value: cobranca.value
+    });
+  } catch (error) {
+    console.error("Erro ao gerar pagamento cartão:", error.response?.data || error.message);
+    res.status(500).json({ error: "Erro ao processar pagamento com cartão" });
   }
 };

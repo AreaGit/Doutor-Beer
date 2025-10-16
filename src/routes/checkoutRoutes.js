@@ -5,6 +5,7 @@ const Cart = require("../models/carrinho");
 const Produto = require("../models/Produto");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
+const checkoutController = require("../controllers/checkoutControllers");
 
 /* ================== FUNÇÕES AUXILIARES ================== */
 function limparCEP(cep) {
@@ -93,6 +94,8 @@ router.get("/resumo", async (req, res) => {
 
     res.json({
       produtos: items.map(i => ({
+        produtoId: i.Produto.id,
+        id: i.Produto.id,
         nome: i.Produto.nome,
         preco: i.Produto.precoPromocional ?? i.Produto.preco ?? 0,
         quantidade: i.quantidade,
@@ -109,81 +112,92 @@ router.get("/resumo", async (req, res) => {
   }
 });
 
+router.post("/gerar-pix", checkoutController.gerarPix);
+router.post("/gerar-boleto", checkoutController.gerarBoleto);
+router.post("/gerar-cartao", checkoutController.gerarCartao);
+
 /* ================== ROTA: Finalizar pedido ================== */
 router.post("/finalizar", async (req, res) => {
-  const usuarioId = req.session.user?.id;
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-
   try {
-    const { metodoPagamento } = req.body;
-    const checkoutSession = req.session.checkout;
+    const usuarioIdSessao = req.session.user?.id;
+    if (!usuarioIdSessao) return res.status(401).json({ error: "Usuário não logado" });
 
-    if (!checkoutSession || !checkoutSession.endereco) {
-      return res.status(400).json({ error: "Endereço/frete não definidos" });
+    const {
+      usuarioId: usuarioIdFront,
+      endereco,
+      frete,
+      itens,
+      subtotal,
+      total,
+      formaPagamento
+    } = req.body;
+
+    if (!endereco || !itens?.length) {
+      return res.status(400).json({ error: "Dados incompletos do pedido" });
     }
 
-    // Captura o endereço exatamente como veio do front
+    // Normaliza endereço
     const enderecoEntrega = {
-      cep: checkoutSession.endereco.cep || "",
-      rua: checkoutSession.endereco.rua || "",
-      nome: checkoutSession.endereco.nome || "",
-      cidade: checkoutSession.endereco.cidade || "",
-      estado: checkoutSession.endereco.estado || "",
-      numero: checkoutSession.endereco.numero || "",
-      complemento: checkoutSession.endereco.complemento || ""
+      nome: endereco.nome || "",
+      cep: endereco.cep || "",
+      rua: endereco.rua || "",
+      numero: endereco.numero || "",
+      complemento: endereco.complemento || "",
+      cidade: endereco.cidade || "",
+      estado: endereco.estado || ""
     };
 
-    // Busca os itens do carrinho do usuário
-    const cartItems = await Cart.findAll({
-      where: { usuarioId },
-      include: [{ model: Produto, as: "Produto" }]
-    });
-
-    if (!cartItems.length)
-      return res.status(400).json({ error: "Carrinho vazio" });
-
-    // Calcula subtotal
-    const subtotal = cartItems.reduce(
-      (acc, item) =>
-        acc +
-        ((item.Produto.precoPromocional ?? item.Produto.preco ?? 0) *
-          item.quantidade),
+    // Calcula subtotal caso não venha do frontend
+    const subtotalCalc = itens.reduce(
+      (acc, item) => acc + Number(item.precoUnitario || 0) * Number(item.quantidade || 0),
       0
     );
 
-    // Cria o pedido com o endereço puro e frete
+    // Cria o pedido
     const pedido = await Pedido.create({
-      usuarioId,
-      status: "Pendente",
-      total: subtotal + (checkoutSession.frete ?? 0),
-      frete: checkoutSession.frete ?? 0,
-      enderecoEntrega: enderecoEntrega, // já é JSON, sem stringify
-      metodoPagamento
+      usuarioId: usuarioIdSessao || usuarioIdFront,
+      status: "PAGO",
+      frete: Number(frete || 0),
+      total: Number(total || subtotalCalc + Number(frete || 0)),
+      enderecoEntrega,
+      formaPagamento: formaPagamento || "Indefinido"
     });
 
-    // Cria os itens do pedido
-    const pedidoItems = cartItems.map(item => ({
-      pedidoId: pedido.id,
-      produtoId: item.produtoId,
-      quantidade: item.quantidade,
-      precoUnitario:
-        item.Produto.precoPromocional ?? item.Produto.preco ?? 0
-    }));
+    // 🔒 Monta os itens garantindo produtoId válido e existe no banco
+    const produtoIds = itens.map(i => i.produtoId || i.id);
+    const produtosValidos = await Produto.findAll({
+      where: { id: produtoIds }
+    });
+    const idsValidos = produtosValidos.map(p => p.id);
+
+    const pedidoItems = itens
+      .filter(item => (item.produtoId || item.id) && idsValidos.includes(item.produtoId || item.id))
+      .map(item => ({
+        pedidoId: pedido.id,
+        produtoId: item.produtoId || item.id,
+        quantidade: Number(item.quantidade || 1),
+        precoUnitario: Number(item.precoUnitario || 0)
+      }));
+
+    if (!pedidoItems.length) {
+      // Se nenhum produto for válido, apaga o pedido criado
+      await pedido.destroy();
+      return res.status(400).json({ error: "Nenhum produto válido no pedido" });
+    }
 
     await PedidoItem.bulkCreate(pedidoItems);
 
-    // Limpa o carrinho
-    await Cart.destroy({ where: { usuarioId } });
+    // Limpa o carrinho do usuário
+    await Cart.destroy({ where: { usuarioId: usuarioIdSessao } });
 
-    // Retorna resposta
-    res.json({
+    return res.json({
       sucesso: true,
       pedidoId: pedido.id,
       mensagem: "Pedido criado com sucesso!"
     });
   } catch (err) {
     console.error("[Checkout] Erro ao finalizar pedido:", err);
-    res.status(500).json({ error: "Erro ao finalizar pedido" });
+    return res.status(500).json({ error: "Erro ao finalizar pedido" });
   }
 });
 

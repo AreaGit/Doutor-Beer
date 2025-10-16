@@ -6,6 +6,7 @@ const enviarEmail = require("../utils/email");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const Produto = require("../models/Produto");
+const { criarClienteAsaas } = require("../services/asaas.services");
 
 // ==================== CRIAR USUÁRIO ====================
 exports.criarUsuario = async (req, res) => {
@@ -24,7 +25,24 @@ exports.criarUsuario = async (req, res) => {
 
     const senhaHash = await bcrypt.hash(senha, 10);
 
+    // CRIAÇÃO DO CLIENTE ASAAS
+    const dadosCliente = {
+      name: nome,
+      cpfCnpj: cpf,
+      email: email,
+      phone: celular,
+      mobilePhone: celular,
+      address: endereco,
+      addressNumber: numero,
+      complement: complemento,
+      province: bairro,
+      postalCode: cep,
+    };
+
+    const clienteAsaas = await criarClienteAsaas(dadosCliente);
+
     const novoUsuario = await Usuario.create({
+      customer_asaas_id: clienteAsaas.id,
       nome,
       cpf,
       celular,
@@ -264,7 +282,7 @@ exports.mePedidos = async (req, res) => {
       status: pedido.status,
       total: pedido.total,
       frete: pedido.frete,
-      metodoPagamento: pedido.metodoPagamento,
+      formaPagamento: pedido.formaPagamento,
       enderecoEntrega: pedido.enderecoEntrega,
       data: pedido.createdAt,
       itens: pedido.Itens.map(item => ({

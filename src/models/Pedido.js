@@ -32,14 +32,22 @@ const Pedido = sequelize.define("Pedido", {
     type: DataTypes.JSON,
     allowNull: false
   },
-  metodoPagamento: {
+  formaPagamento: {
     type: DataTypes.STRING,
     allowNull: false
   },
   cupom: {
     type: DataTypes.STRING,
     allowNull: true
-  }
+  },
+  // Campos adicionados para integração ASAAS
+  paymentId: { type: DataTypes.STRING, allowNull: true }, // ID da cobrança no ASAAS
+  paymentStatus: { type: DataTypes.STRING, allowNull: true }, // Ex: RECEIVED, PENDING, OVERDUE, etc
+  paymentDate: { type: DataTypes.DATE, allowNull: true }, // Data de pagamento
+  paymentType: { type: DataTypes.STRING, allowNull: true }, // PIX, BOLETO, CREDIT_CARD, etc
+  externalReference: { type: DataTypes.STRING, allowNull: true }, // ID interno de controle
+  qrCodePayload: { type: DataTypes.TEXT, allowNull: true }, // Código "copia e cola" PIX
+  qrCodeImage: { type: DataTypes.TEXT("long"), allowNull: true } // Imagem Base64 (pode ser grande)
 }, {
   tableName: "pedidos",
   timestamps: true
