@@ -30,11 +30,26 @@ body {
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
+/* ================== Miniaturas com navegação ================== */
+.miniaturas-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  width: 100%;
+  margin-top: 15px;
+}
+
 .miniaturas {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
+  overflow: hidden;
+  flex: 1;
+  scroll-behavior: smooth;
+  transition: transform 0.3s;
 }
+
 .miniaturas img {
   width: 80px;
   height: 80px;
@@ -42,10 +57,42 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.3s;
+  flex-shrink: 0;
 }
+
 .miniaturas img:hover {
   transform: scale(1.1);
 }
+
+/* ================== Botões de navegação ================== */
+.miniatura-nav {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.miniatura-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.miniatura-nav.esquerda {
+  margin-right: 5px;
+}
+
+.miniatura-nav.direita {
+  margin-left: 5px;
+}
+
+
 
 /* Detalhes */
 .produto-detalhes {
@@ -119,6 +166,42 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(114,47,55,0.4);
 }
+
+
+/* Selecionar Cor */
+.cores-produto {
+  margin-top: 20px;
+}
+
+.cores-produto h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.lista-cores {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cor-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid #000; /* borda preta por padrão */
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.cor-item:hover {
+  transform: scale(1.1);
+}
+
+.cor-item.selecionada {
+  transform: scale(1.15); /* borda já preta, só aumenta o zoom */
+}
+
+
 
 /* ================== Frete ================== */
 .frete-container {

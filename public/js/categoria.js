@@ -131,35 +131,67 @@ function initCategoriaProdutos() {
   const params = new URLSearchParams(window.location.search);
   const categoria = params.get("categoria");
 
-  if (!categoria) return grid.innerHTML = "<p>Nenhuma categoria informada.</p>";
+  if (!categoria) {
+    grid.innerHTML = "<p>Nenhuma categoria informada.</p>";
+    return;
+  }
+
   header.textContent = categoria.replace(/_/g, " ").toUpperCase();
 
   async function carregarProdutos(ordenar = "relevance") {
     try {
+      // Monta a URL do fetch com query string para ordenar
       const resp = await fetch(`/api/produtos/categoria/${categoria}?ordenar=${ordenar}`);
-      if (!resp.ok) throw new Error();
+      if (!resp.ok) throw new Error(`Erro ${resp.status}`);
 
       const produtos = await resp.json();
-      if (!produtos.length) return grid.innerHTML = "<p>Nenhum produto encontrado.</p>";
 
-      grid.innerHTML = produtos.map(prod => `
-        <a href="/detalhes-produto?id=${prod.id}" class="produto">
-          <img src="${prod.imagem[0]}" alt="${prod.nome}">
-          <h3>${prod.nome}</h3>
-          <p class="preco">
-            ${prod.preco ? `<span class="antigo">${prod.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>` : ""}
-            <span class="novo">${prod.precoPromocional.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-          </p>
-        </a>
-      `).join("");
-    } catch {
+      console.log("[Categoria] Produtos carregados:", produtos);
+
+      if (!produtos || !produtos.length) {
+        grid.innerHTML = "<p>Nenhum produto encontrado.</p>";
+        return;
+      }
+
+      grid.innerHTML = produtos.map(prod => {
+        // Garante que imagem seja válida
+        const imagemUrl = Array.isArray(prod.imagem) ? prod.imagem[0] : prod.imagem || '../images/placeholder.png';
+
+        // Preços
+        const precoAntigo = prod.preco
+          ? `<span class="antigo">${prod.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`
+          : "";
+        const precoNovo = prod.precoPromocional
+          ? prod.precoPromocional.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+          : prod.preco?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || "R$ 0,00";
+
+        return `
+          <a href="/detalhes-produto?id=${prod.id}" class="produto">
+            <img src="${imagemUrl}" alt="${prod.nome}">
+            <h3>${prod.nome}</h3>
+            <p class="preco">
+              ${precoAntigo}
+              <span class="novo">${precoNovo}</span>
+            </p>
+          </a>
+        `;
+      }).join("");
+
+    } catch (err) {
+      console.error("[Categoria] Erro ao carregar produtos:", err);
       grid.innerHTML = "<p>Erro ao carregar os produtos.</p>";
     }
   }
 
+  // Carrega produtos inicialmente
   carregarProdutos();
-  sortSelect?.addEventListener("change", () => carregarProdutos(sortSelect.value));
+
+  // Listener para ordenação
+  sortSelect?.addEventListener("change", () => {
+    carregarProdutos(sortSelect.value);
+  });
 }
+
 
 /* ================================================
    SLIDER DE BANNER
@@ -325,6 +357,25 @@ async function initCart() {
   }
 
   /* ================== Renderizar carrinho ================== */
+/* ================== Tradução de cores (EN → PT) ================== */
+const colorTranslations = {
+  red: "Vermelho",
+  blue: "Azul",
+  black: "Preto",
+  white: "Branco",
+  green: "Verde",
+  yellow: "Amarelo",
+  brown: "Marrom",
+  orange: "Laranja",
+  pink: "Rosa",
+  purple: "Roxo",
+  gray: "Cinza",
+  silver: "Prata",
+  gold: "Dourado",
+  beige: "Bege",
+  transparent: "Transparente",
+};
+
   function renderCart() {
     cartItemsContainer.innerHTML = "";
 
@@ -340,18 +391,32 @@ async function initCart() {
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
       itemDiv.innerHTML = `
-    <img src="${item.imagem || ''}" alt="${item.nome}">
-    <div class="cart-item-info">
-      <h4>${item.nome}</h4>
-      <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-      <div class="cart-quantity">
-        <button class="qty-btn minus" data-index="${index}">-</button>
-        <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
-        <button class="qty-btn plus" data-index="${index}">+</button>
-      </div>
-      <button class="remove-btn" data-index="${index}">Remover</button>
+  <img src="${item.imagem || ''}" alt="${item.nome}">
+  <div class="cart-item-info">
+    <h4>${item.nome}</h4>
+   ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
+  <div class="cart-color">
+    <span class="color-circle" 
+      style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
+    </span>
+    <span class="color-name">
+      ${(() => {
+        const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+        const corKey = corEn?.toLowerCase().trim();
+        return colorTranslations[corKey] || corEn; // traduz ou mostra original
+      })()}
+    </span>
+  </div>
+` : ""}
+    <p class="cart-price">${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+    <div class="cart-quantity">
+      <button class="qty-btn minus" data-index="${index}">-</button>
+      <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
+      <button class="qty-btn plus" data-index="${index}">+</button>
     </div>
-  `;
+    <button class="remove-btn" data-index="${index}">Remover</button>
+  </div>
+`;
       cartItemsContainer.appendChild(itemDiv);
     });
 
@@ -427,36 +492,48 @@ async function initCart() {
   async function removeItem(idx) {
     if (idx < 0 || idx >= cartItems.length) return;
 
-    const produtoId = cartItems[idx].id;
+    const item = cartItems[idx];
+    const cartItemId = item.cartItemId || item.idCarrinho || item.carrinhoId || item.idCarrinhoItem || item.cartId || item.id;
+
+    // Remove visualmente do array primeiro
     cartItems.splice(idx, 1);
+    renderCart();
 
     if (isLoggedIn) {
       try {
-        await fetch("/api/carrinho/remove", {
+        const produtoId = item.produtoId || item.id || item.produto?.id;
+        const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+
+        const response = await fetch("/api/carrinho/remove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId })
+          body: JSON.stringify({ produtoId, cor })
         });
+
+        if (!response.ok) console.error("[Carrinho] Falha ao remover do servidor:", response.status);
+        else console.log("[Carrinho] Item removido do banco:", cartItemId);
+
       } catch (err) {
         console.error("[Carrinho] Erro ao remover item:", err);
       }
     } else {
       saveGuestCartToLocalStorage();
     }
-
-    renderCart();
   }
 
   /* ================== Adicionar produto ================== */
   window.addToCart = async function (produto) {
     if (!produto || !produto.id) return;
 
-    const existingIndex = cartItems.findIndex(i => i.id === produto.id);
+    const existingIndex = cartItems.findIndex(i =>
+      i.id === produto.id && (i.cor?.hex || i.cor) === (produto.cor?.hex || produto.cor || "padrao")
+    );
+
     if (existingIndex >= 0) {
       cartItems[existingIndex].quantidade += (produto.quantidade || 1);
     } else {
-      cartItems.push({ ...produto, quantidade: produto.quantidade || 1 });
+      cartItems.push({ ...produto, quantidade: produto.quantidade || 1, cor: produto.cor || produto.corSelecionada || "padrao" });
     }
 
     if (isLoggedIn) {
@@ -465,7 +542,11 @@ async function initCart() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade || 1 })
+          body: JSON.stringify({
+            produtoId: produto.id,
+            quantidade: produto.quantidade || 1,
+            cor: produto.cor || produto.corSelecionada || "padrao"
+          })
         });
       } catch (err) {
         console.error("[Carrinho] Erro ao adicionar produto:", err);
@@ -511,45 +592,38 @@ async function initCart() {
 
   await initializeCart();
 
- /* ================== Finalizar Compra ================== */
-const finalizar = document.getElementById("finalizar");
+  /* ================== Finalizar Compra ================== */
+  const finalizar = document.getElementById("finalizar");
 
-finalizar.addEventListener("click", async () => {
-  try {
-    // Revalida login no momento do clique
-    const res = await fetch("/api/auth/me", { credentials: "include" });
-    const aindaLogado = res.ok;
+  finalizar.addEventListener("click", async () => {
+    try {
+      // Revalida login no momento do clique
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const aindaLogado = res.ok;
 
-    if (!aindaLogado) {
-      const modal = document.getElementById("modalLogin");
-      modal.classList.add("show");
-      document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
-      document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
-      return;
+      if (!aindaLogado) {
+        const modal = document.getElementById("modalLogin");
+        modal.classList.add("show");
+        document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
+        document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
+        return;
+      }
+
+      // Verifica se o carrinho tem itens válidos
+      if (!cartItems || cartItems.length === 0) {
+        const modal = document.getElementById("modalCarrinhoVazio");
+        modal.classList.add("show");
+        document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
+        return;
+      }
+
+      // Tudo certo → segue para checkout
+      window.location.href = "/endereco";
+
+    } catch (err) {
+      console.error("[Checkout] Erro ao finalizar compra:", err);
     }
-
-    // Verifica se o carrinho tem itens válidos
-    if (!cartItems || cartItems.length === 0) {
-      const modal = document.getElementById("modalCarrinhoVazio");
-      modal.classList.add("show");
-      document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
-      return;
-    }
-
-    // Tudo certo → segue para checkout
-    window.location.href = "/endereco";
-
-  } catch (err) {
-    console.error("[Checkout] Erro ao finalizar compra:", err);
-  }
-});
-}
-
-// Inicializar quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initCart);
-} else {
-  initCart();
+  });
 }
 
 

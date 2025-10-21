@@ -1,0 +1,155 @@
+ :root {
+  --primary: #F9B000;
+  --dark: #4d1818;
+  --light: #fff;
+  --gray: #f5f5f5;
+}
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--background), #fff);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ==== HEADER ==== */
+    .header {
+      width: 100%;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--light);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .logo {
+      cursor: pointer;
+    }
+
+    .logo img {
+      height: 130px;
+      width: auto;
+      display: block;
+    }
+
+    /* ==== CONTEÚDO PRINCIPAL ==== */
+    main {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 1rem;
+    }
+
+    .container {
+      background-color: var(--light);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 1.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: #555;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      text-align: left;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #444;
+    }
+
+    input {
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+      width: 100%;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #fcc034;
+    }
+
+    .benefits {
+      margin-top: 2rem;
+      text-align: left;
+      padding-left: 1rem;
+      line-height: 1.7;
+    }
+
+    .benefits li {
+      color: #555;
+      margin-bottom: 0.5rem;
+      list-style: '✨ ';
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    @media (max-width: 600px) {
+      .logo img {
+        height: 80px;
+      }
+
+      .container {
+        padding: 2rem 1.5rem;
+      }
+    }

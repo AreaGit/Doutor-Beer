@@ -16,41 +16,65 @@ function validarCEP(cep) {
   return /^[0-9]{8}$/.test(cep);
 }
 
-/* ================== ROTA: Calcular frete ================== */
+// ================== ROTA: Calcular frete (funciona com ou sem login) ==================
 router.post("/frete", async (req, res) => {
-  const usuarioId = req.session.user?.id;
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-
   try {
-    let { cepDestino } = req.body;
-    cepDestino = limparCEP(cepDestino);
+    const usuarioId = req.session.user?.id;
+    let { cepDestino, produtos } = req.body;
+    cepDestino = (cepDestino || "").replace(/\D/g, "");
 
-    if (!validarCEP(cepDestino)) {
+    if (!/^[0-9]{8}$/.test(cepDestino)) {
       return res.status(400).json({ error: `CEP inválido: ${req.body.cepDestino}` });
     }
 
-    const items = await Cart.findAll({
-      where: { usuarioId },
-      include: [{ model: Produto, as: "Produto" }]
-    });
+    let products = [];
 
-    if (!items.length) return res.status(400).json({ error: "Carrinho vazio" });
+    if (usuarioId) {
+      // 🟢 Usuário logado → usa o carrinho do banco
+      const items = await Cart.findAll({
+        where: { usuarioId },
+        include: [{ model: Produto, as: "Produto" }]
+      });
 
-    const products = items.map(i => ({
-      width: i.Produto.width,
-      height: i.Produto.height,
-      length: i.Produto.length,
-      weight: i.Produto.weight,
-      insurance_value: i.Produto.precoPromocional ?? i.Produto.preco ?? 0,
-      quantity: i.quantidade
-    }));
+      if (!items.length)
+        return res.status(400).json({ error: "Carrinho vazio" });
+
+      products = items.map(i => ({
+        width: i.Produto.width || 20,
+        height: i.Produto.height || 20,
+        length: i.Produto.length || 20,
+        weight: i.Produto.weight || 0.3,
+        insurance_value: i.Produto.precoPromocional ?? i.Produto.preco ?? 0,
+        quantity: i.quantidade || 1
+      }));
+    } else if (Array.isArray(produtos) && produtos.length) {
+      // 🔵 Visitante → usa produtos enviados no body
+      products = produtos.map(p => ({
+        width: p.width || 20,
+        height: p.height || 20,
+        length: p.length || 20,
+        weight: p.weight || 0.3,
+        insurance_value: p.precoPromocional ?? p.preco ?? 0,
+        quantity: p.quantidade || 1
+      }));
+    } else {
+      return res.status(400).json({ error: "Nenhum produto fornecido para o cálculo do frete." });
+    }
 
     const opcoesFrete = await calcularFrete({ toPostalCode: cepDestino, products });
-    res.json(opcoesFrete);
 
+    // Filtra transportadoras indesejadas (opcional)
+    const filtradas = opcoesFrete.filter(o =>
+      o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
+    );
+
+    if (!filtradas.length)
+      return res.status(404).json({ error: "Nenhuma opção de frete disponível." });
+
+    res.json(filtradas);
   } catch (err) {
-    console.error("[Checkout] Erro ao calcular frete:", err);
-    res.status(500).json({ error: "Erro ao calcular frete" });
+    console.error("[Frete] Erro ao calcular:", err);
+    res.status(500).json({ error: "Erro ao calcular frete." });
   }
 });
 

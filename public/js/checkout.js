@@ -139,11 +139,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function calcularFrete(cep) {
     if (!freteContainer) return;
     freteContainer.innerHTML = "<p>Calculando frete...</p>";
+  
     if (!cart.length) {
       freteContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
       return;
     }
-
+  
     try {
       const produtosParaFrete = cart.map(item => {
         const produto = item.Produto || {};
@@ -156,26 +157,34 @@ document.addEventListener("DOMContentLoaded", async () => {
           quantity: item.quantidade || 1
         };
       });
-
+  
       const resp = await fetch("/api/frete/calcular", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cepDestino: cep, produtos: produtosParaFrete })
       });
+  
       if (!resp.ok) throw new Error("Erro ao calcular frete");
-      const opcoes = await resp.json();
+  
+      let opcoes = await resp.json();
+  
+      // 🔴 Filtrar transportadoras indesejadas (Jadlog e Azul)
+      opcoes = opcoes.filter(o =>
+        o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
+      );
+  
       if (!opcoes.length) {
         freteContainer.innerHTML = "<p>Nenhuma opção de frete disponível.</p>";
         return;
       }
-
+  
       freteContainer.innerHTML = opcoes.map(o => {
         const empresa = o.company?.name || "Transportadora";
         const logo = o.company?.picture || "/images/default-shipping.png";
         const nomeServico = o.name || "Serviço";
         const preco = parseFloat(o.price);
         const prazo = o.delivery_time || "N/A";
-
+  
         return `
           <div class="frete-card" data-valor="${preco}">
             <img src="${logo}" alt="${empresa}" class="frete-logo">
@@ -187,19 +196,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         `;
       }).join("");
-
+  
       document.querySelectorAll(".frete-card").forEach(card => {
         card.addEventListener("click", () => {
           document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
           card.classList.add("selecionado");
-
+  
           freteSelecionado = parseFloat(card.dataset.valor);
           window.freteSelecionado = freteSelecionado;
           freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
           totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
         });
       });
-
+  
     } catch (err) {
       console.error("[Checkout] Erro ao calcular frete:", err);
       freteContainer.innerHTML = "<p>Não foi possível calcular o frete. Tente novamente.</p>";
@@ -499,15 +508,11 @@ function abrirModalBoleto({ boletoUrl, linhaDigitavel, vencimento, valor, pedido
 
   // Status e fechamento automático após 10s
   const statusEl = document.getElementById("boletoStatus");
- setTimeout(() => {
-  fecharModalBoleto();
-  mostrarToast("Pedido criado! Aguardando pagamento do boleto.", 5000);
-  // Redireciona apenas depois de 2 segundos (ou 5s se quiser mostrar toast completo)
   setTimeout(() => {
+    fecharModalBoleto();
+    mo("Pedido criado! Aguardando pagamento do boleto.");
     window.location.href = `/pedido/${pedidoId}`;
-  }, 2000);
-}, 1000); // 1s para modal fechar suavemente
-
+  }, 10000);
 
   // Se quiser monitorar status do boleto em tempo real, poderia adicionar fetch periódico aqui
 }
@@ -653,7 +658,7 @@ async function finalizarPedido(formaPagamento) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Erro ao finalizar pedido");
 
-    mostrarToast("✅ Pedido finalizado com sucesso!");
+    alert("✅ Pedido finalizado com sucesso!");
     window.location.href = `/pedido/${result.pedidoId}`;
   } catch (error) {
     console.error("Erro ao finalizar pedido:", error);

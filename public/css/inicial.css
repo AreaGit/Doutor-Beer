@@ -358,6 +358,29 @@ body {
   background-color: #e0a600;
 }
 
+.cart-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 6px 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.color-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 2px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.color-name {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
 .remove-btn {
   background-color: transparent;
   border: none;
@@ -370,6 +393,8 @@ body {
 .remove-btn:hover {
   color: #d9363e;
 }
+
+
 
 
 /* Footer do carrinho */

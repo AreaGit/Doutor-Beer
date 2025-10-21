@@ -27,6 +27,11 @@ const Cart = sequelize.define("Cart", {
     allowNull: false,
     defaultValue: 1
   },
+
+  cor: {
+    type: DataTypes.STRING,
+    allowNull: true
+  }, 
   cupom: {
     type: DataTypes.STRING,
     allowNull: true

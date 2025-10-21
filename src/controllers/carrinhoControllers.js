@@ -9,7 +9,8 @@ function formatCartItem(item) {
     imagem: Array.isArray(item.Produto?.imagem) ? item.Produto.imagem[0] : item.Produto?.imagem || "",
     preco: item.Produto?.preco || 0,
     precoPromocional: item.Produto?.precoPromocional || null,
-    quantidade: item.quantidade
+    quantidade: item.quantidade,
+    cor: item.cor || "padrao"
   };
 }
 
@@ -32,8 +33,9 @@ exports.getCart = async (req, res) => {
 
 // ================== Adicionar produto ==================
 exports.addToCart = async (req, res) => {
-  const { produtoId, quantidade = 1 } = req.body;
+  const { produtoId, quantidade = 1, cor } = req.body;
   const usuarioId = req.session.user?.id;
+  const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
 
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
   if (!produtoId || quantidade <= 0) return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
@@ -42,13 +44,16 @@ exports.addToCart = async (req, res) => {
     const produto = await Produto.findByPk(produtoId);
     if (!produto) return res.status(404).json({ error: "Produto não encontrado" });
 
-    let cartItem = await Cart.findOne({ where: { usuarioId, produtoId }, include: [{ model: Produto, as: "Produto" }] });
+    let cartItem = await Cart.findOne({
+      where: { usuarioId, produtoId, cor: corFinal },
+      include: [{ model: Produto, as: "Produto" }]
+    });
 
     if (cartItem) {
       cartItem.quantidade += quantidade;
       await cartItem.save();
     } else {
-      cartItem = await Cart.create({ usuarioId, produtoId, quantidade });
+      cartItem = await Cart.create({ usuarioId, produtoId, quantidade, cor: corFinal });
       cartItem = await Cart.findByPk(cartItem.id, { include: [{ model: Produto, as: "Produto" }] });
     }
 
@@ -61,14 +66,15 @@ exports.addToCart = async (req, res) => {
 
 // ================== Atualizar quantidade ==================
 exports.updateCart = async (req, res) => {
-  const { produtoId, quantidade } = req.body;
+  const { produtoId, quantidade, cor } = req.body;
   const usuarioId = req.session.user?.id;
+  const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
 
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
   if (!produtoId || quantidade <= 0) return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
 
   try {
-    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId }, include: [{ model: Produto, as: "Produto" }] });
+    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId, cor: corFinal }, include: [{ model: Produto, as: "Produto" }] });
     if (!cartItem) return res.status(404).json({ error: "Produto não encontrado no carrinho" });
 
     cartItem.quantidade = quantidade;
@@ -82,17 +88,24 @@ exports.updateCart = async (req, res) => {
 
 // ================== Remover produto ==================
 exports.removeFromCart = async (req, res) => {
-  const { produtoId } = req.body;
+  const { produtoId, cor } = req.body;
   const usuarioId = req.session.user?.id;
+  const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
 
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
+  if (!produtoId) return res.status(400).json({ error: "ProdutoId é obrigatório" });
 
   try {
-    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId } });
-    if (!cartItem) return res.status(404).json({ error: "Produto não encontrado no carrinho" });
+    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId, cor: corFinal } });
+
+    if (!cartItem) {
+      console.log("[Carrinho] Item não encontrado no banco:", { usuarioId, produtoId, cor: corFinal });
+      return res.status(404).json({ error: "Item não encontrado no carrinho" });
+    }
 
     await cartItem.destroy();
-    res.json({ success: true, produtoId });
+    console.log("[Carrinho] Item removido com sucesso:", { usuarioId, produtoId, cor: corFinal });
+    res.json({ success: true });
   } catch (err) {
     console.error("[Carrinho] Erro ao remover produto:", err);
     res.status(500).json({ error: "Erro ao remover produto do carrinho" });

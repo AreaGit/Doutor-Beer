@@ -44,5 +44,7 @@ app.get("/pedido/:id", (req, res) => renderPage(res, "pedido"));
 
 app.get("/painel-adm", (req, res) => renderPage(res, "painel-adm"));
 
+app.get("/beneficio", (req, res) => renderPage(res, "beneficio"));
+
 module.exports = app;
 

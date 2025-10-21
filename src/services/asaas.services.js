@@ -1,6 +1,6 @@
 const axios = require('axios');
 require('dotenv').config({ path: "../../.env" });
-const asaas_key = process.env.ASAAS_SECRET_API_KEY_TEST;
+const asaas_key = process.env.ASAAS_SECRET_API_KEY_PROD;
 
 /*
 
@@ -46,7 +46,7 @@ CLIENTE CRIADO EM AMBIENTE SANDBOX DO ASAAS
 async function criarClienteAsaas(dadosCliente) {
     const options = {
     method: 'POST',
-    url: 'https://api-sandbox.asaas.com/v3/customers',
+    url: 'https://api.asaas.com/v3/customers',
     headers: {
         accept: 'application/json',
         'content-type': 'application/json',
@@ -120,7 +120,7 @@ async function removerClienteAsaas() {
 async function cobrancaBoletoAsaas(dadosCliente) {
     const options = {
         method: 'POST',
-        url: 'https://api-sandbox.asaas.com/v3/payments',
+        url: 'https://api.asaas.com/v3/payments',
         headers: {
             accept: 'application/json',
             'content-type': 'application/json',
@@ -151,7 +151,7 @@ async function cobrancaBoletoAsaas(dadosCliente) {
 async function obterLinhaBoleto(id) {
     const options = {
         method: 'GET',
-        url: `https://api-sandbox.asaas.com/v3/payments/${id}/identificationField`,
+        url: `https://api.asaas.com/v3/payments/${id}/identificationField`,
         headers: {
             accept: 'application/json',
             'content-type': 'application/json',
@@ -175,7 +175,7 @@ async function obterLinhaBoleto(id) {
 async function cobrancaPixAsaas(dadosCliente) {
     const options = {
         method: 'POST',
-        url: 'https://api-sandbox.asaas.com/v3/payments',
+        url: 'https://api.asaas.com/v3/payments',
         headers: {
             accept: 'application/json',
             'content-type': 'application/json',
@@ -205,7 +205,7 @@ async function cobrancaPixAsaas(dadosCliente) {
 async function obterCodPix(id) {
     const options = {
     method: 'GET',
-    url: `https://api-sandbox.asaas.com/v3/payments/${id}/pixQrCode`,
+    url: `https://api.asaas.com/v3/payments/${id}/pixQrCode`,
     headers: {accept: 'application/json', access_token: asaas_key}
     };
 
@@ -225,7 +225,7 @@ async function obterCodPix(id) {
 async function cobrancaCartaoAsaas(dadosCliente) {
   const options = {
     method: "POST",
-    url: "https://api-sandbox.asaas.com/v3/payments",
+    url: "https://api.asaas.com/v3/payments",
     headers: {
       accept: "application/json",
       "content-type": "application/json",
@@ -272,7 +272,7 @@ async function cobrancaCartaoAsaas(dadosCliente) {
 async function consultarCobranca(payment_id) {
     const options = {
     method: 'GET',
-    url: `https://api-sandbox.asaas.com/v3/payments/${payment_id}/status`,
+    url: `https://api.asaas.com/v3/payments/${payment_id}/status`,
     headers: {
         accept: 'application/json',
         access_token: asaas_key

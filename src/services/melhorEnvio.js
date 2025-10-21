@@ -27,7 +27,7 @@ async function calcularFrete({ toPostalCode, products }) {
 
     const options = {
       method: "POST",
-      url: "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate",
+      url: "https://melhorenvio.com.br/api/v2/me/shipment/calculate",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",

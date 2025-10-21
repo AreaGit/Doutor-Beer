@@ -1,3 +1,5 @@
+
+
 /* ================== Variáveis Globais ================== */
 let produtoAtual = null;
 let quantidadeDeProdutosNoCarrinho = 0;
@@ -241,6 +243,24 @@ async function initCart() {
   }
 
   /* ================== Renderizar carrinho ================== */
+  const colorTranslations = {
+    red: "Vermelho",
+    blue: "Azul",
+    black: "Preto",
+    white: "Branco",
+    green: "Verde",
+    yellow: "Amarelo",
+    brown: "Marrom",
+    orange: "Laranja",
+    pink: "Rosa",
+    purple: "Roxo",
+    gray: "Cinza",
+    silver: "Prata",
+    gold: "Dourado",
+    beige: "Bege",
+    transparent: "Transparente",
+  };
+
   function renderCart() {
     cartItemsContainer.innerHTML = "";
 
@@ -256,18 +276,32 @@ async function initCart() {
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
       itemDiv.innerHTML = `
-    <img src="${item.imagem || ''}" alt="${item.nome}">
-    <div class="cart-item-info">
-      <h4>${item.nome}</h4>
-      <p>${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-      <div class="cart-quantity">
-        <button class="qty-btn minus" data-index="${index}">-</button>
-        <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
-        <button class="qty-btn plus" data-index="${index}">+</button>
-      </div>
-      <button class="remove-btn" data-index="${index}">Remover</button>
+  <img src="${item.imagem || ''}" alt="${item.nome}">
+  <div class="cart-item-info">
+    <h4>${item.nome}</h4>
+   ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
+  <div class="cart-color">
+    <span class="color-circle" 
+      style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
+    </span>
+    <span class="color-name">
+      ${(() => {
+            const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+            const corKey = corEn?.toLowerCase().trim();
+            return colorTranslations[corKey] || corEn; // traduz ou mostra original
+          })()}
+    </span>
+  </div>
+` : ""}
+    <p class="cart-price">${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+    <div class="cart-quantity">
+      <button class="qty-btn minus" data-index="${index}">-</button>
+      <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
+      <button class="qty-btn plus" data-index="${index}">+</button>
     </div>
-  `;
+    <button class="remove-btn" data-index="${index}">Remover</button>
+  </div>
+`;
       cartItemsContainer.appendChild(itemDiv);
     });
 
@@ -343,36 +377,48 @@ async function initCart() {
   async function removeItem(idx) {
     if (idx < 0 || idx >= cartItems.length) return;
 
-    const produtoId = cartItems[idx].id;
+    const item = cartItems[idx];
+    const cartItemId = item.cartItemId || item.idCarrinho || item.carrinhoId || item.idCarrinhoItem || item.cartId || item.id;
+
+    // Remove visualmente do array primeiro
     cartItems.splice(idx, 1);
+    renderCart();
 
     if (isLoggedIn) {
       try {
-        await fetch("/api/carrinho/remove", {
+        const produtoId = item.produtoId || item.id || item.produto?.id;
+        const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+
+        const response = await fetch("/api/carrinho/remove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId })
+          body: JSON.stringify({ produtoId, cor })
         });
+
+        if (!response.ok) console.error("[Carrinho] Falha ao remover do servidor:", response.status);
+        else console.log("[Carrinho] Item removido do banco:", cartItemId);
+
       } catch (err) {
         console.error("[Carrinho] Erro ao remover item:", err);
       }
     } else {
       saveGuestCartToLocalStorage();
     }
-
-    renderCart();
   }
 
   /* ================== Adicionar produto ================== */
   window.addToCart = async function (produto) {
     if (!produto || !produto.id) return;
 
-    const existingIndex = cartItems.findIndex(i => i.id === produto.id);
+    const existingIndex = cartItems.findIndex(i =>
+      i.id === produto.id && (i.cor?.hex || i.cor) === (produto.cor?.hex || produto.cor || "padrao")
+    );
+
     if (existingIndex >= 0) {
       cartItems[existingIndex].quantidade += (produto.quantidade || 1);
     } else {
-      cartItems.push({ ...produto, quantidade: produto.quantidade || 1 });
+      cartItems.push({ ...produto, quantidade: produto.quantidade || 1, cor: produto.cor || produto.corSelecionada || "padrao" });
     }
 
     if (isLoggedIn) {
@@ -381,7 +427,11 @@ async function initCart() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId: produto.id, quantidade: produto.quantidade || 1 })
+          body: JSON.stringify({
+            produtoId: produto.id,
+            quantidade: produto.quantidade || 1,
+            cor: produto.cor || produto.corSelecionada || "padrao"
+          })
         });
       } catch (err) {
         console.error("[Carrinho] Erro ao adicionar produto:", err);
@@ -427,46 +477,40 @@ async function initCart() {
 
   await initializeCart();
 
- /* ================== Finalizar Compra ================== */
-const finalizar = document.getElementById("finalizar");
+  /* ================== Finalizar Compra ================== */
+  const finalizar = document.getElementById("finalizar");
 
-finalizar.addEventListener("click", async () => {
-  try {
-    // Revalida login no momento do clique
-    const res = await fetch("/api/auth/me", { credentials: "include" });
-    const aindaLogado = res.ok;
+  finalizar.addEventListener("click", async () => {
+    try {
+      // Revalida login no momento do clique
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      const aindaLogado = res.ok;
 
-    if (!aindaLogado) {
-      const modal = document.getElementById("modalLogin");
-      modal.classList.add("show");
-      document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
-      document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
-      return;
+      if (!aindaLogado) {
+        const modal = document.getElementById("modalLogin");
+        modal.classList.add("show");
+        document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
+        document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
+        return;
+      }
+
+      // Verifica se o carrinho tem itens válidos
+      if (!cartItems || cartItems.length === 0) {
+        const modal = document.getElementById("modalCarrinhoVazio");
+        modal.classList.add("show");
+        document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
+        return;
+      }
+
+      // Tudo certo → segue para checkout
+      window.location.href = "/endereco";
+
+    } catch (err) {
+      console.error("[Checkout] Erro ao finalizar compra:", err);
     }
-
-    // Verifica se o carrinho tem itens válidos
-    if (!cartItems || cartItems.length === 0) {
-      const modal = document.getElementById("modalCarrinhoVazio");
-      modal.classList.add("show");
-      document.getElementById("btnFecharCarrinho").onclick = () => modal.classList.remove("show");
-      return;
-    }
-
-    // Tudo certo → segue para checkout
-    window.location.href = "/endereco";
-
-  } catch (err) {
-    console.error("[Checkout] Erro ao finalizar compra:", err);
-  }
-});
+  });
 }
 
-// Inicializar quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initCart);
-} else {
-  initCart();
-}
 
 /* ================== Botão Voltar ao Topo ================== */
 function initBtnTop() {
@@ -477,6 +521,8 @@ function initBtnTop() {
 
 /* ================== Alterar Imagem Principal ================== */
 window.mudarImagem = element => document.getElementById("imagemPrincipal").src = element.src;
+
+
 
 /* ================== Alterar Quantidade ================== */
 window.alterarQuantidade = valor => {
@@ -542,8 +588,11 @@ document.querySelector(".btn-comprar").addEventListener("click", async () => {
     const produto = {
       ...produtoAtual,
       quantidade: parseInt(document.getElementById("quantidade").value),
-      imagem: document.getElementById("imagemPrincipal").src
+      imagem: document.getElementById("imagemPrincipal").src,
+      cor: produtoAtual.corSelecionada || null,
+       torneira: produtoAtual.torneiraSelecionada || null
     };
+
     animarEAdicionarAoCarrinho(produto, true);
   } catch (err) {
     console.error("Erro ao verificar login:", err);
@@ -551,103 +600,129 @@ document.querySelector(".btn-comprar").addEventListener("click", async () => {
   }
 });
 
-
-
 document.querySelector(".btn-carrinho").addEventListener("click", () => {
   if (!produtoAtual) return alert("Produto não carregado.");
-  const produto = { ...produtoAtual, quantidade: parseInt(document.getElementById("quantidade").value), imagem: document.getElementById("imagemPrincipal").src };
+
+  const produto = {
+    ...produtoAtual,
+    quantidade: parseInt(document.getElementById("quantidade").value),
+    imagem: document.getElementById("imagemPrincipal").src,
+    cor: produtoAtual.corSelecionada || null // 🔹 Adicionado
+  };
+
   animarEAdicionarAoCarrinho(produto, false);
 });
 
+
 /* ================== Calcular Frete ================== */
-document.getElementById("calcularFrete").addEventListener("click", async () => {
-  const cep = document.getElementById("cepInput").value.trim();
-  const resultadoDiv = document.getElementById("freteResultado");
-
-  resultadoDiv.innerHTML = ""; // limpa resultados anteriores
-
-  if (!cep) {
-    resultadoDiv.innerHTML = `<p style="color:red;">Digite um CEP válido.</p>`;
-    return;
-  }
-
-  if (!produtoAtual) {
-    resultadoDiv.innerHTML = `<p style="color:red;">Produto não carregado.</p>`;
-    return;
-  }
-
+async function calcularFreteDetalhes() {
   try {
-    const insuranceValue = produtoAtual.precoPromocional ?? produtoAtual.preco;
-
-    const produtoParaFrete = {
-      id: String(produtoAtual.id),
-      width: parseFloat(produtoAtual.largura) || 20,
-      height: parseFloat(produtoAtual.altura) || 20,
-      length: parseFloat(produtoAtual.comprimento) || 20,
-      weight: parseFloat(produtoAtual.peso) || 1,
-      insurance_value: insuranceValue != null ? parseFloat(insuranceValue) : 0,
-      quantity: parseInt(document.getElementById("quantidade").value) || 1
-    };
-
-    console.log("Produto para frete:", produtoParaFrete);
-
-    const resp = await fetch("/api/frete/calcular", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cepDestino: cep, produtos: [produtoParaFrete] })
-    });
-
-    if (!resp.ok) throw new Error("Erro ao calcular frete");
-    const opcoes = await resp.json();
-
-    const opcoesValidas = (opcoes || []).filter(o => o.price && !o.error);
-
-    if (!opcoesValidas.length) {
-      resultadoDiv.innerHTML = `<p>Nenhuma opção de frete válida encontrada.</p>`;
+    const cepDestino = document.querySelector("#cepInput").value.replace(/\D/g, "");
+    if (!cepDestino) {
+      alert("Por favor, informe um CEP válido.");
       return;
     }
 
-    // Renderiza cards estilizados
-    resultadoDiv.innerHTML = opcoesValidas
-      .map((o, index) => {
-        const nomeEmpresa = o.company?.name || "Transportadora";
-        const nomeFrete = o.name || "Serviço";
-        const valor = parseFloat(o.price);
-        const prazo = o.delivery_time || "N/A";
-        const logo = o.company?.picture || "/images/default-shipping.png";
+    if (!produtoAtual) {
+      alert("Produto não carregado. Tente novamente.");
+      return;
+    }
 
-        return `
-          <div class="frete-card" data-index="${index}">
-            <img src="${logo}" alt="${nomeEmpresa}" class="frete-logo">
-            <div class="frete-info">
-              <h4>${nomeEmpresa} - ${nomeFrete}</h4>
-              <p>Valor: <strong>${valor.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</strong></p>
-              <p>Prazo: <strong>${prazo} dias úteis</strong></p>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+    const produto = {
+      id: produtoAtual.id,
+      nome: produtoAtual.nome,
+      quantidade: 1,
+      weight: produtoAtual.weight || 0.3,
+      width: produtoAtual.width || 10,
+      height: produtoAtual.height || 10,
+      length: produtoAtual.length || 10,
+      preco: produtoAtual.precoPromocional || produtoAtual.preco
+    };
 
-    // Torna os cards clicáveis
-    document.querySelectorAll(".frete-card").forEach(card => {
+    const response = await fetch("/api/frete/calcular", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cepDestino, produtos: [produto] })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Erro ao calcular frete");
+
+    const container = document.querySelector("#freteResultado");
+    container.innerHTML = "";
+
+    console.log(data);
+
+    data.forEach(opcao => {
+      const valor = Number(opcao.price) || 0;
+      const card = document.createElement("div");
+      card.className = "frete-card";
+
+      card.innerHTML = `
+        <img src="${opcao.company.picture}" class="frete-logo" alt="${opcao.name}">
+        <div class="frete-info">
+          <h4>${opcao.name}</h4>
+          <p>Valor: R$ ${valor.toFixed(2).replace(".", ",")}</p>
+          <p>Prazo: ${opcao.delivery_time} dias úteis</p>
+        </div>
+      `;
+
+      // Permite selecionar o frete
       card.addEventListener("click", () => {
         document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
         card.classList.add("selecionado");
-
-        const index = card.dataset.index;
-        const freteSelecionado = opcoesValidas[index];
-
-        console.log("Frete selecionado:", freteSelecionado);
-        // opcional: salve para uso posterior
-        window.freteSelecionado = freteSelecionado;
       });
+
+      container.appendChild(card);
     });
-  } catch (err) {
-    console.error("[Frete] Erro:", err);
-    resultadoDiv.innerHTML = `<p style="color:red;">Não foi possível calcular o frete. Tente novamente.</p>`;
+
+  } catch (error) {
+    console.error("[Detalhes] Erro ao calcular frete:", error);
+    alert("Não foi possível calcular o frete. Tente novamente mais tarde.");
   }
-});
+}
+
+// Evento do botão
+document.getElementById("calcularFrete").addEventListener("click", calcularFreteDetalhes);
+
+/* ================== Miniaturas com Navegação ================== */
+function initMiniaturas(produto) {
+  const container = document.getElementById("miniaturasContainer");
+  const btnPrev = document.getElementById("miniaturaAnterior");
+  const btnNext = document.getElementById("miniaturaProxima");
+  const maxVisiveis = 3;
+  let indexInicial = 0;
+
+  function renderMiniaturas() {
+    container.innerHTML = "";
+    const miniaturasVisiveis = produto.imagem.slice(indexInicial, indexInicial + maxVisiveis);
+    miniaturasVisiveis.forEach(src => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "Miniatura";
+      img.onclick = () => document.getElementById("imagemPrincipal").src = src;
+      container.appendChild(img);
+    });
+
+    btnPrev.disabled = indexInicial === 0;
+    btnNext.disabled = indexInicial + maxVisiveis >= produto.imagem.length;
+  }
+
+  btnPrev.onclick = () => {
+    if (indexInicial > 0) {
+      indexInicial--;
+      renderMiniaturas();
+    }
+  };
+  btnNext.onclick = () => {
+    if (indexInicial + maxVisiveis < produto.imagem.length) {
+      indexInicial++;
+      renderMiniaturas();
+    }
+  };
+
+  renderMiniaturas();
+}
 
 
 /* ================== Carregar Produto ================== */
@@ -663,8 +738,9 @@ async function carregarProduto() {
     produtoAtual = produto; // Salva produto atual
 
     document.getElementById("imagemPrincipal").src = produto.imagem[0];
-    document.querySelector(".produto-imagens .miniaturas").innerHTML =
-      produto.imagem.map(img => `<img src="${img}" alt="Miniatura" onclick="mudarImagem(this)">`).join("");
+
+    // Inicializa miniaturas com navegação
+    initMiniaturas(produto);
 
     document.querySelector(".produto-detalhes h1").textContent = produto.nome;
     document.querySelector(".produto-detalhes .preco .antigo").textContent =
@@ -676,6 +752,56 @@ async function carregarProduto() {
       <h3>Descrição</h3>
       <p>${produto.descricao}</p>
     `;
+
+    // Renderizar cores disponíveis (ou esconder o seletor)
+    const coresContainer = document.getElementById("coresContainer");
+    const coresProdutoSection = document.querySelector(".cores-produto");
+
+    if (produto.cores && produto.cores.length > 0) {
+      coresContainer.innerHTML = "";
+
+      produto.cores.forEach(cor => {
+        const div = document.createElement("div");
+        div.className = "cor-item";
+        div.style.backgroundColor = cor;
+        div.title = cor;
+
+        div.addEventListener("click", () => {
+          document.querySelectorAll(".cor-item").forEach(el => el.classList.remove("selecionada"));
+          div.classList.add("selecionada");
+          produtoAtual.corSelecionada = cor;
+        });
+
+        coresContainer.appendChild(div);
+      });
+
+      // Garante que o seletor apareça
+      coresProdutoSection.style.display = "block";
+    } else {
+      // Esconde o seletor completamente
+      coresProdutoSection.style.display = "none";
+    }
+
+    // ================== Renderizar variações de torneira ==================
+    const torneiraContainer = document.querySelector(".torneira-container");
+    const torneiraSelect = document.getElementById("torneiraSelect");
+
+    // Verifica se o produto tem variações de torneira
+    if (produto.torneira && produto.torneira.length > 0) {
+      torneiraContainer.style.display = "block";
+      torneiraSelect.innerHTML = `
+    <option value="">Selecione</option>
+    ${produto.torneira.map(t => `<option value="${t}">${t}</option>`).join("")}
+  `;
+
+      // Captura a seleção
+      torneiraSelect.addEventListener("change", e => {
+        produtoAtual.torneiraSelecionada = e.target.value;
+      });
+    } else {
+      // Se não houver variações, esconde o campo completamente
+      torneiraContainer.style.display = "none";
+    }
 
     // Produtos relacionados
     const categorias = [produto.categoria, produto.categoria2, produto.categoria3].filter(Boolean);
@@ -700,11 +826,15 @@ async function carregarProduto() {
         </p>
       </a>
     `).join("") : `<p>Nenhum produto relacionado encontrado.</p>`;
+
   } catch (err) {
     console.error("[Detalhes Produto] Erro:", err);
     alert("Produto não encontrado.");
   }
 }
+
+
+
 
 /* ================== Inicialização ================== */
 document.addEventListener("DOMContentLoaded", () => {

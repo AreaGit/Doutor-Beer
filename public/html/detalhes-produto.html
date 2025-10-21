@@ -90,7 +90,7 @@
       </div>
 
 
-      <button class="checkout-btn" id ="finalizar">Finalizar Compra</button>
+      <button class="checkout-btn" id="finalizar">Finalizar Compra</button>
     </div>
   </div>
 
@@ -142,59 +142,71 @@
     </div>
   </nav>
 
-<!-- Container Produto -->
-<div class="produto-container">
-  <!-- Imagens -->
-  <div class="produto-imagens">
-    <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
-    <div class="miniaturas"></div>
+  <!-- Container Produto -->
+  <div class="produto-container">
+    <!-- Imagens -->
+    <div class="produto-imagens">
+      <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
+
+      <div class="miniaturas-wrapper">
+        <button class="miniatura-nav esquerda" id="miniaturaAnterior">‹</button>
+        <div class="miniaturas" id="miniaturasContainer"></div>
+        <button class="miniatura-nav direita" id="miniaturaProxima">›</button>
+      </div>
+    </div>
+
+    <!-- Detalhes -->
+    <div class="produto-detalhes">
+      <h1></h1>
+      <p class="preco">
+        <span class="antigo"></span>
+        <span class="novo"></span>
+      </p>
+
+      <!-- Seletor de quantidade -->
+      <div class="quantidade-container">
+        <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
+        <input type="number" id="quantidade" value="1" min="1">
+        <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
+      </div>
+
+      <!-- HTML: Seletor de cores -->
+      <div class="cores-produto">
+        <h4>Escolha a cor:</h4>
+        <div class="lista-cores" id="coresContainer"></div>
+      </div>
+
+      <!-- Campos extras para torres -->
+      <div class="extras-torres" id="extrasTorres" style="display:none;">
+        <div class="cores-container">
+          <label for="corSelect">Cor:</label>
+          <select id="corSelect"></select>
+        </div>
+        <div class="torneira-container">
+          <label for="torneiraSelect">Torneira:</label>
+          <select id="torneiraSelect"></select>
+        </div>
+        <div class="litragem-container">
+          <label>Litragem:</label>
+          <span id="litragem"></span>
+        </div>
+      </div>
+
+      <button class="btn-carrinho">Adicionar ao carrinho</button>
+      <button class="btn-comprar">Comprar Agora</button>
+
+      <div class="frete-container">
+        <input type="text" id="cepInput" placeholder="Digite seu CEP">
+        <button id="calcularFrete">Calcular Frete</button>
+      </div>
+
+      <div id="freteResultado"></div>
+
+      <div class="descricao">
+        <h3>Descrição</h3>
+      </div>
+    </div>
   </div>
-
-  <!-- Detalhes -->
-  <div class="produto-detalhes">
-    <h1></h1>
-    <p class="preco">
-      <span class="antigo"></span>
-      <span class="novo"></span>
-    </p>
-
-    <!-- Seletor de quantidade -->
-    <div class="quantidade-container">
-      <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
-      <input type="number" id="quantidade" value="1" min="1">
-      <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
-    </div>
-
-    <!-- Campos extras para torres -->
-    <div class="extras-torres" id="extrasTorres" style="display:none;">
-      <div class="cores-container">
-        <label for="corSelect">Cor:</label>
-        <select id="corSelect"></select>
-      </div>
-      <div class="torneira-container">
-        <label for="torneiraSelect">Torneira:</label>
-        <select id="torneiraSelect"></select>
-      </div>
-      <div class="litragem-container">
-        <label>Litragem:</label>
-        <span id="litragem"></span>
-      </div>
-    </div>
-
-    <button class="btn-carrinho">Adicionar ao carrinho</button>
-    <button class="btn-comprar">Comprar Agora</button>
-    <div class="frete-container">
-      <input type="text" id="cepInput" placeholder="Digite seu CEP">
-      <button id="calcularFrete">Calcular Frete</button>
-    </div>
-
-    <div id="freteResultado"></div>
-
-    <div class="descricao">
-      <h3>Descrição</h3>
-    </div>
-  </div>
-</div>
 
   <!-- Produtos Relacionados -->
   <section class="relacionados">
@@ -216,30 +228,30 @@
   </a>
 
   <!-- ================= Modal de Login ================= -->
-<div id="modalLogin" class="modal-login">
-  <div class="modal-content">
-    <h2>⚠️ Você precisa estar logado</h2>
-    <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
-    <div class="modal-actions">
-      <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
-      <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+  <div id="modalLogin" class="modal-login">
+    <div class="modal-content">
+      <h2>⚠️ Você precisa estar logado</h2>
+      <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
+      <div class="modal-actions">
+        <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
+        <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ================= Modal Carrinho Vazio ================= -->
-<div id="modalCarrinhoVazio" class="modal-login">
-  <div class="modal-content">
-    <h2>⚠️ Seu carrinho está vazio</h2>
-    <p>Adicione produtos antes de finalizar a compra.</p>
-    <div class="modal-actions modal-actions-center">
-      <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+  <!-- ================= Modal Carrinho Vazio ================= -->
+  <div id="modalCarrinhoVazio" class="modal-login">
+    <div class="modal-content">
+      <h2>⚠️ Seu carrinho está vazio</h2>
+      <p>Adicione produtos antes de finalizar a compra.</p>
+      <div class="modal-actions modal-actions-center">
+        <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+      </div>
     </div>
   </div>
-</div>
 
 
-
+<script src="/src/utils/tradutorCores.js"></script>
   <script src="../js/detalhes-produto.js"></script>
 
 </body>

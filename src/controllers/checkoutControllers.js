@@ -38,33 +38,55 @@ async function getCartItems(usuarioId) {
 }
 
 // ================== Calcular Frete ==================
+// ================== Calcular Frete (versão atualizada) ==================
 exports.calcularFreteHandler = async (req, res) => {
-  const usuarioId = req.session.user?.id;
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-
-  const { cepDestino } = req.body;
-  if (!cepDestino) return res.status(400).json({ error: "CEP de destino obrigatório" });
-
   try {
-    // Pega itens do carrinho
-    const produtos = await getCartItems(usuarioId);
-    if (produtos.length === 0) return res.status(400).json({ error: "Carrinho vazio" });
+    const usuarioId = req.session.user?.id;
+    const { cepDestino, produtos } = req.body;
 
-    // Chama o Melhor Envio
-    const opcoes = await calcularFrete({ toPostalCode: cepDestino, products: produtos });
+    if (!cepDestino)
+      return res.status(400).json({ error: "CEP de destino obrigatório" });
 
-    if (!opcoes || opcoes.length === 0) {
-      return res.status(400).json({ error: "Nenhuma opção de frete disponível" });
+    let produtosParaEnvio = [];
+
+    // 🛒 Se estiver logado, pega produtos do carrinho
+    if (usuarioId && (!produtos || produtos.length === 0)) {
+      produtosParaEnvio = await getCartItems(usuarioId);
+    } 
+    // 🎯 Caso contrário, usa os produtos enviados pelo frontend (ex: página de produto)
+    else if (produtos && produtos.length > 0) {
+      produtosParaEnvio = produtos.map(p => ({
+        id: p.id || p.produtoId || 0,
+        name: p.nome || "Produto",
+        quantity: p.quantidade || 1,
+        width: p.width || 10,
+        height: p.height || 10,
+        length: p.length || 10,
+        weight: p.weight || 0.3,
+        insurance_value: p.preco || 0
+      }));
     }
 
-    // Retorna todas as opções para o frontend escolher
+    if (!produtosParaEnvio.length)
+      return res.status(400).json({ error: "Nenhum produto encontrado para calcular o frete." });
+
+    // 🚚 Chama o serviço do Melhor Envio
+    const opcoes = await calcularFrete({
+      toPostalCode: cepDestino,
+      products: produtosParaEnvio
+    });
+
+    if (!opcoes || opcoes.length === 0)
+      return res.status(400).json({ error: "Nenhuma opção de frete disponível" });
+
     res.json(opcoes);
 
   } catch (err) {
-    console.error("[Checkout] Erro ao calcular frete:", err);
-    res.status(500).json({ error: "Falha ao calcular frete" });
+    console.error("[Checkout] Erro ao calcular frete:", err.response?.data || err.message);
+    res.status(500).json({ error: "Erro ao calcular frete" });
   }
 };
+
 
 
 
