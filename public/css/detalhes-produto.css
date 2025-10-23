@@ -27,9 +27,18 @@ body {
 }
 .imagem-principal {
   width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1; /* 🔥 mantém proporção consistente */
+  object-fit: cover;   /* cobre toda a área, sem distorcer */
+  object-position: center;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transition: opacity 0.3s ease; /* suaviza troca da torneira ou miniatura */
 }
+
+
+
+
 /* ================== Miniaturas com navegação ================== */
 .miniaturas-wrapper {
   position: relative;
@@ -53,15 +62,17 @@ body {
 .miniaturas img {
   width: 80px;
   height: 80px;
-  object-fit: cover;
+  object-fit: cover; /* 🔥 mantém proporção das miniaturas */
+  object-position: center;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition: transform 0.3s, opacity 0.3s;
   flex-shrink: 0;
 }
 
 .miniaturas img:hover {
   transform: scale(1.1);
+  opacity: 0.9; /* leve suavidade visual */
 }
 
 /* ================== Botões de navegação ================== */
@@ -201,6 +212,73 @@ body {
   transform: scale(1.15); /* borda já preta, só aumenta o zoom */
 }
 
+
+/* Variação */
+
+.torneira-produto {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.select-torneira {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+  transition: 0.3s ease;
+  font-size: 15px;
+  cursor: pointer;
+  width: 200px;
+}
+
+.select-torneira:hover {
+  border-color: #d4a017;
+  background: #fff;
+}
+
+.select-torneira:focus {
+  outline: none;
+  border-color: #ffb300;
+  box-shadow: 0 0 6px rgba(255, 179, 0, 0.4);
+}
+
+/* ================== Seletor de Refil ================== */
+.refil-produto {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.refil-produto h4 {
+  font-size: 16px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+#refilSelect {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 200px;
+}
+
+#refilSelect:hover {
+  border-color: #d4a017;
+  background: #fff;
+}
+
+#refilSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 6px rgba(249, 176, 0, 0.4);
+}
 
 
 /* ================== Frete ================== */
@@ -519,6 +597,9 @@ body {
   from { transform: translateY(40px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+
+
 
 /* Responsivo */
 

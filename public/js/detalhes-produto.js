@@ -261,93 +261,118 @@ async function initCart() {
     transparent: "Transparente",
   };
 
-  function renderCart() {
-    cartItemsContainer.innerHTML = "";
+ function renderCart() {
+  cartItemsContainer.innerHTML = "";
 
-    if (!cartItems.length) {
-      cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-      updateResumo();
-      return;
-    }
-
-    cartItems.forEach((item, index) => {
-      const preco = item.precoPromocional ?? item.preco ?? 0;
-
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "cart-item";
-      itemDiv.innerHTML = `
-  <img src="${item.imagem || ''}" alt="${item.nome}">
-  <div class="cart-item-info">
-    <h4>${item.nome}</h4>
-   ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
-  <div class="cart-color">
-    <span class="color-circle" 
-      style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
-    </span>
-    <span class="color-name">
-      ${(() => {
-            const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
-            const corKey = corEn?.toLowerCase().trim();
-            return colorTranslations[corKey] || corEn; // traduz ou mostra original
-          })()}
-    </span>
-  </div>
-` : ""}
-    <p class="cart-price">${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-    <div class="cart-quantity">
-      <button class="qty-btn minus" data-index="${index}">-</button>
-      <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
-      <button class="qty-btn plus" data-index="${index}">+</button>
-    </div>
-    <button class="remove-btn" data-index="${index}">Remover</button>
-  </div>
-`;
-      cartItemsContainer.appendChild(itemDiv);
-    });
-
-    // Controles de quantidade e remover
-    document.querySelectorAll(".qty-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const idx = parseInt(btn.dataset.index);
-        const novoValor = btn.classList.contains("plus")
-          ? cartItems[idx].quantidade + 1
-          : Math.max(1, cartItems[idx].quantidade - 1);
-        await updateQuantity(idx, novoValor);
-      });
-    });
-
-    document.querySelectorAll(".quantity-input").forEach(input => {
-      input.addEventListener("change", async () => {
-        const idx = parseInt(input.dataset.index);
-        let novaQtd = parseInt(input.value);
-        if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
-        await updateQuantity(idx, novaQtd);
-      });
-    });
-
-    document.querySelectorAll(".remove-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const idx = parseInt(btn.dataset.index);
-        await removeItem(idx);
-      });
-    });
-
+  if (!cartItems.length) {
+    cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
     updateResumo();
+    return;
   }
+
+  cartItems.forEach((item, index) => {
+    // 🔹 Usa o preço que já veio ajustado (sem somar nada)
+    const preco = item.preco ?? item.precoPromocional ?? 0;
+
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "cart-item";
+    itemDiv.innerHTML = `
+      <img src="${item.imagem || ''}" alt="${item.nome}">
+      <div class="cart-item-info">
+        <h4>${item.nome}</h4>
+        ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
+          <div class="cart-color">
+            <span class="color-circle" 
+              style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
+            </span>
+            <span class="color-name">
+              ${(() => {
+                const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+                const corKey = corEn?.toLowerCase().trim();
+                return colorTranslations[corKey] || corEn;
+              })()}
+            </span>
+          </div>
+        ` : ""}
+
+        ${item.torneira && item.torneira !== "padrao" && item.torneira !== "" ? `
+          <div class="cart-torneira">
+            <span class="torneira-label">Torneira:</span>
+            <span class="torneira-name">${item.torneira}</span>
+          </div>
+        ` : ""}
+
+        ${item.refil ? `
+          <div class="cart-refil">
+            <span class="refil-label">Refis:</span>
+            <span class="refil-count">${item.refil}</span>
+          </div>
+        ` : ""}
+
+        <p class="cart-price">
+          ${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+        </p>
+
+        <div class="cart-quantity">
+          <button class="qty-btn minus" data-index="${index}">-</button>
+          <input type="number" min="1" value="${item.quantidade}" data-index="${index}" class="quantity-input">
+          <button class="qty-btn plus" data-index="${index}">+</button>
+        </div>
+
+        <button class="remove-btn" data-index="${index}">Remover</button>
+      </div>
+    `;
+    cartItemsContainer.appendChild(itemDiv);
+  });
+
+  // Controles de quantidade e remover
+  document.querySelectorAll(".qty-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const idx = parseInt(btn.dataset.index);
+      const novoValor = btn.classList.contains("plus")
+        ? cartItems[idx].quantidade + 1
+        : Math.max(1, cartItems[idx].quantidade - 1);
+      await updateQuantity(idx, novoValor);
+    });
+  });
+
+  document.querySelectorAll(".quantity-input").forEach(input => {
+    input.addEventListener("change", async () => {
+      const idx = parseInt(input.dataset.index);
+      let novaQtd = parseInt(input.value);
+      if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
+      await updateQuantity(idx, novaQtd);
+    });
+  });
+
+  document.querySelectorAll(".remove-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const idx = parseInt(btn.dataset.index);
+      await removeItem(idx);
+    });
+  });
+
+  updateResumo();
+}
 
   /* ================== Atualizar resumo ================== */
-  function updateResumo() {
-    const totalItems = cartItems.length;
-    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
-    const total = cartItems.reduce((acc, i) => acc + ((i.precoPromocional || i.preco || 0) * i.quantidade), 0);
+function updateResumo() {
+  const totalItems = cartItems.length;
+  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-    cartCount.textContent = totalQuantity;
-    summaryItems.textContent = totalItems;
-    summaryQuantity.textContent = totalQuantity;
-    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
+  const total = cartItems.reduce((acc, i) => {
+    const precoBase = i.preco ?? i.precoPromocional ?? 0;
+    return acc + (precoBase * i.quantidade);
+  }, 0);
 
-    if (!isLoggedIn) saveGuestCartToLocalStorage();
-  }
+  cartCount.textContent = totalQuantity;
+  summaryItems.textContent = totalItems;
+  summaryQuantity.textContent = totalQuantity;
+  summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  if (!isLoggedIn) saveGuestCartToLocalStorage();
+}
 
   /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
@@ -355,13 +380,27 @@ async function initCart() {
 
     cartItems[idx].quantidade = quantidade;
 
+    const item = cartItems[idx];
+    const produtoId = item.produtoId || item.id || item.produto?.id;
+    const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+    const torneira = item.torneira && item.torneira !== "" ? item.torneira : "padrao";
+    const refil = item.refil || null;
+
+    console.log("[Carrinho] Atualizando quantidade:", { produtoId, cor, torneira, quantidade });
+
     if (isLoggedIn) {
       try {
         await fetch("/api/carrinho/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
+          body: JSON.stringify({
+            produtoId,
+            quantidade,
+            cor,
+            torneira,
+            refil
+          })
         });
       } catch (err) {
         console.error("[Carrinho] Erro ao atualizar quantidade:", err);
@@ -378,7 +417,21 @@ async function initCart() {
     if (idx < 0 || idx >= cartItems.length) return;
 
     const item = cartItems[idx];
-    const cartItemId = item.cartItemId || item.idCarrinho || item.carrinhoId || item.idCarrinhoItem || item.cartId || item.id;
+    const cartItemId =
+      item.cartItemId ||
+      item.idCarrinho ||
+      item.carrinhoId ||
+      item.idCarrinhoItem ||
+      item.cartId ||
+      item.id;
+
+    // 🔹 Garante que cor e torneira tenham valor padrão
+    const produtoId = item.produtoId || item.id || item.produto?.id;
+    const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+    const torneira = item.torneira && item.torneira !== "" ? item.torneira : "padrao";
+    const refil = item.refil || null;
+
+    console.log("[Carrinho] Removendo item:", { produtoId, cor, torneira });
 
     // Remove visualmente do array primeiro
     cartItems.splice(idx, 1);
@@ -386,19 +439,18 @@ async function initCart() {
 
     if (isLoggedIn) {
       try {
-        const produtoId = item.produtoId || item.id || item.produto?.id;
-        const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
-
         const response = await fetch("/api/carrinho/remove", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ produtoId, cor })
+          body: JSON.stringify({ produtoId, cor, torneira, refil })
         });
 
-        if (!response.ok) console.error("[Carrinho] Falha ao remover do servidor:", response.status);
-        else console.log("[Carrinho] Item removido do banco:", cartItemId);
-
+        if (!response.ok) {
+          console.error("[Carrinho] Falha ao remover do servidor:", response.status);
+        } else {
+          console.log("[Carrinho] Item removido do banco:", cartItemId);
+        }
       } catch (err) {
         console.error("[Carrinho] Erro ao remover item:", err);
       }
@@ -411,16 +463,30 @@ async function initCart() {
   window.addToCart = async function (produto) {
     if (!produto || !produto.id) return;
 
+    const corSelecionada = produto.cor?.hex || produto.cor || produto.corSelecionada || "padrao";
+    const torneiraSelecionada = produto.torneira || produto.torneiraSelecionada || "padrao";
+
+    // 🔹 Verifica se já existe o mesmo produto com MESMA cor e MESMA torneira
     const existingIndex = cartItems.findIndex(i =>
-      i.id === produto.id && (i.cor?.hex || i.cor) === (produto.cor?.hex || produto.cor || "padrao")
+      i.id === produto.id &&
+      (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
+      (i.torneira || "padrao") === torneiraSelecionada
     );
 
     if (existingIndex >= 0) {
+      // Se for o mesmo produto + mesma variação → soma a quantidade
       cartItems[existingIndex].quantidade += (produto.quantidade || 1);
     } else {
-      cartItems.push({ ...produto, quantidade: produto.quantidade || 1, cor: produto.cor || produto.corSelecionada || "padrao" });
+      // Se for variação diferente → cria novo item
+      cartItems.push({
+        ...produto,
+        quantidade: produto.quantidade || 1,
+        cor: corSelecionada,
+        torneira: torneiraSelecionada
+      });
     }
 
+    // 🔹 Se estiver logado → sincroniza com o backend
     if (isLoggedIn) {
       try {
         await fetch("/api/carrinho/add", {
@@ -430,7 +496,9 @@ async function initCart() {
           body: JSON.stringify({
             produtoId: produto.id,
             quantidade: produto.quantidade || 1,
-            cor: produto.cor || produto.corSelecionada || "padrao"
+            cor: corSelecionada,
+            torneira: torneiraSelecionada,
+            refil: produto.refil || null
           })
         });
       } catch (err) {
@@ -442,6 +510,7 @@ async function initCart() {
 
     renderCart();
   };
+
 
   /* ================== Abrir/Fechar carrinho ================== */
   cartButton.addEventListener('click', () => {
@@ -565,33 +634,26 @@ document.querySelector(".btn-comprar").addEventListener("click", async () => {
 
   try {
     const res = await fetch("/api/auth/me", { credentials: "include" });
-
     if (!res.ok) {
-      // Mostra modal em vez de redirecionar direto
       const modal = document.getElementById("modalLogin");
       modal.classList.add("show");
-
-      // Botão ir para login
-      document.getElementById("btnIrLogin").onclick = () => {
-        window.location.href = "/login";
-      };
-
-      // Botão fechar
-      document.getElementById("btnFecharModal").onclick = () => {
-        modal.classList.remove("show");
-      };
-
+      document.getElementById("btnIrLogin").onclick = () => window.location.href = "/login";
+      document.getElementById("btnFecharModal").onclick = () => modal.classList.remove("show");
       return;
     }
 
-    // Usuário logado → continua o fluxo
     const produto = {
       ...produtoAtual,
       quantidade: parseInt(document.getElementById("quantidade").value),
       imagem: document.getElementById("imagemPrincipal").src,
       cor: produtoAtual.corSelecionada || null,
-       torneira: produtoAtual.torneiraSelecionada || null
+      torneira: produtoAtual.torneiraSelecionada || null,
+      refil: produtoAtual.refilSelecionado || null,
+      preco: produtoAtual.precoAjustado || produtoAtual.precoPromocional || produtoAtual.preco,
+      precoPromocional: produtoAtual.precoPromocionalFinal || produtoAtual.precoPromocional
     };
+
+    console.log("[DEBUG] Produto enviado ao carrinho:", produto);
 
     animarEAdicionarAoCarrinho(produto, true);
   } catch (err) {
@@ -607,11 +669,19 @@ document.querySelector(".btn-carrinho").addEventListener("click", () => {
     ...produtoAtual,
     quantidade: parseInt(document.getElementById("quantidade").value),
     imagem: document.getElementById("imagemPrincipal").src,
-    cor: produtoAtual.corSelecionada || null // 🔹 Adicionado
+    cor: produtoAtual.corSelecionada || null,
+    torneira: produtoAtual.torneiraSelecionada || null,
+    refil: produtoAtual.refilSelecionado || null,
+    preco: produtoAtual.precoAjustado || produtoAtual.precoPromocional || produtoAtual.preco,
+    precoPromocional: produtoAtual.precoPromocionalFinal || produtoAtual.precoPromocional
   };
+
+  console.log("[DEBUG] Produto enviado ao carrinho:", produto);
 
   animarEAdicionarAoCarrinho(produto, false);
 });
+
+
 
 
 /* ================== Calcular Frete ================== */
@@ -737,6 +807,47 @@ async function carregarProduto() {
 
     produtoAtual = produto; // Salva produto atual
 
+    // ================== Função central de sincronização de preço ==================
+   function atualizarPreco() {
+  const precoAntigoEl = document.querySelector(".produto-detalhes .preco .antigo");
+  const precoNovoEl = document.querySelector(".produto-detalhes .preco .novo");
+
+  const base = Number(produtoAtual.preco) || 0;
+  const promo = Number(produtoAtual.precoPromocional) || null;
+  let precoFinal = base;
+  let precoPromoFinal = promo;
+
+  // 🔹 Adiciona preço da torneira
+  const torneira = produtoAtual.torneiraSelecionada;
+  if (torneira === "Tap Handle Prata" || torneira === "Tap Handle Preta") {
+    precoFinal += 15;
+    if (precoPromoFinal !== null) precoPromoFinal += 15;
+  }
+
+  // 🔹 Adiciona preço de refil
+  const refil = Number(produtoAtual.refilSelecionado) || 1;
+  if (refil > 1) {
+    const extra = (refil - 1) * 40;
+    precoFinal += extra;
+    if (precoPromoFinal !== null) precoPromoFinal += extra;
+  }
+
+  // 🔹 Atualiza DOM
+  precoAntigoEl.textContent = base
+    ? precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+    : "";
+
+  precoNovoEl.textContent = precoPromoFinal
+    ? precoPromoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+    : precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  // 🔹 Atualiza produtoAtual globalmente
+  produtoAtual.precoAjustado = precoPromoFinal || precoFinal;
+  produtoAtual.precoFinal = precoFinal;
+  produtoAtual.precoPromocionalFinal = precoPromoFinal;
+}
+
+
     document.getElementById("imagemPrincipal").src = produto.imagem[0];
 
     // Inicializa miniaturas com navegação
@@ -783,25 +894,88 @@ async function carregarProduto() {
     }
 
     // ================== Renderizar variações de torneira ==================
-    const torneiraContainer = document.querySelector(".torneira-container");
+    const torneiraSection = document.querySelector(".torneira-produto");
     const torneiraSelect = document.getElementById("torneiraSelect");
 
-    // Verifica se o produto tem variações de torneira
     if (produto.torneira && produto.torneira.length > 0) {
-      torneiraContainer.style.display = "block";
       torneiraSelect.innerHTML = `
-    <option value="">Selecione</option>
+    <option value="">Selecione uma torneira</option>
     ${produto.torneira.map(t => `<option value="${t}">${t}</option>`).join("")}
   `;
 
+      torneiraSection.style.display = "flex";
+
       // Captura a seleção
+      // 🔹 Mapa de imagens por tipo de torre e tipo de torneira
+      const mapaTorneirasPorTipo = {
+        "Torre de Chopp": {
+          "Cromada": "https://i.imgur.com/KJ4yDTM.jpeg",
+          "Alavanca": "https://i.imgur.com/13TF5Cy.jpeg",
+          "Tap Handle Prata": "https://i.imgur.com/57k03HJ.jpeg",
+          "Tap Handle Preta": "https://i.imgur.com/hH5RwCR.jpeg"
+        },
+        "Torre de Tereré": {
+          "Cromada": "https://i.imgur.com/mK0haAE.png",
+          "Alavanca": "https://i.imgur.com/IfE2mif.png",
+          "Tap Handle Prata": "https://i.imgur.com/efnr93G.png",
+          "Tap Handle Preta": "https://i.imgur.com/Kblu3wE.png"
+        }
+      };
+
+      // Captura a seleção e muda imagem e preço
       torneiraSelect.addEventListener("change", e => {
-        produtoAtual.torneiraSelecionada = e.target.value;
+        const selecionada = e.target.value;
+        produtoAtual.torneiraSelecionada = selecionada;
+
+        // troca imagem da torneira (mantém)
+        const tipoTorre = produtoAtual.tipo || produtoAtual.nome?.includes("Tereré") ? "Torre de Tereré" : "Torre de Chopp";
+        const imagemCorrespondente = mapaTorneirasPorTipo[tipoTorre]?.[selecionada];
+        if (imagemCorrespondente) {
+          const imgEl = document.getElementById("imagemPrincipal");
+          imgEl.style.opacity = 0;
+          setTimeout(() => {
+            imgEl.src = imagemCorrespondente;
+            imgEl.style.opacity = 1;
+          }, 150);
+        }
+
+        // 🔹 Chama função central
+        atualizarPreco();
       });
+
     } else {
-      // Se não houver variações, esconde o campo completamente
-      torneiraContainer.style.display = "none";
+      torneiraSection.style.display = "none";
     }
+
+    // ================== Renderizar opção de refil ==================
+    const refilSection = document.querySelector(".refil-produto");
+    const refilSelect = document.getElementById("refilSelect");
+
+    // Exibe o seletor APENAS se o produto tiver refil disponível
+    if (produto.refil && produto.refil > 0) {
+      refilSection.style.display = "block";
+
+      // 🔹 Gera dinamicamente as opções conforme o valor do banco
+      let opcoesRefil = "";
+      for (let i = 1; i <= produto.refil; i++) {
+        const texto = i === 1 ? "1 refil" : `${i} refis`;
+        opcoesRefil += `<option value="${i}">${texto}</option>`;
+      }
+      refilSelect.innerHTML = opcoesRefil;
+
+      // 🔹 Define refil inicial como 1
+      produtoAtual.refilSelecionado = 1;
+
+      // 🔹 Atualiza o preço ao trocar
+      refilSelect.addEventListener("change", e => {
+        produtoAtual.refilSelecionado = parseInt(e.target.value);
+        atualizarPreco();
+      });
+
+    } else {
+      refilSection.style.display = "none";
+    }
+
 
     // Produtos relacionados
     const categorias = [produto.categoria, produto.categoria2, produto.categoria3].filter(Boolean);

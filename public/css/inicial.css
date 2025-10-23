@@ -288,18 +288,19 @@ body {
 /* Itens do carrinho */
 .cart-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;  
   gap: 15px;
   padding: 12px 0;
   border-bottom: 1px solid #eee;
 }
 
 .cart-item img {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
+  margin-top: 4px;           
 }
 
 .cart-item-info {
@@ -307,6 +308,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  justify-content: flex-start; 
 }
 
 .cart-item-info h4 {
@@ -326,6 +328,7 @@ body {
   font-weight: bold;
   color: #222;
 }
+
 
 .cart-quantity {
   display: flex;
@@ -379,6 +382,23 @@ body {
 .color-name {
   font-weight: 500;
   text-transform: capitalize;
+}
+
+.cart-torneira {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.torneira-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.torneira-name {
+  color: #222;
 }
 
 .remove-btn {

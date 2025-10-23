@@ -236,6 +236,7 @@ function initBtnTopo() {
 /* ================================================
    CARRINHO INTERATIVO
 ================================================ */
+
 async function initCart() {
   const cartButton = document.getElementById('cart-button');
   const cartSidebar = document.getElementById('cart-sidebar');
@@ -357,24 +358,23 @@ async function initCart() {
   }
 
   /* ================== Renderizar carrinho ================== */
-/* ================== Tradução de cores (EN → PT) ================== */
-const colorTranslations = {
-  red: "Vermelho",
-  blue: "Azul",
-  black: "Preto",
-  white: "Branco",
-  green: "Verde",
-  yellow: "Amarelo",
-  brown: "Marrom",
-  orange: "Laranja",
-  pink: "Rosa",
-  purple: "Roxo",
-  gray: "Cinza",
-  silver: "Prata",
-  gold: "Dourado",
-  beige: "Bege",
-  transparent: "Transparente",
-};
+  const colorTranslations = {
+    red: "Vermelho",
+    blue: "Azul",
+    black: "Preto",
+    white: "Branco",
+    green: "Verde",
+    yellow: "Amarelo",
+    brown: "Marrom",
+    orange: "Laranja",
+    pink: "Rosa",
+    purple: "Roxo",
+    gray: "Cinza",
+    silver: "Prata",
+    gold: "Dourado",
+    beige: "Bege",
+    transparent: "Transparente",
+  };
 
   function renderCart() {
     cartItemsContainer.innerHTML = "";
@@ -390,24 +390,30 @@ const colorTranslations = {
 
       const itemDiv = document.createElement("div");
       itemDiv.className = "cart-item";
-      itemDiv.innerHTML = `
+     itemDiv.innerHTML = `
   <img src="${item.imagem || ''}" alt="${item.nome}">
   <div class="cart-item-info">
     <h4>${item.nome}</h4>
-   ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
-  <div class="cart-color">
-    <span class="color-circle" 
-      style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
-    </span>
-    <span class="color-name">
-      ${(() => {
-        const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
-        const corKey = corEn?.toLowerCase().trim();
-        return colorTranslations[corKey] || corEn; // traduz ou mostra original
-      })()}
-    </span>
-  </div>
-` : ""}
+    ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
+      <div class="cart-color">
+        <span class="color-circle" 
+          style="background-color:${typeof item.cor === "object" ? (item.cor.hex || "#ccc") : item.cor};">
+        </span>
+        <span class="color-name">
+          ${(() => {
+                const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+                const corKey = corEn?.toLowerCase().trim();
+                return colorTranslations[corKey] || corEn;
+              })()}
+        </span>
+      </div>
+    ` : ""}
+    ${item.torneira && item.torneira !== "padrao" && item.torneira !== "" ? `
+      <div class="cart-torneira">
+        <span class="torneira-label">Torneira:</span>
+        <span class="torneira-name">${item.torneira}</span>
+      </div>
+    ` : ""}
     <p class="cart-price">${preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
     <div class="cart-quantity">
       <button class="qty-btn minus" data-index="${index}">-</button>
@@ -465,62 +471,86 @@ const colorTranslations = {
   }
 
   /* ================== Atualizar quantidade ================== */
-  async function updateQuantity(idx, quantidade) {
-    if (idx < 0 || idx >= cartItems.length) return;
+ async function updateQuantity(idx, quantidade) {
+  if (idx < 0 || idx >= cartItems.length) return;
 
-    cartItems[idx].quantidade = quantidade;
+  cartItems[idx].quantidade = quantidade;
 
-    if (isLoggedIn) {
-      try {
-        await fetch("/api/carrinho/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ produtoId: cartItems[idx].id, quantidade })
-        });
-      } catch (err) {
-        console.error("[Carrinho] Erro ao atualizar quantidade:", err);
-      }
-    } else {
-      saveGuestCartToLocalStorage();
+  const item = cartItems[idx];
+  const produtoId = item.produtoId || item.id || item.produto?.id;
+  const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+  const torneira = item.torneira && item.torneira !== "" ? item.torneira : "padrao";
+
+  console.log("[Carrinho] Atualizando quantidade:", { produtoId, cor, torneira, quantidade });
+
+  if (isLoggedIn) {
+    try {
+      await fetch("/api/carrinho/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          produtoId,
+          quantidade,
+          cor,
+          torneira
+        })
+      });
+    } catch (err) {
+      console.error("[Carrinho] Erro ao atualizar quantidade:", err);
     }
-
-    renderCart();
+  } else {
+    saveGuestCartToLocalStorage();
   }
+
+  renderCart();
+}
 
   /* ================== Remover item ================== */
-  async function removeItem(idx) {
-    if (idx < 0 || idx >= cartItems.length) return;
+async function removeItem(idx) {
+  if (idx < 0 || idx >= cartItems.length) return;
 
-    const item = cartItems[idx];
-    const cartItemId = item.cartItemId || item.idCarrinho || item.carrinhoId || item.idCarrinhoItem || item.cartId || item.id;
+  const item = cartItems[idx];
+  const cartItemId =
+    item.cartItemId ||
+    item.idCarrinho ||
+    item.carrinhoId ||
+    item.idCarrinhoItem ||
+    item.cartId ||
+    item.id;
 
-    // Remove visualmente do array primeiro
-    cartItems.splice(idx, 1);
-    renderCart();
+  // 🔹 Garante que cor e torneira tenham valor padrão
+  const produtoId = item.produtoId || item.id || item.produto?.id;
+  const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+  const torneira = item.torneira && item.torneira !== "" ? item.torneira : "padrao";
 
-    if (isLoggedIn) {
-      try {
-        const produtoId = item.produtoId || item.id || item.produto?.id;
-        const cor = item.cor && item.cor !== "" ? item.cor : "padrao";
+  console.log("[Carrinho] Removendo item:", { produtoId, cor, torneira });
 
-        const response = await fetch("/api/carrinho/remove", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ produtoId, cor })
-        });
+  // Remove visualmente do array primeiro
+  cartItems.splice(idx, 1);
+  renderCart();
 
-        if (!response.ok) console.error("[Carrinho] Falha ao remover do servidor:", response.status);
-        else console.log("[Carrinho] Item removido do banco:", cartItemId);
+  if (isLoggedIn) {
+    try {
+      const response = await fetch("/api/carrinho/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ produtoId, cor, torneira }) // 🔥 Agora envia certinho
+      });
 
-      } catch (err) {
-        console.error("[Carrinho] Erro ao remover item:", err);
+      if (!response.ok) {
+        console.error("[Carrinho] Falha ao remover do servidor:", response.status);
+      } else {
+        console.log("[Carrinho] Item removido do banco:", cartItemId);
       }
-    } else {
-      saveGuestCartToLocalStorage();
+    } catch (err) {
+      console.error("[Carrinho] Erro ao remover item:", err);
     }
+  } else {
+    saveGuestCartToLocalStorage();
   }
+}
 
   /* ================== Adicionar produto ================== */
   window.addToCart = async function (produto) {
@@ -545,7 +575,8 @@ const colorTranslations = {
           body: JSON.stringify({
             produtoId: produto.id,
             quantidade: produto.quantidade || 1,
-            cor: produto.cor || produto.corSelecionada || "padrao"
+            cor: produto.cor || produto.corSelecionada || "padrao",
+            torneira: produto.torneira || produto.torneiraSelecionada || "padrao"
           })
         });
       } catch (err) {

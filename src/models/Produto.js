@@ -42,6 +42,11 @@ const Produto = sequelize.define("Produto", {
     type: DataTypes.JSON,
     allowNull: true
   },
+  refil: {
+  type: DataTypes.INTEGER,
+  allowNull: true, 
+  defaultValue: null 
+},
   capacidade: {
     type: DataTypes.JSON,
     allowNull: true

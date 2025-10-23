@@ -170,26 +170,27 @@
         <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
       </div>
 
-      <!-- HTML: Seletor de cores -->
+      <!-- Seletor de cores -->
       <div class="cores-produto">
         <h4>Escolha a cor:</h4>
         <div class="lista-cores" id="coresContainer"></div>
       </div>
 
-      <!-- Campos extras para torres -->
-      <div class="extras-torres" id="extrasTorres" style="display:none;">
-        <div class="cores-container">
-          <label for="corSelect">Cor:</label>
-          <select id="corSelect"></select>
-        </div>
-        <div class="torneira-container">
-          <label for="torneiraSelect">Torneira:</label>
-          <select id="torneiraSelect"></select>
-        </div>
-        <div class="litragem-container">
-          <label>Litragem:</label>
-          <span id="litragem"></span>
-        </div>
+      <!-- Seletor de torneira -->
+      <div class="torneira-produto" style="display:none;">
+        <h4>Escolha a torneira:</h4>
+        <select id="torneiraSelect" class="select-torneira"></select>
+      </div>
+
+      <!-- Seletor de Refil -->
+      <div class="refil-produto" style="display:none;">
+        <h4>Quantidade de refil:</h4>
+        <select id="refilSelect">
+          <option value="1">1 (incluso)</option>
+          <option value="2">+1 refil extra</option>
+          <option value="3">+2 refis extras</option>
+          <option value="4">+3 refis extras</option>
+        </select>
       </div>
 
       <button class="btn-carrinho">Adicionar ao carrinho</button>
@@ -250,8 +251,6 @@
     </div>
   </div>
 
-
-<script src="/src/utils/tradutorCores.js"></script>
   <script src="../js/detalhes-produto.js"></script>
 
 </body>

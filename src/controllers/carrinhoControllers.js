@@ -1,20 +1,24 @@
 const Cart = require("../models/carrinho");
 const Produto = require("../models/Produto");
 
-// ================== Utilitário ==================
+/* ================== Utilitário ================== */
 function formatCartItem(item) {
   return {
     id: item.produtoId,
     nome: item.Produto?.nome || "",
-    imagem: Array.isArray(item.Produto?.imagem) ? item.Produto.imagem[0] : item.Produto?.imagem || "",
+    imagem: Array.isArray(item.Produto?.imagem)
+      ? item.Produto.imagem[0]
+      : item.Produto?.imagem || "",
     preco: item.Produto?.preco || 0,
     precoPromocional: item.Produto?.precoPromocional || null,
     quantidade: item.quantidade,
-    cor: item.cor || "padrao"
+    cor: item.cor || "padrao",
+    torneira: item.torneira || null, 
+    refil: item.refil || null 
   };
 }
 
-// ================== Pegar carrinho ==================
+/* ================== Pegar carrinho ================== */
 exports.getCart = async (req, res) => {
   const usuarioId = req.session.user?.id;
   if (!usuarioId) return res.json([]);
@@ -24,6 +28,7 @@ exports.getCart = async (req, res) => {
       where: { usuarioId },
       include: [{ model: Produto, as: "Produto" }]
     });
+
     res.json(items.map(formatCartItem));
   } catch (err) {
     console.error("[Carrinho] Erro ao carregar carrinho:", err);
@@ -31,21 +36,27 @@ exports.getCart = async (req, res) => {
   }
 };
 
-// ================== Adicionar produto ==================
+/* ================== Adicionar produto ================== */
 exports.addToCart = async (req, res) => {
-  const { produtoId, quantidade = 1, cor } = req.body;
+  const { produtoId, quantidade = 1, cor, torneira, refil} = req.body; // 🔹 Captura também a torneira
   const usuarioId = req.session.user?.id;
   const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
+  const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao";
+  const refilFinal = refil ?? null;
 
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-  if (!produtoId || quantidade <= 0) return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
+  if (!usuarioId)
+    return res.status(401).json({ error: "Usuário não logado" });
+  if (!produtoId || quantidade <= 0)
+    return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
 
   try {
     const produto = await Produto.findByPk(produtoId);
-    if (!produto) return res.status(404).json({ error: "Produto não encontrado" });
+    if (!produto)
+      return res.status(404).json({ error: "Produto não encontrado" });
 
+    // 🔹 Considera variações de cor e torneira
     let cartItem = await Cart.findOne({
-      where: { usuarioId, produtoId, cor: corFinal },
+      where: { usuarioId, produtoId, cor: corFinal, torneira: torneiraFinal, refil: refilFinal },
       include: [{ model: Produto, as: "Produto" }]
     });
 
@@ -53,8 +64,17 @@ exports.addToCart = async (req, res) => {
       cartItem.quantidade += quantidade;
       await cartItem.save();
     } else {
-      cartItem = await Cart.create({ usuarioId, produtoId, quantidade, cor: corFinal });
-      cartItem = await Cart.findByPk(cartItem.id, { include: [{ model: Produto, as: "Produto" }] });
+      cartItem = await Cart.create({
+        usuarioId,
+        produtoId,
+        quantidade,
+        cor: corFinal,
+        torneira: torneiraFinal,
+        refil: refilFinal
+      });
+      cartItem = await Cart.findByPk(cartItem.id, {
+        include: [{ model: Produto, as: "Produto" }]
+      });
     }
 
     res.json(formatCartItem(cartItem));
@@ -64,18 +84,27 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-// ================== Atualizar quantidade ==================
+/* ================== Atualizar quantidade ================== */
 exports.updateCart = async (req, res) => {
-  const { produtoId, quantidade, cor } = req.body;
+  const { produtoId, quantidade, cor, torneira, refil } = req.body;
   const usuarioId = req.session.user?.id;
   const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
+  const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao";
+   const refilFinal = refil ?? null;
 
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-  if (!produtoId || quantidade <= 0) return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
+  if (!usuarioId)
+    return res.status(401).json({ error: "Usuário não logado" });
+  if (!produtoId || quantidade <= 0)
+    return res.status(400).json({ error: "Produto e quantidade válidos são obrigatórios" });
 
   try {
-    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId, cor: corFinal }, include: [{ model: Produto, as: "Produto" }] });
-    if (!cartItem) return res.status(404).json({ error: "Produto não encontrado no carrinho" });
+    const cartItem = await Cart.findOne({
+      where: { usuarioId, produtoId, cor: corFinal, torneira: torneiraFinal, refil: refilFinal },
+      include: [{ model: Produto, as: "Produto" }]
+    });
+
+    if (!cartItem)
+      return res.status(404).json({ error: "Produto não encontrado no carrinho" });
 
     cartItem.quantidade = quantidade;
     await cartItem.save();
@@ -86,25 +115,47 @@ exports.updateCart = async (req, res) => {
   }
 };
 
-// ================== Remover produto ==================
+/* ================== Remover produto ================== */
 exports.removeFromCart = async (req, res) => {
-  const { produtoId, cor } = req.body;
+  const { produtoId, cor, torneira, refil } = req.body;
   const usuarioId = req.session.user?.id;
-  const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
 
-  if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
-  if (!produtoId) return res.status(400).json({ error: "ProdutoId é obrigatório" });
+  // 🟡 Mantém a mesma lógica usada na cor:
+  const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
+  const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao"; 
+  const refilFinal = refil ?? null;
+
+  if (!usuarioId)
+    return res.status(401).json({ error: "Usuário não logado" });
+
+  if (!produtoId)
+    return res.status(400).json({ error: "ProdutoId é obrigatório" });
 
   try {
-    const cartItem = await Cart.findOne({ where: { usuarioId, produtoId, cor: corFinal } });
+    // 🔹 Busca combinando cor e torneira (ambas podem ser "padrao")
+    const cartItem = await Cart.findOne({
+      where: { usuarioId, produtoId, cor: corFinal, torneira: torneiraFinal, refil: refilFinal }
+    });
 
     if (!cartItem) {
-      console.log("[Carrinho] Item não encontrado no banco:", { usuarioId, produtoId, cor: corFinal });
+      console.log("[Carrinho] Item não encontrado no banco:", {
+        usuarioId,
+        produtoId,
+        cor: corFinal,
+        torneira: torneiraFinal
+      });
       return res.status(404).json({ error: "Item não encontrado no carrinho" });
     }
 
     await cartItem.destroy();
-    console.log("[Carrinho] Item removido com sucesso:", { usuarioId, produtoId, cor: corFinal });
+
+    console.log("[Carrinho] Item removido com sucesso:", {
+      usuarioId,
+      produtoId,
+      cor: corFinal,
+      torneira: torneiraFinal
+    });
+
     res.json({ success: true });
   } catch (err) {
     console.error("[Carrinho] Erro ao remover produto:", err);

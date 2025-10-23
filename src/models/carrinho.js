@@ -30,8 +30,21 @@ const Cart = sequelize.define("Cart", {
 
   cor: {
     type: DataTypes.STRING,
-    allowNull: true
-  }, 
+    allowNull: false,
+    defaultValue: "padrao"
+  },
+
+  torneira: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "padrao"
+  },
+
+  refil: {
+  type: DataTypes.INTEGER,
+  allowNull: true,   
+  defaultValue: null 
+},
   cupom: {
     type: DataTypes.STRING,
     allowNull: true
