@@ -467,11 +467,13 @@ function updateResumo() {
     const torneiraSelecionada = produto.torneira || produto.torneiraSelecionada || "padrao";
 
     // 🔹 Verifica se já existe o mesmo produto com MESMA cor e MESMA torneira
-    const existingIndex = cartItems.findIndex(i =>
-      i.id === produto.id &&
-      (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
-      (i.torneira || "padrao") === torneiraSelecionada
-    );
+const existingIndex = cartItems.findIndex(i =>
+  i.id === produto.id &&
+  (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
+  (i.torneira || "padrao") === torneiraSelecionada &&
+  (Number(i.refil) || 1) === (Number(produto.refil) || 1)
+);
+
 
     if (existingIndex >= 0) {
       // Se for o mesmo produto + mesma variação → soma a quantidade

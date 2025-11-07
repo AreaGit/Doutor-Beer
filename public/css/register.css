@@ -150,6 +150,77 @@ form.form-columns > button {
   opacity: 0.7;
 }
 
+
+.senha-requisitos {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  transition: color 0.3s;
+}
+
+.senha-requisitos.fraca {
+  color: #e74c3c; /* vermelho */
+}
+
+.senha-requisitos.media {
+  color: #f39c12; /* laranja */
+}
+
+.senha-requisitos.forte {
+  color: #2ecc71; /* verde */
+}
+
+/* ===== Mensagem discreta abaixo da senha ===== */
+.senha-requisitos {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  color: #888;
+  transition: all 0.3s ease;
+}
+
+.senha-requisitos.fraca {
+  color: #e74c3c; /* vermelho suave */
+}
+
+.senha-requisitos.media {
+  color: #f39c12; /* dourado */
+}
+
+.senha-requisitos.forte {
+  color: #27ae60; /* verde elegante */
+}
+
+/* ===== Campos com ícones ===== */
+.icon-input .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon-input i {
+  position: absolute;
+  left: 10px;
+  color: #b5b5b5;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.icon-input input {
+  width: 100%;
+  padding: 10px 10px 10px 35px; /* espaço pro ícone */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.3s;
+}
+
+.icon-input input:focus {
+  border-color: #f9b000;
+}
+
+.icon-input input::placeholder {
+  color: #aaa;
+}
+
 /* ==== BOTÃO DE CADASTRO ==== */
 button {
   padding: 14px 0;
@@ -247,6 +318,194 @@ input.erro, select.erro {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ===== Modal de Termos de Uso ===== */
+.modal-termos {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.modal-termos.show {
+  display: flex;
+  opacity: 1;
+}
+
+/* ===== Container do conteúdo ===== */
+.modal-content-termos {
+  background: rgb(255, 255, 255);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 35px 30px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  animation: slideUp 0.4s ease;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ===== Cabeçalho ===== */
+.modal-content-termos h2 {
+  font-size: 1.8rem;
+  color: #2c2c2c;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Texto ===== */
+.termos-texto {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #333;
+}
+
+.termos-texto p {
+  margin-bottom: 12px;
+}
+
+.termos-texto ul {
+  list-style: disc;
+  margin: 10px 0 10px 20px;
+}
+
+.termos-texto a {
+  color: #f9b000;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.termos-texto a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Botões ===== */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.modal-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+}
+
+.btn-modal-login {
+  background: linear-gradient(135deg, #f9b000, #ffca28);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(249, 176, 0, 0.3);
+}
+
+.btn-modal-login:hover {
+  background: linear-gradient(135deg, #ffb300, #f7a800);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(249, 176, 0, 0.5);
+}
+
+.btn-modal-fechar {
+  background: #e0e0e0;
+  color: #444;
+}
+
+.btn-modal-fechar:hover {
+  background: #d5d5d5;
+  transform: translateY(-1px);
+}
+
+/* ===== Animação ===== */
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Scroll suave ===== */
+.modal-content-termos::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-content-termos::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+
+/* ===== Títulos dentro do texto ===== */
+.termos-texto h3 {
+  color: #222;
+  font-size: 1.1rem;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  border-left: 4px solid #f9b000;
+  padding-left: 8px;
+  font-weight: 700;
+}
+
+/* ===== Parágrafos e listas ===== */
+.termos-texto p, 
+.termos-texto li {
+  color: #444;
+  line-height: 1.7;
+}
+
+.termos-texto ul {
+  list-style: disc;
+  margin-left: 20px;
+  margin-bottom: 12px;
+}
+
+/* ===== Destaque de e-mail ===== */
+.termos-texto strong {
+  color: #d89a00;
+}
+
+/* ===== Fixar os botões do modal no rodapé ===== */
+.modal-content-termos {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.termos-texto {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px; 
+}
+
+/* Área fixa dos botões */
+.modal-actions {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 12px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+
+
 
 /* ==== RESPONSIVIDADE ==== */
 @media (max-width: 768px) {

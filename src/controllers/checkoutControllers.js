@@ -38,7 +38,6 @@ async function getCartItems(usuarioId) {
 }
 
 // ================== Calcular Frete ==================
-// ================== Calcular Frete (versão atualizada) ==================
 exports.calcularFreteHandler = async (req, res) => {
   try {
     const usuarioId = req.session.user?.id;
@@ -52,7 +51,7 @@ exports.calcularFreteHandler = async (req, res) => {
     // 🛒 Se estiver logado, pega produtos do carrinho
     if (usuarioId && (!produtos || produtos.length === 0)) {
       produtosParaEnvio = await getCartItems(usuarioId);
-    } 
+    }
     // 🎯 Caso contrário, usa os produtos enviados pelo frontend (ex: página de produto)
     else if (produtos && produtos.length > 0) {
       produtosParaEnvio = produtos.map(p => ({
@@ -127,15 +126,35 @@ exports.confirmarPagamentoHandler = async (req, res) => {
       cupom
     });
 
-    // 4️⃣ Cria os itens do pedido
-    const itensPedido = itensCarrinho.map(item => ({
-      pedidoId: pedido.id,
-      produtoId: item.produtoId,
-      quantidade: item.quantidade,
-      precoUnitario: item.Produto.precoPromocional || item.Produto.preco
-    }));
+const itensPedido = itensCarrinho.map(item => {
+  const produto = item.Produto || {};
+  
+  // 🔹 Base do preço (promocional ou normal)
+  let precoFinal = produto.precoPromocional ?? produto.preco ?? 0;
 
-    await PedidoItem.bulkCreate(itensPedido);
+  // 🔹 Adiciona valor extra da torneira
+  if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") {
+    precoFinal += 15;
+  }
+
+  // 🔹 Adiciona refil extra
+  const refilQtd = Number(item.refil) || 1;
+  if (refilQtd > 1) {
+    precoFinal += (refilQtd - 1) * 40;
+  }
+
+  return {
+    pedidoId: pedido.id,
+    produtoId: item.produtoId,
+    quantidade: item.quantidade,
+    precoUnitario: precoFinal, // ✅ já vem com tudo incluído
+    cor: item.cor || null,
+    torneira: item.torneira || null,
+    refil: item.refil || null
+  };
+});
+
+await PedidoItem.bulkCreate(itensPedido);
 
     // 5️⃣ Limpa carrinho
     await Cart.destroy({ where: { usuarioId } });
@@ -205,7 +224,7 @@ exports.gerarBoleto = async (req, res) => {
       itens
     } = req.body;
 
-    if (!usuarioIdSessao && !usuarioIdFront) 
+    if (!usuarioIdSessao && !usuarioIdFront)
       return res.status(401).json({ error: "Usuário não logado" });
 
     if (!endereco || !itens?.length)

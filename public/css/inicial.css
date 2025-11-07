@@ -1254,6 +1254,11 @@ body {
 
 }
 
+@media (max-width: 664px) {
+
+  
+}
+
 
 @media(max-width: 768px) {
 
@@ -1340,7 +1345,6 @@ body {
 
   .produto-card {
     width: 48%;
-    /* 2 por linha */
     margin-bottom: 20px;
   }
 

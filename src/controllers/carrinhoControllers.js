@@ -9,12 +9,12 @@ function formatCartItem(item) {
     imagem: Array.isArray(item.Produto?.imagem)
       ? item.Produto.imagem[0]
       : item.Produto?.imagem || "",
-    preco: item.Produto?.preco || 0,
+    preco: item.precoFinal || item.Produto?.preco || 0,
     precoPromocional: item.Produto?.precoPromocional || null,
     quantidade: item.quantidade,
     cor: item.cor || "padrao",
-    torneira: item.torneira || null, 
-    refil: item.refil || null 
+    torneira: item.torneira || null,
+    refil: item.refil || null
   };
 }
 
@@ -38,7 +38,7 @@ exports.getCart = async (req, res) => {
 
 /* ================== Adicionar produto ================== */
 exports.addToCart = async (req, res) => {
-  const { produtoId, quantidade = 1, cor, torneira, refil} = req.body; // 🔹 Captura também a torneira
+  const { produtoId, quantidade = 1, cor, torneira, refil } = req.body;
   const usuarioId = req.session.user?.id;
   const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
   const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao";
@@ -54,7 +54,21 @@ exports.addToCart = async (req, res) => {
     if (!produto)
       return res.status(404).json({ error: "Produto não encontrado" });
 
-    // 🔹 Considera variações de cor e torneira
+    // 🧮 CALCULA O PREÇO FINAL COM BASE NAS VARIAÇÕES
+    let precoBase = produto.precoPromocional ?? produto.preco;
+    let precoFinal = precoBase;
+
+    // 🔹 Torneira extra
+    if (torneiraFinal === "Tap Handle Prata" || torneiraFinal === "Tap Handle Preta") {
+      precoFinal += 15;
+    }
+
+    // 🔹 Refis extras
+    if (refilFinal && Number(refilFinal) > 1) {
+      precoFinal += (refilFinal - 1) * 40;
+    }
+
+    // 🔹 Tenta localizar item existente com as mesmas variações
     let cartItem = await Cart.findOne({
       where: { usuarioId, produtoId, cor: corFinal, torneira: torneiraFinal, refil: refilFinal },
       include: [{ model: Produto, as: "Produto" }]
@@ -62,6 +76,7 @@ exports.addToCart = async (req, res) => {
 
     if (cartItem) {
       cartItem.quantidade += quantidade;
+      cartItem.precoFinal = precoFinal; // atualiza caso tenha mudado
       await cartItem.save();
     } else {
       cartItem = await Cart.create({
@@ -70,7 +85,8 @@ exports.addToCart = async (req, res) => {
         quantidade,
         cor: corFinal,
         torneira: torneiraFinal,
-        refil: refilFinal
+        refil: refilFinal,
+        precoFinal
       });
       cartItem = await Cart.findByPk(cartItem.id, {
         include: [{ model: Produto, as: "Produto" }]
@@ -90,7 +106,7 @@ exports.updateCart = async (req, res) => {
   const usuarioId = req.session.user?.id;
   const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
   const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao";
-   const refilFinal = refil ?? null;
+  const refilFinal = refil ?? null;
 
   if (!usuarioId)
     return res.status(401).json({ error: "Usuário não logado" });
@@ -106,8 +122,21 @@ exports.updateCart = async (req, res) => {
     if (!cartItem)
       return res.status(404).json({ error: "Produto não encontrado no carrinho" });
 
+    // Recalcula o preçoFinal se algo mudou
+    let precoBase = cartItem.Produto.precoPromocional ?? cartItem.Produto.preco;
+    let precoFinal = precoBase;
+
+    if (torneiraFinal === "Tap Handle Prata" || torneiraFinal === "Tap Handle Preta") {
+      precoFinal += 15;
+    }
+    if (refilFinal && Number(refilFinal) > 1) {
+      precoFinal += (refilFinal - 1) * 40;
+    }
+
     cartItem.quantidade = quantidade;
+    cartItem.precoFinal = precoFinal;
     await cartItem.save();
+
     res.json(formatCartItem(cartItem));
   } catch (err) {
     console.error("[Carrinho] Erro ao atualizar quantidade:", err);
@@ -122,7 +151,7 @@ exports.removeFromCart = async (req, res) => {
 
   // 🟡 Mantém a mesma lógica usada na cor:
   const corFinal = cor && cor.trim() !== "" ? cor : "padrao";
-  const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao"; 
+  const torneiraFinal = torneira && torneira.trim() !== "" ? torneira : "padrao";
   const refilFinal = refil ?? null;
 
   if (!usuarioId)

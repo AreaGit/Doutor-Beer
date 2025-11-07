@@ -16,28 +16,27 @@ function validarCEP(cep) {
   return /^[0-9]{8}$/.test(cep);
 }
 
-// ================== ROTA: Calcular frete (funciona com ou sem login) ==================
+/* ================== ROTA: Calcular frete ================== */
 router.post("/frete", async (req, res) => {
   try {
     const usuarioId = req.session.user?.id;
     let { cepDestino, produtos } = req.body;
-    cepDestino = (cepDestino || "").replace(/\D/g, "");
+    cepDestino = limparCEP(cepDestino);
 
-    if (!/^[0-9]{8}$/.test(cepDestino)) {
+    if (!validarCEP(cepDestino)) {
       return res.status(400).json({ error: `CEP inválido: ${req.body.cepDestino}` });
     }
 
     let products = [];
 
     if (usuarioId) {
-      // 🟢 Usuário logado → usa o carrinho do banco
+      // Usuário logado → pega do carrinho
       const items = await Cart.findAll({
         where: { usuarioId },
         include: [{ model: Produto, as: "Produto" }]
       });
 
-      if (!items.length)
-        return res.status(400).json({ error: "Carrinho vazio" });
+      if (!items.length) return res.status(400).json({ error: "Carrinho vazio" });
 
       products = items.map(i => ({
         width: i.Produto.width || 20,
@@ -48,7 +47,7 @@ router.post("/frete", async (req, res) => {
         quantity: i.quantidade || 1
       }));
     } else if (Array.isArray(produtos) && produtos.length) {
-      // 🔵 Visitante → usa produtos enviados no body
+      // Visitante → usa body
       products = produtos.map(p => ({
         width: p.width || 20,
         height: p.height || 20,
@@ -62,11 +61,7 @@ router.post("/frete", async (req, res) => {
     }
 
     const opcoesFrete = await calcularFrete({ toPostalCode: cepDestino, products });
-
-    // Filtra transportadoras indesejadas (opcional)
-    const filtradas = opcoesFrete.filter(o =>
-      o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
-    );
+    const filtradas = opcoesFrete.filter(o => o.company?.name !== "Jadlog" && o.company?.name !== "Azul");
 
     if (!filtradas.length)
       return res.status(404).json({ error: "Nenhuma opção de frete disponível." });
@@ -78,18 +73,21 @@ router.post("/frete", async (req, res) => {
   }
 });
 
-/* ================== ROTA: Salvar endereço + frete na sessão ================== */
+/* ================== ROTA: Salvar endereço + frete ================== */
 router.post("/salvar-endereco-frete", (req, res) => {
   const usuarioId = req.session.user?.id;
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
 
   const { endereco, frete } = req.body;
-
   if (!endereco || frete == null) {
     return res.status(400).json({ error: "Endereço ou frete inválido" });
   }
 
-  req.session.checkout = { endereco, frete };
+  req.session.checkout = {
+    endereco,
+    frete: Number(frete),
+    timestamp: Date.now()
+  };
 
   console.log("[Checkout] Endereço e frete salvos na sessão:", req.session.checkout);
   res.json({ ok: true });
@@ -108,13 +106,20 @@ router.get("/resumo", async (req, res) => {
 
     if (!items.length) return res.status(400).json({ error: "Carrinho vazio" });
 
-    const subtotal = items.reduce(
-      (acc, item) => acc + ((item.Produto.precoPromocional ?? item.Produto.preco ?? 0) * item.quantidade),
-      0
-    );
+    // 🔹 Calcula subtotal com variações (torneira/refil)
+    const subtotal = items.reduce((acc, item) => {
+      const base = item.Produto.precoPromocional ?? item.Produto.preco ?? 0;
+      let precoFinal = base;
+
+      if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") precoFinal += 15;
+      const refilQtd = Number(item.refil) || 1;
+      if (refilQtd > 1) precoFinal += (refilQtd - 1) * 40;
+
+      return acc + precoFinal * item.quantidade;
+    }, 0);
 
     const checkoutSession = req.session.checkout || {};
-    const frete = checkoutSession.frete ?? 0;
+    const frete = Number(checkoutSession.frete || 0);
 
     res.json({
       produtos: items.map(i => ({
@@ -123,107 +128,90 @@ router.get("/resumo", async (req, res) => {
         nome: i.Produto.nome,
         preco: i.Produto.precoPromocional ?? i.Produto.preco ?? 0,
         quantidade: i.quantidade,
+        cor: i.cor,
+        torneira: i.torneira,
+        refil: i.refil,
         imagem: i.Produto.imagem || null
       })),
       subtotal,
       frete,
       total: subtotal + frete
     });
-
   } catch (err) {
     console.error("[Checkout] Erro ao carregar resumo:", err);
     res.status(500).json({ error: "Erro ao carregar resumo do pedido" });
   }
 });
 
+/* ================== PAGAMENTOS ================== */
 router.post("/gerar-pix", checkoutController.gerarPix);
 router.post("/gerar-boleto", checkoutController.gerarBoleto);
 router.post("/gerar-cartao", checkoutController.gerarCartao);
 
-/* ================== ROTA: Finalizar pedido ================== */
+// ================== ROTA: Finalizar pedido ==================
 router.post("/finalizar", async (req, res) => {
   try {
     const usuarioIdSessao = req.session.user?.id;
     if (!usuarioIdSessao) return res.status(401).json({ error: "Usuário não logado" });
 
-    const {
-      usuarioId: usuarioIdFront,
-      endereco,
-      frete,
-      itens,
-      subtotal,
-      total,
-      formaPagamento
-    } = req.body;
+    const { itens, formaPagamento } = req.body;
+    if (!itens?.length) return res.status(400).json({ error: "Itens do pedido ausentes" });
 
-    if (!endereco || !itens?.length) {
-      return res.status(400).json({ error: "Dados incompletos do pedido" });
+    // Dados de endereço e frete da sessão
+    const sessionData = req.session.checkout || {};
+    const endereco = sessionData.endereco || {};
+    const frete = Number(sessionData.frete || 0);
+
+    // 🔹 Calcula subtotal com base no preço final enviado do front
+    const subtotal = itens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+    const total = subtotal + frete;
+
+    // 🔹 Define status inicial conforme método de pagamento
+    let statusInicial = "PENDENTE";
+    const metodo = (formaPagamento || "").toUpperCase();
+
+    if (metodo === "PIX" || metodo === "CARTAO") {
+      statusInicial = "PAGO";
+    } else if (metodo === "BOLETO") {
+      statusInicial = "AGUARDANDO_PAGAMENTO";
     }
 
-    // Normaliza endereço
-    const enderecoEntrega = {
-      nome: endereco.nome || "",
-      cep: endereco.cep || "",
-      rua: endereco.rua || "",
-      numero: endereco.numero || "",
-      complemento: endereco.complemento || "",
-      cidade: endereco.cidade || "",
-      estado: endereco.estado || ""
-    };
-
-    // Calcula subtotal caso não venha do frontend
-    const subtotalCalc = itens.reduce(
-      (acc, item) => acc + Number(item.precoUnitario || 0) * Number(item.quantidade || 0),
-      0
-    );
-
-    // Cria o pedido
+    // 🔹 Cria o pedido
     const pedido = await Pedido.create({
-      usuarioId: usuarioIdSessao || usuarioIdFront,
-      status: "PAGO",
-      frete: Number(frete || 0),
-      total: Number(total || subtotalCalc + Number(frete || 0)),
-      enderecoEntrega,
-      formaPagamento: formaPagamento || "Indefinido"
+      usuarioId: usuarioIdSessao,
+      status: statusInicial,
+      frete,
+      total,
+      enderecoEntrega: endereco,
+      formaPagamento: metodo || "INDEFINIDO"
     });
 
-    // 🔒 Monta os itens garantindo produtoId válido e existe no banco
-    const produtoIds = itens.map(i => i.produtoId || i.id);
-    const produtosValidos = await Produto.findAll({
-      where: { id: produtoIds }
-    });
-    const idsValidos = produtosValidos.map(p => p.id);
-
-    const pedidoItems = itens
-      .filter(item => (item.produtoId || item.id) && idsValidos.includes(item.produtoId || item.id))
-      .map(item => ({
-        pedidoId: pedido.id,
-        produtoId: item.produtoId || item.id,
-        quantidade: Number(item.quantidade || 1),
-        precoUnitario: Number(item.precoUnitario || 0)
-      }));
-
-    if (!pedidoItems.length) {
-      // Se nenhum produto for válido, apaga o pedido criado
-      await pedido.destroy();
-      return res.status(400).json({ error: "Nenhum produto válido no pedido" });
-    }
+    // 🔹 Cria os itens
+    const pedidoItems = itens.map(item => ({
+      pedidoId: pedido.id,
+      produtoId: item.produtoId || item.id,
+      quantidade: Number(item.quantidade || 1),
+      precoUnitario: Number(item.precoUnitario || 0),
+      subtotal: Number(item.precoUnitario * item.quantidade),
+      cor: item.cor || "padrao",
+      torneira: item.torneira || "padrao",
+      refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
+    }));
 
     await PedidoItem.bulkCreate(pedidoItems);
 
-    // Limpa o carrinho do usuário
+    // 🔹 Limpa carrinho após sucesso
     await Cart.destroy({ where: { usuarioId: usuarioIdSessao } });
 
-    return res.json({
+    res.json({
       sucesso: true,
       pedidoId: pedido.id,
       mensagem: "Pedido criado com sucesso!"
     });
   } catch (err) {
     console.error("[Checkout] Erro ao finalizar pedido:", err);
-    return res.status(500).json({ error: "Erro ao finalizar pedido" });
+    res.status(500).json({ error: "Erro ao finalizar pedido" });
   }
 });
-
 
 module.exports = router;

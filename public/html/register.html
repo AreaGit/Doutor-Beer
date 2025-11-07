@@ -23,114 +23,171 @@
   </header>
 
   <!-- Formulário de Registro -->
-<div class="registro-container">
-  <h2>Crie sua conta</h2>
- <form id="formRegistro" class="form-columns">
+  <div class="registro-container">
+    <h2>Crie sua conta</h2>
+    <form id="formRegistro" class="form-columns">
 
-    <div class="column">
-      <div class="form-group">
-        <label for="nome">Nome completo <span class="required">*</span></label>
-        <input type="text" name="nome" id="nome" placeholder="Nome completo" required>
-      </div>
+      <div class="column">
+        <div class="form-group">
+          <label for="nome">Nome completo <span class="required">*</span></label>
+          <input type="text" name="nome" id="nome" placeholder="Nome completo" required>
+        </div>
 
-      <div class="form-group">
-        <label for="cpf">CPF <span class="required">*</span></label>
-        <input type="text" name="cpf" id="cpf" placeholder="CPF" maxlength="14">
-      </div>
+        <div class="form-group">
+          <label for="cpf">CPF <span class="required">*</span></label>
+          <input type="text" name="cpf" id="cpf" placeholder="CPF" maxlength="14">
+        </div>
 
-      <div class="form-group">
-        <label for="celular">Celular <span class="required">*</span></label>
-        <input type="text" name="celular" id="celular" placeholder="Digite seu celular" maxlength="15" required>
-      </div>
+        <div class="form-group">
+          <label for="celular">Celular <span class="required">*</span></label>
+          <input type="text" name="celular" id="celular" placeholder="Digite seu celular" maxlength="15" required>
+        </div>
 
-      <div class="form-group">
-        <label for="telefone">Telefone fixo <span class="opcional">(opcional)</span></label>
-        <input type="text" name="telefone" id="telefone" placeholder="Digite seu telefone" maxlength="14">
-      </div>
+        <div class="form-group">
+          <label for="telefone">Telefone fixo <span class="opcional">(opcional)</span></label>
+          <input type="text" name="telefone" id="telefone" placeholder="Digite seu telefone" maxlength="14">
+        </div>
 
-      <div class="form-group">
-        <label for="data-de-nascimento">Data de Nascimento</label>
-        <input type="date" name="data-de-nascimento" id="data-de-nascimento">
-      </div>
+        <div class="form-group">
+          <label for="data-de-nascimento">Data de Nascimento</label>
+          <input type="date" name="data-de-nascimento" id="data-de-nascimento">
+        </div>
 
-      <div class="form-group">
-        <label for="sexo">Sexo <span class="opcional">(opcional)</span></label>
-        <select name="sexo" id="sexo" required>
-          <option value="">- Selecionar -</option>
-          <option value="masculino">Masculino</option>
-          <option value="feminino">Feminino</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="sexo">Sexo <span class="opcional">(opcional)</span></label>
+          <select name="sexo" id="sexo" required>
+            <option value="">- Selecionar -</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="cep">CEP <span class="required">*</span></label>
-        <input type="text" name="cep" id="cep" placeholder="Digite o CEP" maxlength="9" required>
-      </div>
+        <div class="form-group">
+          <label for="cep">CEP <span class="required">*</span></label>
+          <input type="text" name="cep" id="cep" placeholder="Digite o CEP" maxlength="9" required>
+        </div>
 
-      <div class="form-group">
-        <label for="endereco">Endereço <span class="required">*</span></label>
-        <input type="text" name="endereco" id="endereco" placeholder="Digite o endereço" required>
-      </div>
+        <div class="form-group">
+          <label for="endereco">Endereço <span class="required">*</span></label>
+          <input type="text" name="endereco" id="endereco" placeholder="Digite o endereço" required>
+        </div>
 
-      <div class="form-group">
-        <label for="numero">Número <span class="required">*</span></label>
-        <input type="text" name="numero" id="numero" placeholder="Número" required>
-      </div>
-    </div>
-
-    <div class="column">
-      <div class="form-group">
-        <label for="complemento">Complemento <span class="opcional">(opcional)</span></label>
-        <input type="text" name="complemento" id="complemento" placeholder="Complemento">
-      </div>
-
-      <div class="form-group">
-        <label for="referencia">Referência <span class="opcional">(opcional)</span></label>
-        <input type="text" name="referencia" id="referencia" placeholder="Referência">
-      </div>
-
-      <div class="form-group">
-        <label for="bairro">Bairro <span class="required">*</span></label>
-        <input type="text" name="bairro" id="bairro" placeholder="Bairro" required>
-      </div>
-
-      <div class="form-group">
-        <label for="cidade">Cidade <span class="required">*</span></label>
-        <input type="text" name="cidade" id="cidade" placeholder="Cidade" required>
-      </div>
-
-      <div class="form-group">
-        <label for="estado">Estado <span class="required">*</span></label>
-        <input type="text" name="estado" id="estado" placeholder="Estado" required>
-      </div>
-
-      <div class="form-group">
-        <label for="email">E-mail <span class="required">*</span></label>
-        <input type="email" name="email" id="email" placeholder="E-mail" required>
-      </div>
-
-      <div class="form-group senha-group">
-        <label for="senha">Senha <span class="required">*</span></label>
-        <div class="senha-wrapper">
-          <input type="password" name="senha" id="senha" placeholder="Senha" required>
-          <img src="../images/senha-off.png" alt="Mostrar senha" class="toggle-senha"
-            onclick="toggleSenha('senha', this)">
+        <div class="form-group">
+          <label for="numero">Número <span class="required">*</span></label>
+          <input type="text" name="numero" id="numero" placeholder="Número" required>
         </div>
       </div>
 
-      <div class="form-group senha-group">
-        <label for="confirmarSenha">Confirmar Senha <span class="required">*</span></label>
-        <div class="senha-wrapper">
-          <input type="password" name="confirmarSenha" id="confirmarSenha" placeholder="Confirmar senha" required>
-          <img src="../images/senha-off.png" alt="Mostrar senha" class="toggle-senha"
-            onclick="toggleSenha('confirmarSenha', this)">
+      <div class="column">
+        <div class="form-group">
+          <label for="complemento">Complemento <span class="opcional">(opcional)</span></label>
+          <input type="text" name="complemento" id="complemento" placeholder="Complemento">
+        </div>
+
+        <div class="form-group">
+          <label for="referencia">Referência <span class="opcional">(opcional)</span></label>
+          <input type="text" name="referencia" id="referencia" placeholder="Referência">
+        </div>
+
+        <div class="form-group">
+          <label for="bairro">Bairro <span class="required">*</span></label>
+          <input type="text" name="bairro" id="bairro" placeholder="Bairro" required>
+        </div>
+
+        <div class="form-group">
+          <label for="cidade">Cidade <span class="required">*</span></label>
+          <input type="text" name="cidade" id="cidade" placeholder="Cidade" required>
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado <span class="required">*</span></label>
+          <input type="text" name="estado" id="estado" placeholder="Estado" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail <span class="required">*</span></label>
+          <input type="email" name="email" id="email" placeholder="E-mail" required>
+        </div>
+
+        <div class="form-group senha-group">
+          <label for="senha">Senha <span class="required">*</span></label>
+          <div class="senha-wrapper">
+            <input type="password" name="senha" id="senha" placeholder="Senha" required>
+            <img src="../images/senha-off.png" alt="Mostrar senha" class="toggle-senha"
+              onclick="toggleSenha('senha', this)">
+          </div>
+          <small id="senhaRequisitos" class="senha-requisitos"></small>
+        </div>
+
+        <div class="form-group senha-group">
+          <label for="confirmarSenha">Confirmar Senha <span class="required">*</span></label>
+          <div class="senha-wrapper">
+            <input type="password" name="confirmarSenha" id="confirmarSenha" placeholder="Confirmar senha" required>
+            <img src="../images/senha-off.png" alt="Mostrar senha" class="toggle-senha"
+              onclick="toggleSenha('confirmarSenha', this)">
+          </div>
         </div>
       </div>
+
+      <button type="submit">Cadastrar</button>
+    </form>
+    <p class="login-link">Já tem uma conta? <a href="/login">Faça login</a></p>
+  </div>
+
+<!-- ================= Modal Termos de Uso ================= -->
+<div id="modalTermos" class="modal-termos">
+  <div class="modal-content-termos">
+    <h2>📜 Termos de Uso e Privacidade</h2>
+
+    <div class="termos-texto scroll-elegante">
+      <p>Bem-vindo(a) à Doutor Beer!</p>
+      <p>Ao criar uma conta e utilizar nossos serviços, você declara estar de acordo com os termos abaixo descritos.</p>
+      <p>Recomendamos a leitura atenta deste documento antes de prosseguir com o cadastro.</p>
+
+      <h3>1. OBJETO</h3>
+      <p>O presente Termo tem por finalidade disciplinar a utilização da plataforma Doutor Beer, destinada à oferta e comercialização de chopeiras, torres de chopp, torres de tereré e demais produtos correlatos ao universo cervejeiro, bem como estabelecer as diretrizes relativas ao tratamento dos dados pessoais fornecidos pelos usuários, em conformidade com a legislação aplicável.</p>
+
+      <h3>2. CADASTRO E RESPONSABILIDADE DO USUÁRIO</h3>
+      <ul>
+        <li>O usuário declara que todas as informações prestadas são verdadeiras, completas e atualizadas.</li>
+        <li>O cadastro é pessoal e intransferível, sendo vedado o compartilhamento de credenciais com terceiros.</li>
+        <li>O usuário compromete-se a utilizar a plataforma apenas para fins lícitos e em conformidade com a legislação vigente.</li>
+      </ul>
+
+      <h3>3. PRIVACIDADE E PROTEÇÃO DE DADOS</h3>
+      <ul>
+        <li>A Doutor Beer realiza o tratamento dos dados pessoais conforme a Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018).</li>
+        <li>As informações coletadas são utilizadas exclusivamente para processar pedidos, enviar atualizações e cumprir obrigações legais.</li>
+        <li>As informações de pagamento são processadas por intermediadores seguros, sem armazenamento de dados sensíveis pela loja.</li>
+        <li>O usuário poderá solicitar, a qualquer momento, a exclusão ou atualização de seus dados pessoais.</li>
+        <li> Recomendamos ler nossa <a href="/politica-privacidade" target="_blank">Política de Privacidade</a> completa.</li>
+      </ul>
+
+      <h3>4. COMUNICAÇÕES E MARKETING</h3>
+      <p>O usuário poderá receber comunicações promocionais por e-mail ou WhatsApp, podendo optar pelo cancelamento (“opt-out”) a qualquer momento.</p>
+
+      <h3>5. DIREITOS DE PROPRIEDADE INTELECTUAL</h3>
+      <p>Todo o conteúdo do site (marcas, logotipos, imagens, textos e layout) é de propriedade exclusiva da Doutor Beer, sendo proibida sua reprodução sem autorização prévia e por escrito.</p>
+
+      <h3>6. LIMITAÇÃO DE RESPONSABILIDADE</h3>
+      <p>A Doutor Beer não se responsabiliza por danos decorrentes de mau uso dos produtos, erros de informação fornecida pelo usuário ou interrupções temporárias do sistema fora do controle da empresa.</p>
+
+      <h3>7. ALTERAÇÕES DOS TERMOS</h3>
+      <p>A Doutor Beer poderá atualizar este Termo periodicamente. Recomenda-se a consulta regular desta página para acompanhar eventuais modificações.</p>
+
+      <h3>8. CONTATO E DÚVIDAS</h3>
+      <p>Em caso de dúvidas sobre estes Termos ou sobre o tratamento de dados, o usuário poderá entrar em contato pelo e-mail: <strong>atendimento@doutorbeer.com.br</strong>.</p>
+
+      <h3>9. ACEITE</h3>
+      <p>Ao clicar em “Aceito os Termos”, o usuário declara que leu, compreendeu e concorda integralmente com este Termo de Uso e Política de Privacidade.</p>
     </div>
 
-    <button type="submit">Cadastrar</button>
-  </form>
-  <p class="login-link">Já tem uma conta? <a href="/login">Faça login</a></p>
+    <div class="modal-actions">
+      <button id="btnAceitarTermos" class="btn-modal-login">Aceito os Termos</button>
+      <button id="btnRecusarTermos" class="btn-modal-fechar">Cancelar</button>
+    </div>
+  </div>
+  
 </div>
 
   <script src="../js/register.js"></script>

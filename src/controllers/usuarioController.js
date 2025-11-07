@@ -256,7 +256,8 @@ exports.atualizarUsuario = async (req, res) => {
 
 // ==================== LISTAR PEDIDOS DO USUÁRIO ====================
 exports.mePedidos = async (req, res) => {
-  if (!req.session.user) return res.status(401).json({ error: "Não autenticado" });
+  if (!req.session.user)
+    return res.status(401).json({ error: "Não autenticado" });
 
   try {
     const pedidos = await Pedido.findAll({
@@ -268,7 +269,8 @@ exports.mePedidos = async (req, res) => {
           include: [
             {
               model: Produto,
-              as: "Produto"
+              as: "Produto",
+              attributes: ["id", "nome", "imagem"]
             }
           ]
         }
@@ -276,8 +278,7 @@ exports.mePedidos = async (req, res) => {
       order: [["createdAt", "DESC"]]
     });
 
-    // Formata os pedidos para envio
-    const pedidosFormatados = pedidos.map(pedido => ({
+    const pedidosFormatados = pedidos.map((pedido) => ({
       id: pedido.id,
       status: pedido.status,
       total: pedido.total,
@@ -285,17 +286,19 @@ exports.mePedidos = async (req, res) => {
       formaPagamento: pedido.formaPagamento,
       enderecoEntrega: pedido.enderecoEntrega,
       data: pedido.createdAt,
-      itens: pedido.Itens.map(item => ({
-        id: item.produtoId,
-        nome: item.Produto?.nome,
+      Itens: pedido.Itens.map((item) => ({
+        produtoId: item.produtoId,
+        nome: item.Produto?.nome || "Produto não encontrado",
         quantidade: item.quantidade,
         precoUnitario: item.precoUnitario,
-        imagem: item.Produto?.imagem || null
+        imagem: item.Produto?.imagem || "/images/no-image.png",
+        cor: item.cor || "padrao",
+        torneira: item.torneira || "padrao",
+        refil: item.refil || 0
       }))
     }));
 
     res.json(pedidosFormatados);
-
   } catch (error) {
     console.error("Erro ao buscar pedidos do usuário:", error);
     res.status(500).json({ error: "Erro ao buscar pedidos" });

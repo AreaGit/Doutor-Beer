@@ -1,65 +1,194 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fale Conosco - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="../css/fale-conosco.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
 
-    <!-- Cabeçalho -->
-    <header class="header">
-        <div class="logo">
-            <a href="/">
-                <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
-            </a>
-        </div>
-    </header>
-
-      <!-- CONTEÚDO -->
-  <div class="content-container">
-    <h1>Fale Conosco</h1>
-    <p style="text-align: center;">Entre em contato conosco preenchendo o formulário ou através dos nossos canais de atendimento.</p>
-
-    <div class="contact-grid">
-      <!-- FORMULÁRIO -->
-      <div class="form-container">
-        <form action="#" method="post">
-          <label for="nome">Nome</label>
-          <input type="text" id="nome" name="nome" required>
-
-          <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" required>
-
-          <label for="telefone">Telefone</label>
-          <input type="tel" id="telefone" name="telefone">
-
-          <label for="pedido">Nº do pedido</label>
-          <input type="text" id="pedido" name="pedido">
-
-          <label for="mensagem">Mensagem</label>
-          <textarea id="mensagem" name="mensagem" rows="5" required></textarea>
-
-          <button type="submit">Enviar Mensagem</button>
-        </form>
-      </div>
-
-      <!-- INFORMAÇÕES DE CONTATO -->
-      <div class="info-container">
-        <h2>Informações de Contato</h2>
-        <p><strong>Instagram:</strong> @doutor_beer</p>
-        <p><strong>Email:</strong> contato@doutorbeer.com.br</p>
-      </div>
+  <!-- Cabeçalho -->
+  <header class="header">
+    <div class="logo">
+      <a href="/">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      </a>
     </div>
+  </header>
+
+
+  <div class="main-wrapper">
+    <!-- Conteúdo -->
+    <section class="contact-section">
+      <h1>🍺 Fale Conosco</h1>
+      <p>Tem dúvidas sobre seu pedido, nossos produtos ou bquer fazer um orçamento personalizado?
+        Nossa equipe está pronta pra te ajudar!</p>
+
+      <div class="contact-grid">
+        <!-- Formulário -->
+        <div class="form-container">
+          <h2>Envie sua mensagem</h2>
+          <form id="contactForm" action="#" method="post">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="(XX) XXXXX-XXXX">
+
+            <label for="pedido">Nº do pedido (opcional)</label>
+            <input type="text" id="pedido" name="pedido" placeholder="#12345">
+
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="mensagem" rows="5" required placeholder="Como podemos te ajudar?"></textarea>
+
+            <label for="conheceu">Como nos conheceu?</label>
+            <select id="conheceu" name="conheceu" required>
+              <option value="" disabled selected>Selecione uma opção</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="google">Google</option>
+              <option value="amigos">Indicação de amigos</option>
+              <option value="eventos">Eventos / Feiras</option>
+              <option value="outros">Outros</option>
+            </select>
+
+            <button type="submit">Enviar Mensagem</button>
+            <p class="success-message" style="display:none;">✅ Mensagem enviada com sucesso! Entraremos em contato em
+              breve.</p>
+          </form>
+        </div>
+
+        <!-- Informações -->
+        <div class="info-container">
+          <h2>Outros Canais</h2>
+          <ul>
+            <li><span class="material-icons">email</span> <strong>Email:</strong> contato@doutorbeer.com.br</li>
+            <li><span class="material-icons">schedule</span> <strong>Atendimento:</strong> Seg a Sex, das 9h às 17h</li>
+            <li><span class="material-icons">public</span> <strong>Instagram:</strong> <a
+                href="https://instagram.com/doutor_beer" target="_blank">@doutor_beer</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="main-wrapper">
+
+    <!-- FAQ -->
+    <section class="faq-section">
+      <h2>Perguntas Frequentes</h2>
+      <div class="faq-container">
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <div class="faq-left">
+              <span class="material-icons">local_shipping</span>
+              <span>Como acompanho meu pedido?</span>
+            </div>
+            <span class="arrow material-icons">expand_more</span>
+          </button>
+          <div class="faq-answer">
+            <p>Você pode acompanhar o status do seu pedido acessando a área <strong>“Meus Pedidos”</strong> após fazer
+              login na sua conta.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <div class="faq-left">
+              <span class="material-icons">schedule</span>
+              <span>Qual é o prazo de entrega?</span>
+            </div>
+            <span class="arrow material-icons">expand_more</span>
+          </button>
+          <div class="faq-answer">
+            <p>O prazo de entrega depende do endereço e do tipo de frete selecionado. O cálculo é feito automaticamente
+              no checkout antes da compra.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <div class="faq-left">
+              <span class="material-icons">credit_card</span>
+              <span>Quais formas de pagamento são aceitas?</span>
+            </div>
+            <span class="arrow material-icons">expand_more</span>
+          </button>
+          <div class="faq-answer">
+            <p>Aceitamos <strong>Pix, Boleto e Cartão de Crédito</strong> (parcelado em até 6x sem juros).</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <div class="faq-left">
+              <span class="material-icons">local_mall</span>
+              <span>Como funciona o frete?</span>
+            </div>
+            <span class="arrow material-icons">expand_more</span>
+          </button>
+          <div class="faq-answer">
+            <p>Trabalhamos com transportadoras parceiras e Correios. O valor é calculado automaticamente com base no seu
+              CEP e peso do pedido.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <div class="faq-left">
+              <span class="material-icons">sync_alt</span>
+              <span>Posso trocar ou devolver um produto?</span>
+            </div>
+            <span class="arrow material-icons">expand_more</span>
+          </button>
+          <div class="faq-answer">
+            <p>Sim! Você tem até 7 dias após o recebimento para solicitar troca ou devolução.
+              Basta entrar em contato pelo formulário acima ou via WhatsApp.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </div>
 
   <!-- Botão WhatsApp -->
-  <a href="https://api.whatsapp.com/send?phone=5511965764852&text=Ol%C3%A1,%20vamos%20vender%20mais?" target="_blank"
+  <a href="https://api.whatsapp.com/send?phone=5511920592000&text=Olá,%20vamos%20vender%20mais?" target="_blank"
     id="btnWhats">
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
-    
+
+  <script>
+    // Feedback simples de envio
+    const form = document.getElementById('contactForm');
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      form.reset();
+      document.querySelector('.success-message').style.display = 'block';
+      setTimeout(() => {
+        document.querySelector('.success-message').style.display = 'none';
+      }, 4000);
+    });
+
+    // FAQ interativo
+    document.querySelectorAll(".faq-question").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const item = btn.parentElement;
+        item.classList.toggle("active");
+      });
+    });
+  </script>
+
 </body>
+
 </html>

@@ -23,15 +23,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ================== Preencher informações do pedido ==================
     pedidoIdEl.textContent = `#${pedido.id}`;
     statusEl.textContent = pedido.status;
-    metodoPagamentoEl.textContent = pedido.metodoPagamento;
+    statusEl.classList.add("status", pedido.status.toLowerCase());
+    metodoPagamentoEl.textContent = pedido.metodoPagamento || "Não informado";
 
-    // Ajusta endereço caso esteja salvo como string
+    // Ajusta endereço (se for string, converte para objeto)
     const endereco = typeof pedido.enderecoEntrega === "string"
       ? JSON.parse(pedido.enderecoEntrega)
       : pedido.enderecoEntrega;
 
     enderecoEntregaEl.textContent = endereco
-      ? `${endereco.rua}, ${endereco.numero}${endereco.complemento ? ' - ' + endereco.complemento : ''}, ${endereco.cidade}, ${endereco.estado} - CEP: ${endereco.cep}`
+      ? `${endereco.rua}, ${endereco.numero}${endereco.complemento ? " - " + endereco.complemento : ""}, ${endereco.cidade}, ${endereco.estado} - CEP: ${endereco.cep}`
       : "Endereço não informado";
 
     // ================== Exibir itens do pedido ==================
@@ -40,18 +41,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (pedido.Itens && pedido.Itens.length > 0) {
       pedido.Itens.forEach(item => {
-        // Preço promocional se existir
         const precoProduto = item.precoUnitario ?? 0;
-        const precoTotal = precoProduto * (item.quantidade ?? 1);
+        const quantidade = item.quantidade ?? 1;
+        const precoTotal = precoProduto * quantidade;
         subtotal += precoTotal;
 
+        // Monta HTML com as informações adicionais
         const li = document.createElement("li");
         li.classList.add("produto-item");
         li.innerHTML = `
-          <img src="${item.imagem || '/images/no-image.png'}" alt="${item.nome || 'Produto'}" class="img-produto">
-          <span class="nome-produto">${item.nome || "Produto"} x${item.quantidade ?? 1}</span>
-          <strong class="preco-produto">R$ ${precoTotal.toFixed(2).replace(".", ",")}</strong>
+          <div class="produto-card">
+            <img src="${item.imagem || '/images/no-image.png'}" 
+                 alt="${item.nome || 'Produto'}" 
+                 class="img-produto">
+
+            <div class="produto-detalhes">
+              <span class="nome-produto">${item.nome || "Produto"}</span>
+              
+              <div class="info-adicional">
+                ${item.cor && item.cor !== "padrao" ? `<p>Cor: <strong>${item.cor}</strong></p>` : ""}
+                ${item.torneira && item.torneira !== "padrao" ? `<p>Torneira: <strong>${item.torneira}</strong></p>` : ""}
+                ${item.refil && Number(item.refil) > 1 ? `<p>Refis: <strong>${item.refil}</strong></p>` : ""}
+              </div>
+
+              <p class="quantidade">Quantidade: <strong>${quantidade}</strong></p>
+              <p class="preco-unitario">Preço unitário: <strong>R$ ${precoProduto.toFixed(2).replace(".", ",")}</strong></p>
+              <p class="preco-total">Total: <strong>R$ ${precoTotal.toFixed(2).replace(".", ",")}</strong></p>
+            </div>
+          </div>
         `;
+
         itensList.appendChild(li);
       });
     } else {

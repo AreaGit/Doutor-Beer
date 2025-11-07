@@ -1,7 +1,12 @@
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const Produto = require("../models/Produto");
+const Usuario = require("../models/Usuario");
+const enviarEmail = require("../utils/email");
 
+// ==========================
+// 🔹 Buscar pedido por ID
+// ==========================
 exports.getPedidoById = async (req, res) => {
   const usuarioId = req.session.user?.id;
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
@@ -9,7 +14,6 @@ exports.getPedidoById = async (req, res) => {
   const pedidoId = req.params.id;
 
   try {
-    // Busca pedido com itens e produtos relacionados
     const pedido = await Pedido.findOne({
       where: { id: pedidoId, usuarioId },
       include: [
@@ -23,18 +27,26 @@ exports.getPedidoById = async (req, res) => {
 
     if (!pedido) return res.status(404).json({ error: "Pedido não encontrado" });
 
-    // Calcula subtotal somando todos os itens
+    // 🔹 Formata os itens e calcula subtotal
     let subtotal = 0;
     const itensFormatados = pedido.Itens.map(i => {
       const precoUnit = i.precoUnitario ?? 0;
       const qtd = i.quantidade ?? 1;
       subtotal += precoUnit * qtd;
 
+      // Captura imagem (caso seja array)
+      const imagemProduto = Array.isArray(i.Produto?.imagem)
+        ? i.Produto.imagem[0]
+        : i.Produto?.imagem || "/images/no-image.png";
+
       return {
         nome: i.Produto?.nome ?? "Produto",
         quantidade: qtd,
         precoUnitario: precoUnit,
-        imagem: i.Produto?.imagem ?? "/images/no-image.png"
+        imagem: imagemProduto,
+        cor: i.cor || null,
+        torneira: i.torneira || null,
+        refil: i.refil || null
       };
     });
 
@@ -44,7 +56,7 @@ exports.getPedidoById = async (req, res) => {
       total: pedido.total,
       subtotal,
       frete: pedido.frete ?? 0,
-      metodoPagamento: pedido.metodoPagamento,
+      metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento || "Não informado",
       enderecoEntrega: pedido.enderecoEntrega ?? {},
       Itens: itensFormatados
     });
@@ -55,8 +67,9 @@ exports.getPedidoById = async (req, res) => {
   }
 };
 
-// Listar Pedidos do usuário Logado
-
+// ==========================
+// 🔹 Listar pedidos do usuário logado
+// ==========================
 exports.getPedidosUsuario = async (req, res) => {
   const usuarioId = req.session.user?.id;
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
@@ -71,7 +84,7 @@ exports.getPedidosUsuario = async (req, res) => {
           include: [{ model: Produto, as: "Produto" }]
         }
       ],
-      order: [["createdAt", "DESC"]] // mais recentes primeiro
+      order: [["createdAt", "DESC"]]
     });
 
     const pedidosFormatados = pedidos.map(pedido => {
@@ -81,11 +94,18 @@ exports.getPedidosUsuario = async (req, res) => {
         const qtd = i.quantidade ?? 1;
         subtotal += precoUnit * qtd;
 
+        const imagemProduto = Array.isArray(i.Produto?.imagem)
+          ? i.Produto.imagem[0]
+          : i.Produto?.imagem || "/images/no-image.png";
+
         return {
           nome: i.Produto?.nome ?? "Produto",
           quantidade: qtd,
           precoUnitario: precoUnit,
-          imagem: i.Produto?.imagem ?? "/images/no-image.png"
+          imagem: imagemProduto,
+          cor: i.cor || null,
+          torneira: i.torneira || null,
+          refil: i.refil || null
         };
       });
 
@@ -95,23 +115,23 @@ exports.getPedidosUsuario = async (req, res) => {
         total: pedido.total,
         subtotal,
         frete: pedido.frete ?? 0,
-        metodoPagamento: pedido.metodoPagamento,
+        metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento,
         enderecoEntrega: pedido.enderecoEntrega ?? {},
-        itens: itensFormatados,
+        Itens: itensFormatados,
         criadoEm: pedido.createdAt
       };
     });
 
     res.json(pedidosFormatados);
-
   } catch (err) {
     console.error("[PedidoController] Erro ao listar pedidos:", err);
     res.status(500).json({ error: "Erro ao listar pedidos" });
   }
 };
 
-
-// Listar todos os pedidos (acesso administrativo)
+// ==========================
+// 🔹 Listar todos os pedidos (Admin)
+// ==========================
 exports.getTodosPedidos = async (req, res) => {
   try {
     const pedidos = await Pedido.findAll({
@@ -122,7 +142,7 @@ exports.getTodosPedidos = async (req, res) => {
           include: [{ model: Produto, as: "Produto" }]
         },
         {
-          association: "Usuario", // inclui informações do usuário
+          association: "Usuario",
           attributes: ["id", "nome", "email"]
         }
       ],
@@ -135,28 +155,38 @@ exports.getTodosPedidos = async (req, res) => {
         const precoUnit = i.precoUnitario ?? 0;
         const qtd = i.quantidade ?? 1;
         subtotal += precoUnit * qtd;
+
+        const imagemProduto = Array.isArray(i.Produto?.imagem)
+          ? i.Produto.imagem[0]
+          : i.Produto?.imagem || "/images/no-image.png";
+
         return {
           nome: i.Produto?.nome ?? "Produto",
           quantidade: qtd,
           precoUnitario: precoUnit,
-          imagem: i.Produto?.imagem ?? "/images/no-image.png"
+          imagem: imagemProduto,
+          cor: i.cor || null,
+          torneira: i.torneira || null,
+          refil: i.refil || null
         };
       });
 
       return {
         id: pedido.id,
-        usuario: pedido.Usuario ? {
-          id: pedido.Usuario.id,
-          nome: pedido.Usuario.nome,
-          email: pedido.Usuario.email
-        } : null,
+        usuario: pedido.Usuario
+          ? {
+              id: pedido.Usuario.id,
+              nome: pedido.Usuario.nome,
+              email: pedido.Usuario.email
+            }
+          : null,
         status: pedido.status,
         subtotal,
         total: pedido.total,
         frete: pedido.frete,
-        metodoPagamento: pedido.metodoPagamento,
+        metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento,
         enderecoEntrega: pedido.enderecoEntrega,
-        itens: itensFormatados,
+        Itens: itensFormatados,
         criadoEm: pedido.createdAt
       };
     });
@@ -168,27 +198,24 @@ exports.getTodosPedidos = async (req, res) => {
   }
 };
 
-const enviarEmail = require("../utils/email"); // importa seu email.js
-const Usuario = require("../models/Usuario"); // precisa para pegar o email do usuário
-
-// Atualizar status do pedido e enviar e-mail
+// ==========================
+// 🔹 Atualizar status e enviar e-mail
+// ==========================
 exports.atualizarStatusPedido = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
   try {
-    // Busca o pedido com o usuário relacionado
     const pedido = await Pedido.findByPk(id, {
       include: [{ model: Usuario, as: "Usuario", attributes: ["nome", "email"] }]
     });
 
     if (!pedido) return res.status(404).json({ error: "Pedido não encontrado" });
 
-    // Atualiza o status no banco
     pedido.status = status;
     await pedido.save();
 
-    // Se existir e-mail do usuário, envia notificação
+    // 🔸 Envia e-mail de notificação
     if (pedido.Usuario?.email) {
       const assunto = `Atualização do Pedido #${pedido.id} - ${status}`;
       const html = `
@@ -210,7 +237,6 @@ exports.atualizarStatusPedido = async (req, res) => {
     }
 
     res.json({ success: true, status: pedido.status });
-
   } catch (err) {
     console.error("[PedidoController] Erro ao atualizar status:", err);
     res.status(500).json({ error: "Erro ao atualizar status do pedido" });

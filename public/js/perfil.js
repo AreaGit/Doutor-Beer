@@ -66,46 +66,69 @@ async function carregarPedidosUsuario() {
       return;
     }
 
-    pedidosContainer.innerHTML = pedidos.map(p => `
-      <div class="pedido-card">
-        <div class="pedido-header" data-pedido-id="${p.id}">
-          <p><strong>Pedido #${p.id}</strong> - ${new Date(p.data).toLocaleDateString()}</p>
-          <p>Status: <span class="status ${p.status.replace(" ", "-").toLowerCase()}">${p.status}</span></p>
-          <p>Total: <strong>R$ ${p.total.toFixed(2)}</strong></p>
-          <button class="toggle-detalhes-btn">Ver detalhes</button>
-        </div>
-        <div class="pedido-detalhes" style="display:none;">
-          <h4>Itens:</h4>
-          <ul class="pedido-itens">
-            ${p.itens.map(i => `
-              <li>
-                <img src="${i.imagem || '/images/no-image.png'}" alt="${i.nome}" />
-                ${i.nome} x ${i.quantidade} - R$ ${i.precoUnitario.toFixed(2)}
-              </li>
-            `).join('')}
-          </ul>
-          <h4>Endereço de entrega:</h4>
-          <p>
-            ${p.enderecoEntrega.rua || ""}, ${p.enderecoEntrega.numero || ""} - ${p.enderecoEntrega.complemento || ""} ${p.enderecoEntrega.bairro || ""}, ${p.enderecoEntrega.cidade || ""} - ${p.enderecoEntrega.estado || ""} - CEP: ${p.enderecoEntrega.cep || ""}
-          </p>
-          <h4>Método de pagamento:</h4>
-          <p>${p.formaPagamento}</p>
-        </div>
-      </div>
-    `).join("");
+    pedidosContainer.innerHTML = pedidos.map(p => {
+      const endereco = typeof p.enderecoEntrega === "string"
+        ? JSON.parse(p.enderecoEntrega)
+        : p.enderecoEntrega || {};
 
-    // Toggle detalhes
+      const dataPedido = new Date(p.createdAt || p.data).toLocaleDateString("pt-BR");
+
+      // Classe do status (pago, pendente, cancelado)
+      const statusClass = p.status ? p.status.toLowerCase().replace(" ", "-") : "pendente";
+
+      return `
+        <div class="pedido-card">
+          <div class="pedido-header" data-pedido-id="${p.id}">
+            <p><strong>Pedido #${p.id}</strong> - ${dataPedido}</p>
+            <p>Status: <span class="status ${statusClass}">${p.status}</span></p>
+            <p>Total: <strong>R$ ${p.total?.toFixed(2).replace(".", ",")}</strong></p>
+            <button class="toggle-detalhes-btn">Ver detalhes</button>
+          </div>
+
+          <div class="pedido-detalhes" style="display:none;">
+            <h4>Itens:</h4>
+            <ul class="pedido-itens">
+              ${p.Itens?.map(i => `
+                <li>
+                  <img src="${i.imagem[0] || '/images/no-image.png'}" alt="${i.nome}" />
+                  <div>
+                    <p><strong>${i.nome}</strong></p>
+                    ${i.cor && i.cor !== "padrao" ? `<p>Cor: ${i.cor}</p>` : ""}
+                    ${i.torneira && i.torneira !== "padrao" ? `<p>Torneira: ${i.torneira}</p>` : ""}
+                    ${i.refil && i.refil > 1 ? `<p>Refis: ${i.refil}</p>` : ""}
+                    <p>Qtd: ${i.quantidade}</p>
+                    <p>Preço unitário: R$ ${i.precoUnitario.toFixed(2).replace(".", ",")}</p>
+                    <p><strong>Total item: R$ ${(i.precoUnitario * i.quantidade).toFixed(2).replace(".", ",")}</strong></p>
+                  </div>
+                </li>
+              `).join("")}
+            </ul>
+
+            <h4>Endereço de entrega:</h4>
+            <p>
+              ${endereco.rua || ""}, ${endereco.numero || ""}
+              ${endereco.complemento ? ` - ${endereco.complemento}` : ""}
+              ${endereco.bairro ? ` - ${endereco.bairro}` : ""}
+              ${endereco.cidade ? `, ${endereco.cidade}` : ""}
+              ${endereco.estado ? ` - ${endereco.estado}` : ""}
+              ${endereco.cep ? ` - CEP: ${endereco.cep}` : ""}
+            </p>
+
+            <h4>Método de pagamento:</h4>
+            <p>${p.formaPagamento || "Não informado"}</p>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // Toggle dos detalhes
     document.querySelectorAll(".toggle-detalhes-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const card = btn.closest(".pedido-card");
         const detalhes = card.querySelector(".pedido-detalhes");
-        if (detalhes.style.display === "none") {
-          detalhes.style.display = "block";
-          btn.textContent = "Ocultar detalhes";
-        } else {
-          detalhes.style.display = "none";
-          btn.textContent = "Ver detalhes";
-        }
+        const isHidden = detalhes.style.display === "none";
+        detalhes.style.display = isHidden ? "block" : "none";
+        btn.textContent = isHidden ? "Ocultar detalhes" : "Ver detalhes";
       });
     });
 

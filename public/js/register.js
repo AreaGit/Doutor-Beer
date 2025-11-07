@@ -16,6 +16,43 @@ function toggleSenha(idCampo, img) {
   }
 }
 
+// ===================== VALIDAÇÃO DE SENHA FORTE =====================
+const senhaInput = document.getElementById("senha");
+const requisitosEl = document.getElementById("senhaRequisitos");
+
+senhaInput.addEventListener("input", () => {
+  const senha = senhaInput.value;
+
+  const temLetraMaiuscula = /[A-Z]/.test(senha);
+  const temNumero = /[0-9]/.test(senha);
+  const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
+  const temTamanho = senha.length >= 8;
+
+  let forca = 0;
+  if (temLetraMaiuscula) forca++;
+  if (temNumero) forca++;
+  if (temEspecial) forca++;
+  if (temTamanho) forca++;
+
+  if (senha.length === 0) {
+    requisitosEl.textContent = "";
+    requisitosEl.className = "senha-requisitos";
+    return;
+  }
+
+  if (forca <= 1) {
+    requisitosEl.textContent = "Senha fraca. Use letras, números e símbolos.";
+    requisitosEl.className = "senha-requisitos fraca";
+  } else if (forca === 2 || forca === 3) {
+    requisitosEl.textContent = "Senha média. Adicione mais variação para fortalecê-la.";
+    requisitosEl.className = "senha-requisitos media";
+  } else if (forca === 4) {
+    requisitosEl.textContent = "Senha forte! Boa escolha.";
+    requisitosEl.className = "senha-requisitos forte";
+  }
+});
+
+
 // ===================== VALIDAÇÃO NOME =====================
 const nome = document.getElementById('nome');
 let validNome = false;
@@ -141,15 +178,32 @@ document.querySelector("form").addEventListener("submit", e => {
   });
 
   if (!valido) return;
+
+  // Verifica se senha é forte antes de enviar
+  const senhaValida = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+  if (!senhaValida.test(document.getElementById("senha").value)) {
+    mostrarToast("A senha deve ter ao menos 8 caracteres, 1 letra maiúscula, 1 número e 1 símbolo.", "erro");
+    return;
+  }
 });
 
-// ===================== ENVIO FORMULÁRIO =====================
+
+// ===================== ENVIO FORMULÁRIO + TERMOS DE USO =====================
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("formRegistro");
+  let aceitouTermos = false;
 
   form.addEventListener("submit", async e => {
     e.preventDefault();
 
+    // Exibe o modal se ainda não aceitou os termos
+    if (!aceitouTermos) {
+      const modal = document.getElementById("modalTermos");
+      if (modal) modal.classList.add("show");
+      return;
+    }
+
+    // Captura dados do formulário
     const formData = {
       nome: document.getElementById("nome").value,
       cpf: document.getElementById("cpf").value,
@@ -185,11 +239,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        mostrarToast(result.message, "sucesso");
+        mostrarToast(result.message || "Conta criada com sucesso!", "sucesso");
         form.reset();
         setTimeout(() => window.location.href = "/login", 2000);
       } else {
-        mostrarToast(result.message, "erro");
+        mostrarToast(result.message || "Erro ao criar conta.", "erro");
       }
 
     } catch (error) {
@@ -197,4 +251,27 @@ document.addEventListener("DOMContentLoaded", () => {
       mostrarToast("Erro ao enviar formulário", "erro");
     }
   });
+
+  // ====== Controle do modal de Termos ======
+  const modalTermos = document.getElementById("modalTermos");
+  const btnAceitar = document.getElementById("btnAceitarTermos");
+  const btnRecusar = document.getElementById("btnRecusarTermos");
+
+  if (btnAceitar) {
+    btnAceitar.addEventListener("click", () => {
+      aceitouTermos = true;
+      modalTermos.classList.remove("show");
+      mostrarToast("Termos aceitos.", "sucesso");
+      // Reenvia o formulário automaticamente
+      form.dispatchEvent(new Event("submit"));
+    });
+  }
+
+  if (btnRecusar) {
+    btnRecusar.addEventListener("click", () => {
+      aceitouTermos = false;
+      modalTermos.classList.remove("show");
+      mostrarToast("Você precisa aceitar os termos para continuar.", "erro");
+    });
+  }
 });

@@ -290,60 +290,90 @@ button:hover,
   box-shadow: 0 10px 25px rgba(249, 176, 0, 0.5);
 }
 
-/* ==== RESUMO DO PEDIDO ==== */
+/* ==== RESUMO DO PEDIDO - ESTILO PREMIUM ==== */
 .checkout-summary {
   flex: 1;
-  background-color: var(--light);
-  padding: 40px 20px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  background: linear-gradient(145deg, #ffffff, #f9f9f9);
+  padding: 40px 28px;
+  border-radius: 18px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
   height: fit-content;
+  position: relative;
+  overflow: hidden;
+}
+
+.checkout-summary::before {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 220px;
+  height: 220px;
+  z-index: 0;
 }
 
 .checkout-summary h3 {
-  margin-bottom: 20px;
-  color: var(--primary);
-  font-size: 1.3rem;
+  margin-bottom: 25px;
+  color: var(--dark);
+  font-size: 1.5rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  text-align: center;
 }
 
 .produtos-summary {
   list-style: none;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   padding: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .produtos-summary li {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--gray);
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+.produtos-summary li:hover {
+  background: rgba(249,176,0,0.05);
+  border-radius: 10px;
+  padding-left: 10px;
 }
 
 .produto-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  flex: 1;
 }
 
 .produto-item img.img-produto {
-  width: 50px;
-  height: 50px;
+  width: 58px;
+  height: 58px;
   object-fit: contain;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  border-radius: 12px;
+  border: 1.5px solid #eee;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .produto-item .nome-produto {
   flex: 1;
-  font-size: 0.95rem;
-  color: #333;
+  font-size: 0.97rem;
+  color: #222;
+  font-weight: 500;
 }
 
 .produto-item .preco-produto {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--dark);
-  min-width: 80px;
+  font-size: 1rem;
+  min-width: 90px;
   text-align: right;
 }
 
@@ -354,9 +384,20 @@ button:hover,
   margin: 10px 0;
 }
 
+
+
 .total {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(249,176,0,0.3);
+  color: var(--dark);
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+}
+
+.total span {
   color: var(--primary);
-  font-size: 1.15rem;
+  font-size: 1.25rem;
 }
 
 /* ==== CARDS DE FRETE ==== */

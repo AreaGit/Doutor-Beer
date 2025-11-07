@@ -98,42 +98,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ================== Função: carregar resumo ==================
-  async function carregarResumo() {
-    const ulResumo = document.querySelector(".produtos-summary");
-    if (!ulResumo || !subtotalEl || !freteEl || !totalEl) return;
+async function carregarResumo() {
+  const ulResumo = document.querySelector(".produtos-summary");
+  if (!ulResumo || !subtotalEl || !freteEl || !totalEl) return;
 
-    try {
-      const res = await fetch("/api/carrinho", { credentials: "include" });
-      if (!res.ok) throw new Error("Erro ao buscar carrinho");
-      cart = await res.json();
+  try {
+    const res = await fetch("/api/carrinho", { credentials: "include" });
+    if (!res.ok) throw new Error("Erro ao buscar carrinho");
+    cart = await res.json();
 
-      ulResumo.innerHTML = "";
-      subtotal = 0;
+    ulResumo.innerHTML = "";
+    subtotal = 0;
 
-      cart.forEach(item => {
-        const produto = item.Produto || {};
-        const precoUnit = item.precoPromocional ?? item.preco ?? 0;
-        const precoTotal = precoUnit * (item.quantidade || 1);
-        subtotal += precoTotal;
+    cart.forEach(item => {
+      const produto = item.Produto || {};
 
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <div class="produto-item">
-            <img src="${item.imagem}" alt="${produto.nome || item.nome}" class="img-produto">
-            <span class="nome-produto">${produto.nome || item.nome} x${item.quantidade || 1}</span>
+      // 🔹 Preço base (considera promoção)
+      const precoBase = item.precoPromocional ?? item.preco ?? 0;
+      let precoFinal = precoBase;
+
+      // 🔹 Ajuste para torneira
+      if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") {
+        precoFinal += 15;
+      }
+
+      // 🔹 Ajuste para refil extra
+      const refilQtd = Number(item.refil) || 1;
+      if (refilQtd > 1) precoFinal += (refilQtd - 1) * 40;
+
+      // 🔹 Soma subtotal geral
+      const precoTotal = precoFinal * (item.quantidade || 1);
+      subtotal += precoTotal;
+
+      // 🔹 Monta o item visual
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="produto-item">
+          <img src="${item.imagem}" alt="${produto.nome || item.nome}" class="img-produto">
+          <div class="produto-info">
+            <span class="nome-produto">${produto.nome || item.nome}</span>
+            ${item.cor && item.cor !== "padrao" ? `<p>Cor: ${item.cor}</p>` : ""}
+            ${item.torneira && item.torneira !== "padrao" ? `<p>Torneira: ${item.torneira}</p>` : ""}
+            ${item.refil && Number(item.refil) > 1 ? `<p>Refis: ${item.refil}</p>` : ""}
             <strong class="preco-produto">R$ ${precoTotal.toFixed(2).replace(".", ",")}</strong>
           </div>
-        `;
-        ulResumo.appendChild(li);
-      });
+        </div>
+      `;
+      ulResumo.appendChild(li);
+    });
 
-      subtotalEl.textContent = subtotal.toFixed(2).replace(".", ",");
-      freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
-      totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
-    } catch (err) {
-      console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
-    }
+    // Atualiza totais
+    subtotalEl.textContent = subtotal.toFixed(2).replace(".", ",");
+    freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
+    totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
   }
+}
 
   // ================== Função: calcular frete ==================
   async function calcularFrete(cep) {
@@ -258,42 +280,73 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ================== Página de pagamento ==================
-  if (window.location.pathname.includes("/pagamento")) {
-    // Função para carregar resumo do pedido
-    async function carregarResumoPedido() {
-      try {
-        const res = await fetch("/checkout/resumo", { credentials: "include" });
-        if (!res.ok) throw new Error("Erro ao carregar resumo do pedido");
-        const dados = await res.json();
 
-        const ul = document.querySelector(".produtos-summary");
-        if (!ul) return;
-        ul.innerHTML = "";
+// ================== Página de pagamento ==================
+if (window.location.pathname.includes("/pagamento")) {
 
-        dados.produtos.forEach(p => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <div class="produto-item">
-              <img src="${p.imagem || '/images/no-image.png'}" alt="${p.nome}" class="img-produto">
-              <span class="nome-produto">${p.nome} x${p.quantidade}</span>
-              <strong class="preco-produto">R$ ${(p.preco * p.quantidade).toFixed(2).replace(".", ",")}</strong>
+  async function carregarResumoPagamento() {
+    try {
+      // 🔹 Passo 1: busca o carrinho
+      const resCarrinho = await fetch("/api/carrinho", { credentials: "include" });
+      if (!resCarrinho.ok) throw new Error("Erro ao buscar carrinho");
+      const carrinho = await resCarrinho.json();
+
+      // 🔹 Passo 2: busca o frete da sessão
+      const resResumo = await fetch("/checkout/resumo", { credentials: "include" });
+      const resumoSessao = resResumo.ok ? await resResumo.json() : { frete: 0 };
+
+      const freteSelecionado = Number(resumoSessao.frete || 0);
+      const ulResumo = document.querySelector(".produtos-summary");
+      ulResumo.innerHTML = "";
+      let subtotal = 0;
+
+      // 🔹 Passo 3: monta os itens do carrinho com cálculo completo
+      carrinho.forEach(item => {
+        const produto = item.Produto || {};
+        const precoBase = item.precoPromocional ?? item.preco ?? produto.precoPromocional ?? produto.preco ?? 0;
+        let precoFinal = precoBase;
+
+        if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") precoFinal += 15;
+        const refilQtd = Number(item.refil) || 1;
+        if (refilQtd > 1) precoFinal += (refilQtd - 1) * 40;
+
+        const precoTotal = precoFinal * (item.quantidade || 1);
+        subtotal += precoTotal;
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="produto-item">
+            <img src="${item.imagem || produto.imagem || '/images/no-image.png'}" alt="${produto.nome || item.nome}" class="img-produto">
+            <div class="produto-info">
+              <span class="nome-produto">${produto.nome || item.nome}</span>
+              ${item.cor && item.cor !== "padrao" ? `<p>Cor: ${item.cor}</p>` : ""}
+              ${item.torneira && item.torneira !== "padrao" ? `<p>Torneira: ${item.torneira}</p>` : ""}
+              ${item.refil && Number(item.refil) > 1 ? `<p>Refis: ${item.refil}</p>` : ""}
+              <strong class="preco-produto">R$ ${precoTotal.toFixed(2).replace(".", ",")}</strong>
             </div>
-          `;
-          ul.appendChild(li);
-        });
+          </div>
+        `;
+        ulResumo.appendChild(li);
+      });
 
-        document.querySelector("#subtotal").textContent = dados.subtotal.toFixed(2).replace(".", ",");
-        document.querySelector("#frete").textContent = dados.frete.toFixed(2).replace(".", ",");
-        document.querySelector("#total").textContent = dados.total.toFixed(2).replace(".", ",");
+      // 🔹 Passo 4: atualiza subtotal, frete e total
+      const subtotalEl = document.querySelector("#subtotal");
+      const freteEl = document.querySelector("#frete");
+      const totalEl = document.querySelector("#total");
 
-        console.log("[Pagamento] Resumo carregado com sucesso:", dados);
-      } catch (err) {
-        console.error("[Pagamento] Erro ao carregar resumo:", err);
-      }
+      subtotalEl.textContent = subtotal.toFixed(2).replace(".", ",");
+      freteEl.textContent = freteSelecionado.toFixed(2).replace(".", ",");
+      totalEl.textContent = (subtotal + freteSelecionado).toFixed(2).replace(".", ",");
+
+      console.log("[Pagamento] Resumo completo carregado:", { subtotal, frete: freteSelecionado, total: subtotal + freteSelecionado });
+
+    } catch (err) {
+      console.error("[Pagamento] Erro ao carregar resumo do pagamento:", err);
+      mostrarToast("Erro ao carregar resumo do pedido.");
     }
+  }
 
-    await carregarResumoPedido();
+  await carregarResumoPagamento();
 
     const cards = document.querySelectorAll('.payment-card');
     const confirmBtn = document.querySelector('.confirm-btn');
@@ -612,12 +665,10 @@ function mostrarToast(mensagem, duracao = 3000) {
 // ================== Finalizar Pedido ==================
 async function finalizarPedido(formaPagamento) {
   try {
-    // Busca resumo atual do checkout (produtos, frete e total)
     const resumoRes = await fetch("/checkout/resumo", { credentials: "include" });
     if (!resumoRes.ok) throw new Error("Erro ao buscar resumo");
     const resumo = await resumoRes.json();
 
-    // Busca dados do usuário logado
     const userRes = await fetch("/api/auth/me", { credentials: "include" });
     if (!userRes.ok) throw new Error("Usuário não logado");
     const usuario = await userRes.json();
@@ -637,17 +688,32 @@ async function finalizarPedido(formaPagamento) {
       frete: resumo.frete || 0,
       formaPagamento,
       total: resumo.total || 0,
-      itens: resumo.produtos.map(p => ({
-        produtoId: p.produtoId || p.id, // garante compatibilidade
-        quantidade: p.quantidade,
-        precoUnitario: p.preco
-      }))
+      itens: resumo.produtos.map(p => {
+        let precoFinal = p.preco ?? 0;
+
+        // 🔹 Ajusta variações de torneira e refil
+        if (p.torneira === "Tap Handle Prata" || p.torneira === "Tap Handle Preta") {
+          precoFinal += 15;
+        }
+        const refilQtd = Number(p.refil) || 1;
+        if (refilQtd > 1) {
+          precoFinal += (refilQtd - 1) * 40;
+        }
+
+        return {
+          produtoId: p.produtoId || p.id,
+          nome: p.nome,
+          quantidade: p.quantidade,
+          precoUnitario: precoFinal, // ✅ preço final calculado
+          cor: p.cor || "padrao",
+          torneira: p.torneira || "padrao",
+          refil: refilQtd
+        };
+      })
     };
 
+    console.log("[FinalizarPedido] Dados enviados:", pedidoData);
 
-    console.log(pedidoData)
-
-    // Envia para o backend
     const response = await fetch("/checkout/finalizar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,130 +1,336 @@
 :root {
-    --primary: #F9B000;
-    --light: #fff;
-    --gray: #f5f5f5;
-    --dark: #333;
+  --primary: #F9B000;
+  --primary-dark: #d99400;
+  --light: #fff;
+  --gray: #f7f7f7;
+  --dark: #333;
+  --text-muted: #666;
+  --radius: 12px;
 }
 
+/* ===== BASE ===== */
 body {
-    margin: 0;
-    font-family: "Arial", sans-serif;
-    background-color: var(--gray);
-    color: var(--dark);
+  margin: 0;
+  font-family: "Inter", "Arial", sans-serif;
+  color: var(--dark);
+  /*background: url("https://i.imgur.com/Efuu1B8.jpeg") center/cover fixed no-repeat;*/
 }
 
-/* ==== HEADER ==== */
+/* ===== HEADER ===== */
 .header {
   padding: 15px 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--light);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   position: relative;
-  top: 0;
   z-index: 1000;
-}
-
-.logo {
-  cursor: pointer;
 }
 
 .logo img {
   height: 130px;
   width: auto;
-  display: block;
 }
 
-.content-container {
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 30px;
-      background: var(--light);
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    }
 
-    .content-container h1 {
-      color: var(--primary);
-      text-align: center;
-      margin-bottom: 20px;
-    }
 
-    .contact-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      margin-top: 30px;
-    }
+/* ===== SEÇÃO FALE CONOSCO ===== */
+.contact-section {
+  max-width: 1100px;
+  margin: 60px auto;
+  background: var(--light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 50px 60px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
 
-    /* FORM */
-    .form-container form {
-      display: flex;
-      flex-direction: column;
-    }
+.contact-section:hover {
+  transform: translateY(-3px);
+}
 
-    .form-container label {
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
+.contact-section h1 {
+  font-size: 2.3rem;
+  color: var(--primary);
+  margin-bottom: 15px;
+}
 
-    .form-container input,
-    .form-container textarea {
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border-color 0.3s;
-    }
+.contact-section p {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 750px;
+  margin: 0 auto 45px;
+}
 
-    .form-container input:focus,
-    .form-container textarea:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
+/* ===== GRID PRINCIPAL ===== */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
 
-    .form-container button {
-      background: var(--primary);
-      color: var(--light);
-      border: none;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.form-container, .info-container {
+  background: #fffdfa;
+  border: 1px solid #f1f1f1;
+  border-radius: var(--radius);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  padding: 30px 35px;
+  text-align: left;
+  transition: box-shadow 0.3s;
+}
 
-    .form-container button:hover {
-      background: #d99400;
-    }
+.form-container:hover,
+.info-container:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
 
-    /* INFORMAÇÕES */
-    .info-container h2 {
-      color: var(--primary);
-      margin-bottom: 20px;
-    }
+/* ===== FORMULÁRIO ===== */
+.form-container h2 {
+  color: var(--primary-dark);
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
 
-    .info-container p {
-      margin: 8px 0;
-      line-height: 1.6;
-    }
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
 
-    /* ===== Botão WhatsApp ===== */
+input, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(249,176,0,0.2);
+  outline: none;
+}
+
+/* ===== BOTÃO ENVIAR ===== */
+button[type="submit"] {
+  background: var(--primary);
+  color: var(--light);
+  border: none;
+  border-radius: var(--radius);
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  width: 100%;
+}
+
+button[type="submit"]:hover {
+  background: var(--primary-dark);
+  transform: scale(1.03);
+}
+
+.success-message {
+  margin-top: 15px;
+  color: #2ecc71;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.4s ease;
+}
+
+/* ===== INFORMAÇÕES ===== */
+.info-container h2 {
+  color: var(--primary-dark);
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.info-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-container li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.info-container .material-icons {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+.info-container a {
+  color: var(--primary-dark);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.info-container a:hover {
+  color: var(--primary);
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== SELECT ===== */
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  background-color: #fff;
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--dark);
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23666' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+}
+
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(249,176,0,0.2);
+  outline: none;
+}
+
+select option {
+  color: var(--dark);
+  background-color: #fffdfa;
+}
+
+
+/* ===== FAQ ===== */
+.faq-section {
+  max-width: 1100px;
+  margin: 70px auto;
+  background: transparent;
+  padding: 20px;
+}
+
+.faq-section h2 {
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 35px;
+  font-size: 1.9rem;
+}
+
+.faq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Itens do FAQ com o mesmo padrão das caixas */
+.faq-item {
+  border: 1px solid #e5e5e5;
+  border-radius: var(--radius);
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.faq-item.active {
+  border-color: var(--primary);
+  background: linear-gradient(to bottom right, #fff, #fffdf5);
+  box-shadow: 0 0 15px rgba(249,176,0,0.3);
+}
+
+/* Perguntas */
+.faq-question {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 20px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--dark);
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.faq-question:hover {
+  background-color: #fff6e0;
+}
+
+/* Ícone e texto alinhados à esquerda */
+.faq-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.faq-left .material-icons {
+  color: var(--primary);
+  font-size: 22px;
+}
+
+/* Seta animada */
+.arrow {
+  transition: transform 0.3s ease;
+  color: var(--text-muted);
+}
+
+.faq-item.active .arrow {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+/* Resposta */
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 25px;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  color: var(--text-muted);
+  line-height: 1.6;
+  background-color: #fffdfa;
+}
+
+.faq-item.active .faq-answer {
+  max-height: 250px;
+  padding: 10px 25px 25px;
+}
+
+/* ===== BOTÃO WHATSAPP ===== */
 #btnWhats {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  z-index: 98;
   background-color: #25D366;
   border-radius: 50%;
+  width: 55px;
+  height: 55px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s;
-  width: 48px;
-  height: 48px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s, background 0.3s;
 }
 
 #btnWhats img {
@@ -135,12 +341,103 @@ body {
 }
 
 #btnWhats:hover {
+  transform: scale(1.1);
   background-color: #1ebe5d;
 }
 
-    /* RESPONSIVO */
-    @media (max-width: 900px) {
-      .contact-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+/* ===== RODAPÉ ===== */
+.footer {
+  background: #1b1b1b;
+  color: #aaa;
+  text-align: center;
+  padding: 25px 15px;
+  font-size: 14px;
+  margin-top: 60px;
+  letter-spacing: 0.5px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 900px) {
+  .faq-section {
+    padding: 25px;
+  }
+
+    .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .contact-section {
+    padding: 35px 25px;
+  }
+
+  .contact-section h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  input, textarea {
+    font-size: 0.9rem;
+  }
+
+  button[type="submit"] {
+    font-size: 0.95rem;
+    padding: 12px 22px;
+  }
+
+  .info-container li {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .contact-section {
+    padding: 20px 14px;
+  }
+
+  .contact-section h1 {
+    font-size: 1.6rem;
+  }
+
+  .contact-section p {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 30px;
+  }
+
+  .form-container, .info-container {
+    padding: 20px;
+  }
+
+  label {
+    font-size: 0.9rem;
+  }
+
+  input, textarea {
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+
+  button[type="submit"] {
+    font-size: 0.9rem;
+    padding: 10px 18px;
+  }
+
+  .info-container h2 {
+    font-size: 1.2rem;
+  }
+
+  .info-container li {
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .info-container .material-icons {
+    font-size: 20px;
+  }
+}

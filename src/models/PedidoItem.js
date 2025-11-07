@@ -23,14 +23,35 @@ const PedidoItem = sequelize.define("PedidoItem", {
   },
   precoUnitario: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    defaultValue: 0
+  },
+  subtotal: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0
+  },
+  cor: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "padrao"
+  },
+  torneira: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "padrao"
+  },
+  refil: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   }
 }, {
   tableName: "pedido_items",
   timestamps: true
 });
 
-// Relações
+// Relação com Produto
 PedidoItem.belongsTo(Produto, { foreignKey: "produtoId", as: "Produto" });
 
 module.exports = PedidoItem;
