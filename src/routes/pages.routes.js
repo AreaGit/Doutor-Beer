@@ -2,6 +2,8 @@ const path = require("path");
 const express = require("express");
 const app = express();
 
+const isAdmin = require("../middlewares/isAdmin");
+
 app.use(express.static('public'));
 
 // Função auxiliar
@@ -42,7 +44,7 @@ app.get("/autenticacao", (req, res) => renderPage(res, "autenticacao"));
 
 app.get("/pedido/:id", (req, res) => renderPage(res, "pedido"));
 
-app.get("/painel-adm", (req, res) => renderPage(res, "painel-adm"));
+app.get("/painel-adm", isAdmin, (req, res) => renderPage(res, "painel-adm"));
 
 app.get("/beneficio", (req, res) => renderPage(res, "beneficio"));
 

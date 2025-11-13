@@ -261,7 +261,7 @@ async function initCart() {
     transparent: "Transparente",
   };
 
- function renderCart() {
+function renderCart() {
   cartItemsContainer.innerHTML = "";
 
   if (!cartItems.length) {
@@ -274,10 +274,19 @@ async function initCart() {
     // 🔹 Usa o preço que já veio ajustado (sem somar nada)
     const preco = item.preco ?? item.precoPromocional ?? 0;
 
+    // 🔹 Garante o ID do produto para o link
+    const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
+
     const itemDiv = document.createElement("div");
     itemDiv.className = "cart-item";
+
     itemDiv.innerHTML = `
-      <img src="${item.imagem || ''}" alt="${item.nome}">
+      <a 
+        href="${produtoId ? `/detalhes-produto?id=${produtoId}` : '#'}" 
+        class="cart-item-image-link"
+      >
+        <img src="${item.imagem || ''}" alt="${item.nome}">
+      </a>
       <div class="cart-item-info">
         <h4>${item.nome}</h4>
         ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
@@ -322,6 +331,7 @@ async function initCart() {
         <button class="remove-btn" data-index="${index}">Remover</button>
       </div>
     `;
+
     cartItemsContainer.appendChild(itemDiv);
   });
 
@@ -354,6 +364,7 @@ async function initCart() {
 
   updateResumo();
 }
+
 
   /* ================== Atualizar resumo ================== */
 function updateResumo() {

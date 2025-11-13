@@ -255,23 +255,32 @@ async function initCart() {
     transparent: "Transparente",
   };
 
- function renderCart() {
-  cartItemsContainer.innerHTML = "";
+  function renderCart() {
+    cartItemsContainer.innerHTML = "";
 
-  if (!cartItems.length) {
-    cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-    updateResumo();
-    return;
-  }
+    if (!cartItems.length) {
+      cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
+      updateResumo();
+      return;
+    }
 
-  cartItems.forEach((item, index) => {
-    // 🔹 Usa o preço que já veio ajustado (sem somar nada)
-    const preco = item.preco ?? item.precoPromocional ?? 0;
+    cartItems.forEach((item, index) => {
+      // 🔹 Usa o preço que já veio ajustado (sem somar nada)
+      const preco = item.preco ?? item.precoPromocional ?? 0;
 
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "cart-item";
-    itemDiv.innerHTML = `
-      <img src="${item.imagem || ''}" alt="${item.nome}">
+      // 🔹 Garante o ID do produto para o link
+      const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
+
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "cart-item";
+
+      itemDiv.innerHTML = `
+      <a 
+        href="${produtoId ? `/detalhes-produto?id=${produtoId}` : '#'}" 
+        class="cart-item-image-link"
+      >
+        <img src="${item.imagem || ''}" alt="${item.nome}">
+      </a>
       <div class="cart-item-info">
         <h4>${item.nome}</h4>
         ${item.cor && item.cor !== "padrao" && item.cor !== "default" && item.cor !== "" ? `
@@ -281,10 +290,10 @@ async function initCart() {
             </span>
             <span class="color-name">
               ${(() => {
-                const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
-                const corKey = corEn?.toLowerCase().trim();
-                return colorTranslations[corKey] || corEn;
-              })()}
+            const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+            const corKey = corEn?.toLowerCase().trim();
+            return colorTranslations[corKey] || corEn;
+          })()}
             </span>
           </div>
         ` : ""}
@@ -316,57 +325,59 @@ async function initCart() {
         <button class="remove-btn" data-index="${index}">Remover</button>
       </div>
     `;
-    cartItemsContainer.appendChild(itemDiv);
-  });
 
-  // Controles de quantidade e remover
-  document.querySelectorAll(".qty-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      const novoValor = btn.classList.contains("plus")
-        ? cartItems[idx].quantidade + 1
-        : Math.max(1, cartItems[idx].quantidade - 1);
-      await updateQuantity(idx, novoValor);
+      cartItemsContainer.appendChild(itemDiv);
     });
-  });
 
-  document.querySelectorAll(".quantity-input").forEach(input => {
-    input.addEventListener("change", async () => {
-      const idx = parseInt(input.dataset.index);
-      let novaQtd = parseInt(input.value);
-      if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
-      await updateQuantity(idx, novaQtd);
+    // Controles de quantidade e remover
+    document.querySelectorAll(".qty-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        const novoValor = btn.classList.contains("plus")
+          ? cartItems[idx].quantidade + 1
+          : Math.max(1, cartItems[idx].quantidade - 1);
+        await updateQuantity(idx, novoValor);
+      });
     });
-  });
 
-  document.querySelectorAll(".remove-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      await removeItem(idx);
+    document.querySelectorAll(".quantity-input").forEach(input => {
+      input.addEventListener("change", async () => {
+        const idx = parseInt(input.dataset.index);
+        let novaQtd = parseInt(input.value);
+        if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
+        await updateQuantity(idx, novaQtd);
+      });
     });
-  });
 
-  updateResumo();
-}
+    document.querySelectorAll(".remove-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        await removeItem(idx);
+      });
+    });
+
+    updateResumo();
+  }
+
 
   /* ================== Atualizar resumo ================== */
-function updateResumo() {
-  const totalItems = cartItems.length;
-  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+  function updateResumo() {
+    const totalItems = cartItems.length;
+    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-  // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
-  const total = cartItems.reduce((acc, i) => {
-    const precoBase = i.preco ?? i.precoPromocional ?? 0;
-    return acc + (precoBase * i.quantidade);
-  }, 0);
+    // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
+    const total = cartItems.reduce((acc, i) => {
+      const precoBase = i.preco ?? i.precoPromocional ?? 0;
+      return acc + (precoBase * i.quantidade);
+    }, 0);
 
-  cartCount.textContent = totalQuantity;
-  summaryItems.textContent = totalItems;
-  summaryQuantity.textContent = totalQuantity;
-  summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    cartCount.textContent = totalQuantity;
+    summaryItems.textContent = totalItems;
+    summaryQuantity.textContent = totalQuantity;
+    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (!isLoggedIn) saveGuestCartToLocalStorage();
-}
+    if (!isLoggedIn) saveGuestCartToLocalStorage();
+  }
 
   /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
@@ -464,8 +475,10 @@ function updateResumo() {
     const existingIndex = cartItems.findIndex(i =>
       i.id === produto.id &&
       (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
-      (i.torneira || "padrao") === torneiraSelecionada
+      (i.torneira || "padrao") === torneiraSelecionada &&
+      (Number(i.refil) || 1) === (Number(produto.refil) || 1)
     );
+
 
     if (existingIndex >= 0) {
       // Se for o mesmo produto + mesma variação → soma a quantidade
@@ -615,42 +628,68 @@ function initBtnTopo() {
 }
 
 /* ==================== Módulo: Carregar Seções ==================== */
-async function carregarSecao(secao, containerId) {
+async function carregarSecao(secaoNome, containerId) {
   try {
-    const res = await fetch(`/api/produtos/secao/${secao}`);
-    if (!res.ok) throw new Error("Erro ao buscar produtos");
-
-    const produtos = await res.json();
+    const res = await fetch(`/api/produtos/secao/${encodeURIComponent(secaoNome)}`);
     const container = document.getElementById(containerId);
+    if (!container) return;
+
     container.innerHTML = "";
 
-   produtos.forEach(prod => {
-  // garante que 'imagem' seja um array
-  const imagens = Array.isArray(prod.imagem) ? prod.imagem : [prod.imagem];
-  const imagemPrincipal = imagens[0] || '/img/sem-imagem.jpg';
+    if (!res.ok) {
+      container.innerHTML = `<p class="sem-produtos">Nenhum produto nessa seção ainda.</p>`;
+      return;
+    }
 
-  // Cria link clicável para a página do produto
-  const link = document.createElement("a");
-  link.href = `/detalhes-produto?id=${prod.id}`;
-  link.classList.add("produto-card");
+    const produtos = await res.json();
 
-  link.innerHTML = `
-    <img src="${imagemPrincipal}" alt="${prod.nome}">
-    <h3>${prod.nome}</h3>
-    <div class="preco">
-      <span class="antigo">
-        ${prod.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-      </span>
-      <span class="novo">
-        ${prod.precoPromocional.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-      </span>
-    </div>
-  `;
+    if (!produtos.length) {
+      container.innerHTML = `<p class="sem-produtos">Nenhum produto nessa seção ainda.</p>`;
+      return;
+    }
 
-  container.appendChild(link);
-});
+    produtos.forEach((prod) => {
+      const imagens = Array.isArray(prod.imagem) ? prod.imagem : [prod.imagem];
+      const imagemPrincipal = imagens[0] || "/img/sem-imagem.jpg";
+
+      const preco = Number(prod.preco) || 0;
+      const precoPromocional =
+        prod.precoPromocional != null ? Number(prod.precoPromocional) : null;
+
+      const link = document.createElement("a");
+      link.href = `/detalhes-produto?id=${prod.id}`;
+      link.classList.add("produto-card");
+
+      link.innerHTML = `
+        <img src="${imagemPrincipal}" alt="${prod.nome}">
+        <h3>${prod.nome}</h3>
+        <div class="preco">
+          ${precoPromocional && precoPromocional < preco
+          ? `
+                <span class="antigo">
+                  ${preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+                <span class="novo">
+                  ${precoPromocional.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              `
+          : `
+                <span class="novo">
+                  ${preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+              `
+        }
+        </div>
+      `;
+
+      container.appendChild(link);
+    });
   } catch (err) {
-    console.error("Falha ao carregar seção:", secao, err);
+    console.error("Falha ao carregar seção:", secaoNome, err);
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = `<p class="sem-produtos">Erro ao carregar seção.</p>`;
+    }
   }
 }
 

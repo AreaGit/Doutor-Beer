@@ -1,93 +1,504 @@
-
-
-// =========================
-// Troca de abas (cards)
-// =========================
-document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', () => {
-        const tabName = card.getAttribute('data-tab');
-        abrirTab(tabName);
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  initTabs();
+  initTopbarDate();
+  initLogout();
+  initModals();
+  initProdutoCadastro();
+  initProdutoEdicao();
+  initBuscaProdutos();
+  initChart();
+  initMascarasECEPClienteModal();
+  // As abas carregam dados sob demanda:
+  // - produtos: carregarProdutos()
+  // - pedidos: carregarPedidos()
+  // - clientes: carregarClientes()
 });
 
-function abrirTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    const target = document.getElementById(tabName);
-    if (target) {
-        target.classList.add('active');
-        if (tabName === "pedidos") carregarPedidos();
-        if(tabName === "produtos") carregarProdutos();
+/* =====================
+ * UTILIDADES GERAIS
+ * ===================== */
 
-    }
+function showToast(message, type = "success") {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = message;
+  el.className = `toast toast-${type} show`;
+  setTimeout(() => {
+    el.classList.remove("show");
+  }, 2500);
 }
 
-  // =========================
-  // Formulário de cadastro de produto
-  // =========================
-  const formCadastro = document.getElementById("formCadastrarProduto");
-const btnCadastrarProduto = document.getElementById("btnCadastrarProduto");
+function formatCurrency(value) {
+  const num = Number(value) || 0;
+  return num.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+}
 
-if (formCadastro) {
-  btnCadastrarProduto.addEventListener("click", async (e) => {
-    e.preventDefault();
+/* =====================
+ * TABS / SIDEBAR
+ * ===================== */
 
-      try {
-        const nome = document.getElementById("nomeProduto").value.trim();
-        const descricao = document.getElementById("descricaoProduto").value.trim();
-        const preco = parseFloat(document.getElementById("precoProduto").value);
-        const precoPromocional = parseFloat(document.getElementById("precoPromocionalProduto").value) || null;
-        const categoria = document.getElementById("categoriaProduto").value.trim() || null;
-        const categoria2 = document.getElementById("categoria2Produto").value.trim() || null;
-        const categoria3 = document.getElementById("categoria3Produto").value.trim() || null;
-        const secao = document.getElementById("secaoProduto").value.trim() || null;
-        const altura = parseFloat(document.getElementById("alturaProduto").value) || null;
-        const largura = parseFloat(document.getElementById("larguraProduto").value) || null;
-        const comprimento = parseFloat(document.getElementById("comprimentoProduto").value) || null;
-        const peso = parseFloat(document.getElementById("pesoProduto").value) || null;
+function initTabs() {
+  const navItems = document.querySelectorAll(".nav-item");
+  const tabs = document.querySelectorAll(".tab");
+  const topbarTitle = document.querySelector(".topbar-left h1");
+  const topbarSubtitle = document.querySelector(".topbar-left p");
 
-        // Conversão segura (array de strings)
-        const imagem = document.getElementById("imagemProduto").value
-          .split(",").map(i => i.trim()).filter(i => i);
-        const cores = document.getElementById("coresProduto").value
-          .split(",").map(i => i.trim()).filter(i => i);
-        const torneira = document.getElementById("torneiraProduto").value
-          .split(",").map(i => i.trim()).filter(i => i);
-        const capacidade = document.getElementById("capacidadeProduto").value
-          .split(",").map(i => i.trim()).filter(i => i);
+  const tabLabels = {
+    dashboard: {
+      title: "Dashboard",
+      subtitle: "Resumo geral da operação da loja."
+    },
+    produtos: {
+      title: "Produtos",
+      subtitle: "Gerencie o catálogo de produtos da loja."
+    },
+    pedidos: {
+      title: "Pedidos",
+      subtitle: "Controle o status e acompanhe os pedidos da loja."
+    },
+    clientes: {
+      title: "Clientes",
+      subtitle: "Visualize seus clientes e histórico de compras."
+    },
+    config: {
+      title: "Configurações",
+      subtitle: "Preferências gerais do painel e da loja."
+    }
+  };
 
-        const produtoData = {
-          nome, descricao, preco, precoPromocional,
-          categoria, categoria2, categoria3,
-          secao, altura, largura, comprimento, peso,
-          imagem, cores, torneira, capacidade
-        };
+  navItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const tabId = item.getAttribute("data-tab");
 
-        const res = await fetch("/api/produtos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(produtoData)
-        });
+      // ativa item da sidebar
+      navItems.forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
 
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.erro || "Erro ao criar produto");
+      // mostra a tab correta
+      tabs.forEach((tab) => {
+        tab.classList.toggle("active", tab.id === tabId);
+      });
 
-        alert("✅ Produto cadastrado com sucesso!");
-        formCadastro.reset();
-        carregarProdutos();
-
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao cadastrar produto: " + err.message);
+      // atualiza título e subtítulo
+      if (tabLabels[tabId]) {
+        topbarTitle.textContent = tabLabels[tabId].title;
+        topbarSubtitle.textContent = tabLabels[tabId].subtitle;
       }
+
+      // carrega dados quando entrar nas abas
+      if (tabId === "produtos") carregarProdutos();
+      if (tabId === "pedidos") carregarPedidos();
+      if (tabId === "clientes") carregarClientes();
+    });
+  });
+
+  // botão "ver todos" de Últimos pedidos (dashboard) pula pra aba de pedidos
+  document.querySelectorAll("[data-tab-jump='pedidos']").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetNav = document.querySelector(".nav-item[data-tab='pedidos']");
+      if (targetNav) targetNav.click();
+    });
+  });
+}
+
+/* =====================
+ * DATA NO TOPO
+ * ===================== */
+
+function initTopbarDate() {
+  const dateEl = document.getElementById("topbarDate");
+  if (!dateEl) return;
+
+  const hoje = new Date();
+  const formatado = hoje.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+  dateEl.textContent = formatado;
+}
+
+/* =====================
+ * LOGOUT
+ * ===================== */
+
+function initLogout() {
+  const btnLogout = document.getElementById("btnLogout");
+  if (!btnLogout) return;
+
+  btnLogout.addEventListener("click", () => {
+    if (confirm("Deseja sair do painel administrativo?")) {
+      fetch("/api/auth/logout", { method: "POST" })
+        .finally(() => {
+          window.location.href = "/login";
+        });
+    }
+  });
+}
+
+/* =====================
+ * MODAIS (GENÉRICO)
+ * ===================== */
+
+function initModals() {
+  // Fecha modais pelos botões com data-modal-close
+  document.addEventListener("click", (e) => {
+    const closeBtn = e.target.closest("[data-modal-close]");
+    if (closeBtn) {
+      const modal = closeBtn.closest(".modal");
+      if (modal) modal.style.display = "none";
+    }
+  });
+
+  // Fecha clicando no overlay
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal")) {
+      e.target.style.display = "none";
+    }
+  });
+
+  // Modal "Novo Produto" tem abertura por botão
+  const modalNovoProduto = document.getElementById("modalNovoProduto");
+  const btnNovoProduto = document.getElementById("btnNovoProduto");
+
+  if (btnNovoProduto && modalNovoProduto) {
+    btnNovoProduto.addEventListener("click", () => {
+      modalNovoProduto.style.display = "block";
+    });
+  }
+}
+
+/* =====================
+ * PRODUTOS - CADASTRO
+ * ===================== */
+
+function initProdutoCadastro() {
+  const formCadastro = document.getElementById("formCadastrarProduto");
+  const btnCadastrarProduto = document.getElementById("btnCadastrarProduto");
+  const textareaImagens = document.getElementById("imagemProduto");
+  const previewContainer = document.getElementById("previewImagensNovo");
+
+  if (!formCadastro || !btnCadastrarProduto) return;
+
+  // 🔹 Array em memória que guarda as URLs já adicionadas
+  let imagensArray = [];
+  let dragSrcIndex = null; // índice da imagem que está sendo arrastada
+
+  // ---------- PRÉ-VISUALIZAÇÃO DE IMAGENS ----------
+  function renderPreviewImagensNovo() {
+    if (!previewContainer) return;
+
+    if (!imagensArray.length) {
+      previewContainer.innerHTML = `
+        <span style="font-size:0.78rem;color:#77778f;">
+          Nenhuma imagem adicionada ainda.
+        </span>`;
+      return;
+    }
+
+    previewContainer.innerHTML = imagensArray.map((url, index) => `
+      <div class="imagem-preview-item" draggable="true" data-index="${index}">
+        <button type="button" class="imagem-remove-btn" data-index="${index}">&times;</button>
+        <img src="${url}" alt="Pré-visualização">
+      </div>
+    `).join("");
+
+    // Eventos de remover
+    previewContainer.querySelectorAll(".imagem-remove-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const idx = Number(btn.dataset.index);
+        imagensArray.splice(idx, 1);
+        renderPreviewImagensNovo();
+      });
+    });
+
+    // Eventos de drag & drop
+    previewContainer.querySelectorAll(".imagem-preview-item").forEach(item => {
+      item.addEventListener("dragstart", (e) => {
+        dragSrcIndex = Number(item.dataset.index);
+        e.dataTransfer.effectAllowed = "move";
+        item.classList.add("dragging");
+      });
+
+      item.addEventListener("dragend", () => {
+        item.classList.remove("dragging");
+      });
+
+      item.addEventListener("dragover", (e) => {
+        e.preventDefault(); // necessário pra permitir drop
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      item.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const targetIndex = Number(item.dataset.index);
+        if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+
+        // Reordena o array
+        const moved = imagensArray.splice(dragSrcIndex, 1)[0];
+        imagensArray.splice(targetIndex, 0, moved);
+        dragSrcIndex = null;
+
+        // Re-renderiza tudo
+        renderPreviewImagensNovo();
+      });
     });
   }
 
-// =========================
-// Carrega todos produtos
-// =========================
+  // Adiciona URLs ao array a partir de um texto bruto
+  function adicionarUrlsDeTexto(raw) {
+    if (!raw) return;
+
+    const urls = raw
+      .split(/[\n,; ]+/)              // quebra por vírgula, enter, espaço, ponto e vírgula
+      .map((u) => u.trim())
+      .filter((u) => u && /^https?:\/\//i.test(u)); // só http/https
+
+    if (!urls.length) return;
+
+    // Evita duplicadas
+    urls.forEach((u) => {
+      if (!imagensArray.includes(u)) {
+        imagensArray.push(u);
+      }
+    });
+
+    // Limpa o campo de texto (é aqui que o link "some")
+    textareaImagens.value = "";
+
+    // Atualiza o preview
+    renderPreviewImagensNovo();
+  }
+
+  // Estado inicial do preview
+  renderPreviewImagensNovo();
+
+  if (textareaImagens && previewContainer) {
+    // Quando apertar ENTER no campo, processa o texto e limpa
+    textareaImagens.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        adicionarUrlsDeTexto(textareaImagens.value);
+      }
+    });
+
+    // Se o usuário sair do campo com algo digitado, processa também
+    textareaImagens.addEventListener("blur", () => {
+      adicionarUrlsDeTexto(textareaImagens.value);
+    });
+  }
+
+  // ---------- SUBMIT DO FORM ----------
+  btnCadastrarProduto.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      const nome = document.getElementById("nomeProduto").value.trim();
+      const descricao = document.getElementById("descricaoProduto").value.trim();
+      const preco = parseFloat(document.getElementById("precoProduto").value);
+      const precoPromocional = parseFloat(document.getElementById("precoPromocionalProduto").value) || null;
+      const categoria = document.getElementById("categoriaProduto").value.trim() || null;
+      const categoria2 = document.getElementById("categoria2Produto").value.trim() || null;
+      const categoria3 = document.getElementById("categoria3Produto").value.trim() || null;
+      const secoesSelecionadas = Array.from(
+        document.querySelectorAll("input[name='secaoProduto']:checked")
+      ).map(el => el.value);
+
+      // Agora `secao` é um array mesmo (JSON), não mais string
+      const secao = secoesSelecionadas.length ? secoesSelecionadas : [];
+      const altura = parseFloat(document.getElementById("alturaProduto").value) || null;
+      const largura = parseFloat(document.getElementById("larguraProduto").value) || null;
+      const comprimento = parseFloat(document.getElementById("comprimentoProduto").value) || null;
+      const peso = parseFloat(document.getElementById("pesoProduto").value) || null;
+
+      const cores = Array.from(
+        document.querySelectorAll("input[name='coresProduto']:checked")
+      ).map(el => el.value);
+
+      const torneira = Array.from(
+        document.querySelectorAll("input[name='torneiraProduto']:checked")
+      ).map(el => el.value);
+
+      const capacidade = document.getElementById("capacidadeProduto").value
+        .split(",").map(i => i.trim()).filter(i => i);
+
+      const refilValue = document.getElementById("refilProduto").value;
+      const refil = refilValue === "" ? null : parseInt(refilValue, 10);
+
+      // 🔹 Usa o array em memória na ordem atual
+      const imagem = imagensArray;
+
+      const produtoData = {
+        nome,
+        descricao,
+        preco,
+        precoPromocional,
+        categoria,
+        categoria2,
+        categoria3,
+        secao,
+        altura,
+        largura,
+        comprimento,
+        peso,
+        imagem,
+        cores,
+        torneira,
+        capacidade,
+        refil,
+      };
+
+      const res = await fetch("/api/produtos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(produtoData)
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.erro || "Erro ao criar produto");
+
+      showToast("Produto cadastrado com sucesso!", "success");
+      formCadastro.reset();
+
+      // Limpa array e preview depois de cadastrar
+      imagensArray = [];
+      renderPreviewImagensNovo();
+      if (textareaImagens) textareaImagens.value = "";
+
+      document.getElementById("modalNovoProduto").style.display = "none";
+      carregarProdutos();
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao cadastrar produto: " + err.message, "error");
+    }
+  });
+}
+
+/* =====================
+ * PRODUTO - EDIÇÃO (UI de imagens)
+ * ===================== */
+
+let imagensEditarArray = [];
+let dragEditarSrcIndex = null;
+
+function initProdutoEdicao() {
+  const textareaImagensEditar = document.getElementById("editarImagemProduto");
+  const previewEditar = document.getElementById("previewImagensEditar");
+
+  if (!textareaImagensEditar || !previewEditar) return;
+
+  function renderPreviewImagensEditar() {
+    if (!imagensEditarArray.length) {
+      previewEditar.innerHTML = `
+        <span style="font-size:0.78rem;color:#77778f;">
+          Nenhuma imagem adicionada ainda.
+        </span>`;
+      return;
+    }
+
+    previewEditar.innerHTML = imagensEditarArray.map((url, index) => `
+      <div class="imagem-preview-item" draggable="true" data-index="${index}">
+        <button type="button" class="imagem-remove-btn" data-index="${index}">&times;</button>
+        <img src="${url}" alt="Pré-visualização">
+      </div>
+    `).join("");
+
+    // remover
+    previewEditar.querySelectorAll(".imagem-remove-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const idx = Number(btn.dataset.index);
+        imagensEditarArray.splice(idx, 1);
+        renderPreviewImagensEditar();
+      });
+    });
+
+    // drag & drop
+    previewEditar.querySelectorAll(".imagem-preview-item").forEach(item => {
+      item.addEventListener("dragstart", (e) => {
+        dragEditarSrcIndex = Number(item.dataset.index);
+        e.dataTransfer.effectAllowed = "move";
+        item.classList.add("dragging");
+      });
+
+      item.addEventListener("dragend", () => {
+        item.classList.remove("dragging");
+      });
+
+      item.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      item.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const targetIndex = Number(item.dataset.index);
+        if (dragEditarSrcIndex === null || dragEditarSrcIndex === targetIndex) return;
+
+        const moved = imagensEditarArray.splice(dragEditarSrcIndex, 1)[0];
+        imagensEditarArray.splice(targetIndex, 0, moved);
+        dragEditarSrcIndex = null;
+        renderPreviewImagensEditar();
+      });
+    });
+  }
+
+  function adicionarUrlsDeTextoEditar(raw) {
+    if (!raw) return;
+
+    const urls = raw
+      .split(/[\n,; ]+/)
+      .map((u) => u.trim())
+      .filter((u) => u && /^https?:\/\//i.test(u));
+
+    if (!urls.length) return;
+
+    urls.forEach((u) => {
+      if (!imagensEditarArray.includes(u)) {
+        imagensEditarArray.push(u);
+      }
+    });
+
+    textareaImagensEditar.value = "";
+    renderPreviewImagensEditar();
+  }
+
+  // deixa função acessível em outros pontos
+  window._renderPreviewImagensEditar = renderPreviewImagensEditar;
+
+  // estado inicial
+  renderPreviewImagensEditar();
+
+  // eventos
+  textareaImagensEditar.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      adicionarUrlsDeTextoEditar(textareaImagensEditar.value);
+    }
+  });
+
+  textareaImagensEditar.addEventListener("blur", () => {
+    adicionarUrlsDeTextoEditar(textareaImagensEditar.value);
+  });
+}
+
+
+
+/* =====================
+ * PRODUTOS - LISTAGEM / EDIÇÃO / REMOÇÃO
+ * ===================== */
+
+let produtoAtualId = null;
+
 async function carregarProdutos() {
   const container = document.getElementById("listaProdutos");
-  container.innerHTML = "<p>Carregando produtos...</p>";
+  if (!container) return;
+
+  container.innerHTML = "<p class='text-muted'>Carregando produtos...</p>";
 
   try {
     const response = await fetch("/api/produtos");
@@ -95,239 +506,361 @@ async function carregarProdutos() {
 
     const produtos = await response.json();
     if (!produtos.length) {
-      container.innerHTML = "<p>Nenhum produto cadastrado.</p>";
+      container.innerHTML = "<p class='text-muted'>Nenhum produto cadastrado.</p>";
       return;
     }
 
-    container.innerHTML = produtos.map(p => `
-      <div class="produto-card" data-id="${p.id}">
-        <img src="${p.imagem?.[0] ?? '/images/no-image.png'}" alt="${p.nome}">
-        <div class="produto-info">
-          <h3>${p.nome}</h3>
-          <p>${p.descricao.substring(0, 80)}${p.descricao.length>80?'...':''}</p>
-          <p>R$ ${p.preco.toFixed(2)} ${p.precoPromocional ? `<span class="promocao">R$ ${p.precoPromocional.toFixed(2)}</span>` : ""}</p>
-          <div class="produto-acoes">
-            <button class="editar-btn"><i class="fa fa-edit"></i> Editar</button>
-            <button class="deletar-btn"><i class="fa fa-trash"></i> Deletar</button>
-          </div>
-        </div>
-      </div>
-    `).join("");
-
-    // Eventos de ação
-    container.querySelectorAll(".editar-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const produtoId = btn.closest(".produto-card").dataset.id;
-        abrirModalEditarProduto(produtoId);
-      });
-    });
-
-    container.querySelectorAll(".deletar-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const produtoId = btn.closest(".produto-card").dataset.id;
-        if (confirm("Deseja realmente deletar este produto?")) {
-          await deletarProduto(produtoId);
-        }
-      });
-    });
-
+    renderListaProdutos(produtos);
   } catch (err) {
     console.error(err);
-    container.innerHTML = "<p>Erro ao carregar produtos.</p>";
+    container.innerHTML = "<p class='text-error'>Erro ao carregar produtos.</p>";
   }
 }
 
-// Deleta produto
+function renderProdutoCard(p) {
+  const imagem = (p.imagem && p.imagem[0]) ? p.imagem[0] : "/images/no-image.png";
+
+  const precoNormal = formatCurrency(p.preco);
+  const precoPromo = p.precoPromocional ? formatCurrency(p.precoPromocional) : null;
+
+  return `
+    <article class="product-card" data-id="${p.id}">
+      <div class="product-thumb">
+        <img src="${imagem}" alt="${p.nome}">
+      </div>
+      <div class="product-body">
+        <div class="product-top">
+          <h3>${p.nome}</h3>
+          <span class="badge badge-success">Ativo</span>
+        </div>
+        <p class="product-meta">
+          ${p.categoria || "Sem categoria"} • Estoque: ${p.estoque ?? "-"} 
+        </p>
+        <div class="product-price">
+          ${
+            precoPromo
+              ? `<span class="new">${precoPromo}</span><span class="old">${precoNormal}</span>`
+              : `<span class="new">${precoNormal}</span>`
+          }
+        </div>
+        <div class="product-actions">
+          <button class="btn-outline editar-btn">
+            <i class="fa-regular fa-pen-to-square"></i>
+            Editar
+          </button>
+          <button class="btn-danger deletar-btn">
+            <i class="fa-regular fa-trash-can"></i>
+            Remover
+          </button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+
+function renderListaProdutos(produtos) {
+  const container = document.getElementById("listaProdutos");
+  if (!container) return;
+
+  container.innerHTML = produtos.map(renderProdutoCard).join("");
+
+  // Eventos de edição / remoção
+  container.querySelectorAll(".editar-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const produtoId = btn.closest(".product-card").dataset.id;
+      abrirModalEditarProduto(produtoId);
+    });
+  });
+
+  container.querySelectorAll(".deletar-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const produtoId = btn.closest(".product-card").dataset.id;
+      if (confirm("Deseja realmente deletar este produto?")) {
+        await deletarProduto(produtoId);
+      }
+    });
+  });
+
+  // ✅ Clique no card redireciona para a página pública (seguindo a lógica do site)
+  container.querySelectorAll(".product-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      // Evita que o clique nos botões dispare o redirecionamento
+      if (e.target.closest(".editar-btn") || e.target.closest(".deletar-btn")) return;
+
+      const produtoId = card.dataset.id;
+      if (produtoId) {
+        // igual ao front público: /detalhes-produto?id={id}
+        window.open(`/detalhes-produto?id=${produtoId}`, "_blank");
+      }
+    });
+  });
+}
+
 async function deletarProduto(id) {
   try {
     const response = await fetch(`/api/produtos/${id}`, { method: "DELETE" });
     if (!response.ok) throw new Error("Erro ao deletar produto");
-    alert("Produto deletado com sucesso!");
+    showToast("Produto deletado com sucesso!", "success");
     carregarProdutos();
   } catch (err) {
     console.error(err);
-    alert("Erro ao deletar produto.");
+    showToast("Erro ao deletar produto.", "error");
   }
 }
-
-// Modal editar produto (simples)
-let produtoAtualId = null;
 
 function abrirModalEditarProduto(id) {
   produtoAtualId = id;
   const modal = document.getElementById("modalEditarProduto");
+  if (!modal) return;
   modal.style.display = "block";
 
-  // Fecha modal
-  modal.querySelector(".close").onclick = () => modal.style.display = "none";
-  window.onclick = e => { if (e.target == modal) modal.style.display = "none"; }
-
-  // Carrega produto do backend
   fetch(`/api/produtos/${id}`)
     .then(res => res.json())
     .then(p => {
+      // básicos
       document.getElementById("editarNome").value = p.nome || "";
       document.getElementById("editarDescricao").value = p.descricao || "";
       document.getElementById("editarPreco").value = p.preco || "";
       document.getElementById("editarPrecoPromocional").value = p.precoPromocional || "";
-      document.getElementById("editarCategoria").value = p.categoria || "";
-      document.getElementById("editarCategoria2").value = p.categoria2 || "";
-      document.getElementById("editarCategoria3").value = p.categoria3 || "";
-      document.getElementById("editarSecao").value = p.secao || "";
+
+      // categorias (selects)
+      document.getElementById("editarCategoriaProduto").value = p.categoria || "";
+      document.getElementById("editarCategoria2Produto").value = p.categoria2 || "";
+      document.getElementById("editarCategoria3Produto").value = p.categoria3 || "";
+
+      // seções (chips)
+      const secoes = Array.isArray(p.secao) ? p.secao : (p.secao ? [p.secao] : []);
+      document.querySelectorAll("input[name='editarSecaoProduto']").forEach(chk => {
+        chk.checked = secoes.includes(chk.value);
+      });
+
+      // dimensões / peso
       document.getElementById("editarAltura").value = p.altura || "";
       document.getElementById("editarLargura").value = p.largura || "";
       document.getElementById("editarComprimento").value = p.comprimento || "";
       document.getElementById("editarPeso").value = p.peso || "";
-      document.getElementById("editarImagem").value = JSON.stringify(p.imagem || []);
-      document.getElementById("editarCores").value = JSON.stringify(p.cores || []);
-      document.getElementById("editarTorneira").value = JSON.stringify(p.torneira || []);
-      document.getElementById("editarCapacidade").value = JSON.stringify(p.capacidade || []);
+
+      // refil
+      document.getElementById("editarRefil").value =
+        p.refil === null || p.refil === undefined ? "" : p.refil;
+
+      // capacidade (array -> string com vírgulas)
+      const cap = Array.isArray(p.capacidade) ? p.capacidade : [];
+      document.getElementById("editarCapacidadeProduto").value = cap.join(", ");
+
+      // cores (check)
+      const cores = Array.isArray(p.cores) ? p.cores : [];
+      document.querySelectorAll("input[name='editarCoresProduto']").forEach(chk => {
+        chk.checked = cores.includes(chk.value);
+      });
+
+      // torneira (check)
+      const torneiras = Array.isArray(p.torneira) ? p.torneira : [];
+      document.querySelectorAll("input[name='editarTorneiraProduto']").forEach(chk => {
+        chk.checked = torneiras.includes(chk.value);
+      });
+
+      // imagens (array -> preview)
+      imagensEditarArray = Array.isArray(p.imagem) ? [...p.imagem] : [];
+      if (typeof window._renderPreviewImagensEditar === "function") {
+        window._renderPreviewImagensEditar();
+      }
+
+      // limpa textarea de imagens (o usuário só adiciona/edita links novos)
+      const textareaImagensEditar = document.getElementById("editarImagemProduto");
+      if (textareaImagensEditar) textareaImagensEditar.value = "";
     })
     .catch(err => {
       console.error(err);
-      alert("Erro ao carregar produto.");
+      showToast("Erro ao carregar produto.", "error");
       modal.style.display = "none";
     });
+
+  initEditarProdutoSubmit();
 }
 
-// Submissão do formulário
-document.getElementById("formEditarProduto").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!produtoAtualId) return;
 
-  const data = {
-    nome: document.getElementById("editarNome").value,
-    descricao: document.getElementById("editarDescricao").value,
-    preco: parseFloat(document.getElementById("editarPreco").value),
-    precoPromocional: parseFloat(document.getElementById("editarPrecoPromocional").value) || null,
-    categoria: document.getElementById("editarCategoria").value,
-    categoria2: document.getElementById("editarCategoria2").value,
-    categoria3: document.getElementById("editarCategoria3").value,
-    secao: document.getElementById("editarSecao").value,
-    altura: parseFloat(document.getElementById("editarAltura").value) || null,
-    largura: parseFloat(document.getElementById("editarLargura").value) || null,
-    comprimento: parseFloat(document.getElementById("editarComprimento").value) || null,
-    peso: parseFloat(document.getElementById("editarPeso").value) || null,
-    imagem: JSON.parse(document.getElementById("editarImagem").value || "[]"),
-    cores: JSON.parse(document.getElementById("editarCores").value || "[]"),
-    torneira: JSON.parse(document.getElementById("editarTorneira").value || "[]"),
-    capacidade: JSON.parse(document.getElementById("editarCapacidade").value || "[]")
-  };
+function initEditarProdutoSubmit() {
+  const formEditarProduto = document.getElementById("formEditarProduto");
+  if (!formEditarProduto) return;
 
-  try {
-    const res = await fetch(`/api/produtos/${produtoAtualId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+  // garante que só tenha um listener
+  if (formEditarProduto.dataset.bound === "true") return;
+  formEditarProduto.dataset.bound = "true";
 
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Erro ao atualizar produto");
+  formEditarProduto.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!produtoAtualId) return;
 
-    alert("Produto atualizado com sucesso!");
-    document.getElementById("modalEditarProduto").style.display = "none";
-    carregarProdutos(); // Recarrega lista
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao atualizar produto.");
+    const refilRaw = document.getElementById("editarRefil").value;
+    const refil = refilRaw === "" ? null : parseInt(refilRaw, 10);
+
+    const secoesSelecionadas = Array.from(
+      document.querySelectorAll("input[name='editarSecaoProduto']:checked")
+    ).map(el => el.value);
+    const secao = secoesSelecionadas.length ? secoesSelecionadas : [];
+
+    const cores = Array.from(
+      document.querySelectorAll("input[name='editarCoresProduto']:checked")
+    ).map(el => el.value);
+
+    const torneira = Array.from(
+      document.querySelectorAll("input[name='editarTorneiraProduto']:checked")
+    ).map(el => el.value);
+
+    const capacidade = document.getElementById("editarCapacidadeProduto").value
+      .split(",")
+      .map(i => i.trim())
+      .filter(i => i);
+
+    // usa o array de imagens da edição
+    const imagem = imagensEditarArray;
+
+    const data = {
+      nome: document.getElementById("editarNome").value,
+      descricao: document.getElementById("editarDescricao").value,
+      preco: parseFloat(document.getElementById("editarPreco").value),
+      precoPromocional: parseFloat(document.getElementById("editarPrecoPromocional").value) || null,
+      categoria: document.getElementById("editarCategoriaProduto").value || null,
+      categoria2: document.getElementById("editarCategoria2Produto").value || null,
+      categoria3: document.getElementById("editarCategoria3Produto").value || null,
+      secao,
+      altura: parseFloat(document.getElementById("editarAltura").value) || null,
+      largura: parseFloat(document.getElementById("editarLargura").value) || null,
+      comprimento: parseFloat(document.getElementById("editarComprimento").value) || null,
+      peso: parseFloat(document.getElementById("editarPeso").value) || null,
+      imagem,
+      cores,
+      torneira,
+      capacidade,
+      refil,
+    };
+
+    try {
+      const res = await fetch(`/api/produtos/${produtoAtualId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Erro ao atualizar produto");
+
+      showToast("Produto atualizado com sucesso!", "success");
+      document.getElementById("modalEditarProduto").style.display = "none";
+      carregarProdutos();
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao atualizar produto.", "error");
+    }
+  });
+}
+
+
+/* =====================
+ * BUSCA DE PRODUTOS
+ * ===================== */
+
+function initBuscaProdutos() {
+  const searchBtn = document.getElementById("searchProdutoBtn");
+  const searchInput = document.getElementById("searchProdutoInput");
+
+  if (!searchBtn || !searchInput) return;
+
+  searchBtn.addEventListener("click", () => buscarProdutos(searchInput.value.trim()));
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      buscarProdutos(searchInput.value.trim());
+    }
+  });
+}
+
+async function buscarProdutos(query) {
+  if (!query) {
+    return carregarProdutos();
   }
-});
 
+  const container = document.getElementById("listaProdutos");
+  if (!container) return;
 
-// Pesquisa rápida por produto
-document.getElementById("searchProdutoBtn").addEventListener("click", async () => {
-  const query = document.getElementById("searchProdutoInput").value.trim();
-  if (!query) return carregarProdutos();
+  container.innerHTML = "<p class='text-muted'>Buscando produtos...</p>";
 
   try {
     const res = await fetch(`/api/produtos/busca?query=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error("Erro na busca de produtos");
     const produtos = await res.json();
-    const container = document.getElementById("listaProdutos");
 
     if (!produtos.length) {
-      container.innerHTML = "<p>Nenhum produto encontrado.</p>";
+      container.innerHTML = "<p class='text-muted'>Nenhum produto encontrado.</p>";
       return;
     }
 
-    container.innerHTML = produtos.map(p => `
-      <div class="produto-card" data-id="${p.id}">
-        <img src="${p.imagem?.[0] ?? '/images/no-image.png'}" alt="${p.nome}">
-        <div class="produto-info">
-          <h3>${p.nome}</h3>
-          <p>${p.descricao.substring(0, 80)}${p.descricao.length>80?'...':''}</p>
-          <p>R$ ${p.preco.toFixed(2)} ${p.precoPromocional ? `<span class="promocao">R$ ${p.precoPromocional.toFixed(2)}</span>` : ""}</p>
-          <div class="produto-acoes">
-            <button class="editar-btn"><i class="fa fa-edit"></i> Editar</button>
-            <button class="deletar-btn"><i class="fa fa-trash"></i> Deletar</button>
-          </div>
-        </div>
-      </div>
-    `).join("");
-
+    renderListaProdutos(produtos);
   } catch (err) {
     console.error(err);
-    alert("Erro na busca de produtos.");
+    showToast("Erro na busca de produtos.", "error");
   }
-});
+}
 
-// =========================
-// Carrega pedidos do backend
-// =========================
+/* =====================
+ * PEDIDOS
+ * ===================== */
+
 async function carregarPedidos() {
-    const tabelaBody = document.getElementById('listaPedidos');
-    tabelaBody.innerHTML = "<tr><td colspan='5'>Carregando...</td></tr>";
+  const tabelaBody = document.getElementById("listaPedidos");
+  if (!tabelaBody) return;
 
-    try {
-        const response = await fetch("/api/pedido/admin"); // ajuste se estiver usando plural "/api/pedidos/admin"
-        if (!response.ok) throw new Error("Erro ao carregar pedidos");
+  tabelaBody.innerHTML = "<tr><td colspan='5'>Carregando...</td></tr>";
 
-        const pedidos = await response.json();
+  try {
+    const response = await fetch("/api/pedido/admin");
+    if (!response.ok) throw new Error("Erro ao carregar pedidos");
 
-        if (!pedidos.length) {
-            tabelaBody.innerHTML = "<tr><td colspan='5'>Nenhum pedido encontrado.</td></tr>";
-            return;
-        }
+    const pedidos = await response.json();
 
-        // Renderiza tabela de pedidos
-        tabelaBody.innerHTML = pedidos.map(p => `
+    if (!pedidos.length) {
+      tabelaBody.innerHTML = "<tr><td colspan='5'>Nenhum pedido encontrado.</td></tr>";
+      return;
+    }
+
+    tabelaBody.innerHTML = pedidos.map(p => `
       <tr data-id="${p.id}">
-      <td data-label="ID">#${p.id}</td>
-<td data-label="Cliente">${p.usuario?.nome ?? "Cliente removido"}</td>
-<td data-label="Status">${p.status}</td>
-<td data-label="Total">R$ ${p.total.toFixed(2)}</td>
-<td data-label="Data">${new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
+        <td data-label="ID">#${p.id}</td>
+        <td data-label="Cliente">${p.usuario?.nome ?? "Cliente removido"}</td>
+        <td data-label="Status">${p.status}</td>
+        <td data-label="Total">${formatCurrency(p.total)}</td>
+        <td data-label="Data">${new Date(p.criadoEm).toLocaleDateString("pt-BR")}</td>
       </tr>
     `).join("");
 
-        // Adiciona evento de clique em cada linha para abrir modal
-        tabelaBody.querySelectorAll("tr").forEach(tr => {
-            tr.addEventListener("click", () => {
-                const pedidoId = tr.getAttribute("data-id");
-                const pedido = pedidos.find(p => p.id == pedidoId);
-                abrirModalPedido(pedido);
-            });
-        });
-
-    } catch (err) {
-        console.error(err);
-        tabelaBody.innerHTML = "<tr><td colspan='5'>Erro ao carregar pedidos.</td></tr>";
-    }
+    tabelaBody.querySelectorAll("tr").forEach(tr => {
+      tr.addEventListener("click", () => {
+        const pedidoId = tr.getAttribute("data-id");
+        const pedido = pedidos.find(p => p.id == pedidoId);
+        abrirModalPedido(pedido);
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    tabelaBody.innerHTML = "<tr><td colspan='5'>Erro ao carregar pedidos.</td></tr>";
+  }
 }
 
-// =========================
-// Modal de detalhes do pedido
-// =========================
-async function abrirModalPedido(pedido) {
+function abrirModalPedido(pedido) {
   const modal = document.getElementById("modalPedido");
+  if (!modal) return;
+
   modal.style.display = "block";
 
-  // Informações básicas
+  // Título / cliente
   document.getElementById("modalPedidoId").innerText = "#" + pedido.id;
-  document.getElementById("modalCliente").innerText = pedido.usuario?.nome ?? "Cliente removido";
+  document.getElementById("modalClientePed").innerText = pedido.usuario?.nome ?? "Cliente removido";
 
-  // Preenche o select com os status disponíveis
+  // Select de status
   const statusSelect = document.getElementById("modalStatus");
   statusSelect.innerHTML = `
     <option value="Pendente">Pendente</option>
@@ -339,77 +872,98 @@ async function abrirModalPedido(pedido) {
   statusSelect.value = pedido.status;
   aplicarCorStatusTexto(statusSelect);
 
-  // Atualiza o status no banco quando o valor muda
- statusSelect.onchange = async () => {
-  const novoStatus = statusSelect.value;
-  aplicarCorStatusTexto(statusSelect); // muda só a cor do texto
+  statusSelect.onchange = async () => {
+    const novoStatus = statusSelect.value;
+    aplicarCorStatusTexto(statusSelect);
 
-  try {
-    const response = await fetch(`/api/pedido/admin/${pedido.id}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: novoStatus })
-    });
+    try {
+      const response = await fetch(`/api/pedido/admin/${pedido.id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: novoStatus })
+      });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Erro ao atualizar status");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Erro ao atualizar status");
 
-    console.log("✅ Status atualizado no banco:", data.status);
-
-    // Recarrega a lista de pedidos para refletir a mudança
-    if (typeof carregarPedidos === "function") {
-      carregarPedidos(); // função que você já usa para popular a tabela
+      console.log("Status atualizado:", data.status);
+      carregarPedidos();
+      showToast("Status do pedido atualizado.", "success");
+    } catch (err) {
+      console.error("Erro ao atualizar status:", err);
+      showToast("Erro ao atualizar status do pedido.", "error");
     }
+  };
 
-  } catch (err) {
-    console.error("❌ Erro ao atualizar status:", err);
-    alert("Erro ao atualizar status do pedido.");
-  }
-};
-
-  // Endereço e pagamento
+  // Endereço
+  const end = pedido.enderecoEntrega || {};
   document.getElementById("modalEndereco").innerText =
-    `${pedido.enderecoEntrega.rua ?? ""}, ${pedido.enderecoEntrega.numero ?? ""} - ${pedido.enderecoEntrega.cidade ?? ""} / ${pedido.enderecoEntrega.estado ?? ""}, CEP: ${pedido.enderecoEntrega.cep ?? ""}`;
+    `${end.rua ?? ""}, ${end.numero ?? ""} - ${end.cidade ?? ""} / ${end.estado ?? ""}, CEP: ${end.cep ?? ""}`;
 
-  document.getElementById("modalPagamento").innerText = pedido.metodoPagamento;
+  // Pagamento (ajustei pra tentar formaPagamento ou metodoPagamento)
+  document.getElementById("modalPagamento").innerText =
+    pedido.metodoPagamento || pedido.formaPagamento || "-";
 
-  // Itens do pedido
+  // ===========================
+  // ITENS DO PEDIDO (AQUI ESTAVA O ERRO)
+  // ===========================
   const itensContainer = document.getElementById("modalItens");
-  itensContainer.innerHTML = pedido.itens.map(i => `
-    <div class="item-card">
-      <img src="${i.imagem?.[0] ?? '/images/no-image.png'}" alt="${i.nome}">
-      <div class="item-details">
-        <span><strong>${i.nome}</strong></span>
-        <span>Qtd: ${i.quantidade}x</span>
-        <span>Unit: R$ ${i.precoUnitario.toFixed(2)}</span>
-        <span>Subtotal: R$ ${(i.precoUnitario * i.quantidade).toFixed(2)}</span>
-      </div>
-    </div>
-  `).join("");
 
-  // Totais
-  document.getElementById("modalSubtotal").innerText = pedido.subtotal.toFixed(2);
-  document.getElementById("modalFrete").innerText = pedido.frete.toFixed(2);
-  document.getElementById("modalTotal").innerText = pedido.total.toFixed(2);
+  // Garante que sempre seja um array, mesmo que venha undefined
+  const itens = Array.isArray(pedido.itens)
+    ? pedido.itens
+    : Array.isArray(pedido.Itens)
+      ? pedido.Itens
+      : [];
 
-  // Fecha modal
-  modal.querySelector(".close").onclick = () => modal.style.display = "none";
-  window.onclick = e => { if (e.target == modal) modal.style.display = "none"; }
+  if (!itens.length) {
+    itensContainer.innerHTML = `
+      <p style="font-size:0.82rem;color:#9b9bb0;">
+        Nenhum item encontrado neste pedido.
+      </p>
+    `;
+  } else {
+    itensContainer.innerHTML = itens.map(i => {
+      const imagem = i.imagem?.[0] ?? "/images/no-image.png";
+      const nome = i.nome || i.Produto?.nome || "Produto";
+      const qtd = i.quantidade ?? 1;
+      const preco = i.precoUnitario ?? i.preco ?? 0;
+      console.log(i)
+      return `
+        <div class="item-card">
+          <img src="${i.imagem}" alt="${nome}">
+          <div class="item-details">
+            <span><strong>${nome}</strong></span>
+            <span>Qtd: ${qtd}x</span>
+            <span>Unit: ${formatCurrency(preco)}</span>
+            <span>Subtotal: ${formatCurrency(preco * qtd)}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // Totais (com fallback pra não quebrar)
+  const subtotal = pedido.subtotal ?? pedido.subTotal ?? 0;
+  const frete = pedido.frete ?? 0;
+  const total = pedido.total ?? (subtotal + frete);
+
+  document.getElementById("modalSubtotal").innerText = subtotal.toFixed(2);
+  document.getElementById("modalFrete").innerText = frete.toFixed(2);
+  document.getElementById("modalTotal").innerText = total.toFixed(2);
 }
 
-// =========================
-// Aplica cor apenas no texto do status
-// =========================
+
 function aplicarCorStatusTexto(select) {
   const status = select.value;
-  select.style.backgroundColor = "#fff"; // mantém o fundo branco
-  select.style.fontWeight = "bold";
-  select.style.border = "1px solid #ddd";
-  select.style.borderRadius = "8px";
-  select.style.padding = "6px 12px";
-  select.style.fontSize = "1rem";
+  select.style.backgroundColor = "#101018";
+  select.style.fontWeight = "600";
+  select.style.border = "1px solid rgba(255,255,255,0.06)";
+  select.style.borderRadius = "999px";
+  select.style.padding = "4px 10px";
+  select.style.fontSize = "0.8rem";
 
-  switch(status) {
+  switch (status) {
     case "Pendente":
       select.style.color = "#F9B000";
       break;
@@ -426,8 +980,428 @@ function aplicarCorStatusTexto(select) {
       select.style.color = "#e74c3c";
       break;
     default:
-      select.style.color = "#333";
+      select.style.color = "#ddd";
+  }
+}
+
+/* =====================
+ * CLIENTES
+ * ===================== */
+
+async function carregarClientes() {
+  const tbody = document.getElementById("listaClientes");
+  if (!tbody) {
+    console.warn("Elemento #listaClientes não encontrado");
+    return;
+  }
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="7" style="padding:8px 10px;color:#9b9bb0;font-size:0.84rem;">
+        Carregando clientes...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const res = await fetch("/api/auth/admin");
+    if (!res.ok) throw new Error("Erro ao carregar clientes");
+    const clientes = await res.json();
+
+    if (!clientes.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="padding:8px 10px;color:#9b9bb0;font-size:0.84rem;">
+            Nenhum cliente encontrado.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = clientes
+      .map((c) => {
+        const dataCadastro = c.createdAt
+          ? new Date(c.createdAt).toLocaleDateString("pt-BR")
+          : "-";
+
+        const cidadeUf = [c.cidade, c.estado].filter(Boolean).join(" / ");
+
+        return `
+          <tr data-id="${c.id}">
+            <td data-label="#ID">#${c.id}</td>
+            <td data-label="Nome">${c.nome}</td>
+            <td data-label="E-mail">${c.email}</td>
+            <td data-label="CPF">${c.cpf}</td>
+            <td data-label="Celular">${c.celular}</td>
+            <td data-label="Cidade/UF">${cidadeUf || "-"}</td>
+            <td data-label="Cadastrado em">${dataCadastro}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    // Clique na linha abre o modal de edição
+    tbody.querySelectorAll("tr").forEach((tr) => {
+      tr.addEventListener("click", () => {
+        const id = tr.getAttribute("data-id");
+        const cliente = clientes.find((c) => String(c.id) === String(id));
+        if (cliente) abrirModalCliente(cliente);
+      });
+    });
+  } catch (err) {
+    console.error("[CLIENTES] Erro:", err);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="padding:8px 10px;color:#ff9c9f;font-size:0.84rem;">
+          Erro ao carregar clientes.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// Inicializa máscaras e autocomplete de CEP no modal de cliente
+function initMascarasECEPClienteModal() {
+  const inputCep      = document.getElementById("clienteCep");
+  const inputCelular  = document.getElementById("clienteCelular");
+  const inputTelefone = document.getElementById("clienteTelefone");
+
+  // CEP
+  if (inputCep && !inputCep.dataset.inicializado) {
+    // máscara CEP em tempo real
+    inputCep.addEventListener("input", (e) => {
+      e.target.value = aplicarMascaraCEP(e.target.value);
+    });
+
+    // autocomplete ao sair do campo
+    inputCep.addEventListener("blur", () => {
+      buscarCEPCliente(inputCep.value);
+    });
+
+    inputCep.dataset.inicializado = "true";
+  }
+
+  // Celular
+  if (inputCelular && !inputCelular.dataset.inicializado) {
+    inputCelular.addEventListener("input", (e) => {
+      e.target.value = aplicarMascaraCelular(e.target.value);
+    });
+    inputCelular.dataset.inicializado = "true";
+  }
+
+  // Telefone
+  if (inputTelefone && !inputTelefone.dataset.inicializado) {
+    inputTelefone.addEventListener("input", (e) => {
+      e.target.value = aplicarMascaraTelefone(e.target.value);
+    });
+    inputTelefone.dataset.inicializado = "true";
+  }
+}
+
+function abrirModalCliente(cliente) {
+  const modal = document.getElementById("modalCliente");
+  const form = document.getElementById("formEditarCliente");
+  if (!modal || !form) return;
+
+  modal.style.display = "block";
+
+  // Helpers
+  const setVal = (id, value = "") => {
+    const el = document.getElementById(id);
+    if (el) el.value = value ?? "";
+  };
+
+  const normalizeDate = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) {
+      // se vier como "2024-01-01" já está ok
+      return String(value).substring(0, 10);
+    }
+    return d.toISOString().slice(0, 10); // yyyy-mm-dd
+  };
+
+  // Hidden + (opcional) pill com o ID
+  setVal("clienteId", cliente.id);
+  const idDisplay = document.getElementById("clienteIdDisplay");
+  if (idDisplay) idDisplay.textContent = `#${cliente.id}`;
+
+  // Preenche campos (já aplicando máscara onde faz sentido)
+  setVal("clienteNome", cliente.nome);
+  setVal("clienteEmail", cliente.email);
+
+  setVal(
+    "clienteCelular",
+    cliente.celular ? aplicarMascaraCelular(cliente.celular) : ""
+  );
+  setVal(
+    "clienteTelefone",
+    cliente.telefone ? aplicarMascaraTelefone(cliente.telefone) : ""
+  );
+
+  setVal("clienteSexo", cliente.sexo);
+  setVal("clienteNascimento", normalizeDate(cliente.data_de_nascimento));
+
+  setVal(
+    "clienteCep",
+    cliente.cep ? aplicarMascaraCEP(cliente.cep) : ""
+  );
+  setVal("clienteEndereco", cliente.endereco);
+  setVal("clienteNumero", cliente.numero);
+  setVal("clienteComplemento", cliente.complemento);
+  setVal("clienteReferencia", cliente.referencia);
+  setVal("clienteBairro", cliente.bairro);
+  setVal("clienteCidade", cliente.cidade);
+  setVal("clienteEstado", cliente.estado);
+
+  const isAdminInput = document.getElementById("clienteIsAdmin");
+  if (isAdminInput) {
+    isAdminInput.checked = !!cliente.isAdmin;
+  }
+
+  // Inicializa máscaras e autocomplete CEP
+  initMascarasECEPClienteModal();
+
+  // Submit (editar)
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const dados = {
+      nome: document.getElementById("clienteNome").value.trim(),
+      email: document.getElementById("clienteEmail").value.trim(),
+      celular: soDigitos(
+        document.getElementById("clienteCelular").value
+      ),
+      telefone: soDigitos(
+        document.getElementById("clienteTelefone").value
+      ),
+      sexo: document.getElementById("clienteSexo").value,
+      data_de_nascimento:
+        document.getElementById("clienteNascimento").value,
+      cep: soDigitos(document.getElementById("clienteCep").value),
+      endereco: document.getElementById("clienteEndereco").value.trim(),
+      numero: document.getElementById("clienteNumero").value.trim(),
+      complemento: document
+        .getElementById("clienteComplemento")
+        .value.trim(),
+      referencia: document
+        .getElementById("clienteReferencia")
+        .value.trim(),
+      bairro: document.getElementById("clienteBairro").value.trim(),
+      cidade: document.getElementById("clienteCidade").value.trim(),
+      estado: document.getElementById("clienteEstado").value.trim(),
+      isAdmin: isAdminInput ? isAdminInput.checked : false,
+    };
+
+    try {
+      const res = await fetch(`/api/auth/admin/${cliente.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+
+      const result = await res.json();
+      if (!res.ok)
+        throw new Error(result.message || "Erro ao atualizar cliente");
+
+      showToast("Cliente atualizado com sucesso!", "success");
+      modal.style.display = "none";
+      carregarClientes();
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao salvar alterações: " + err.message, "error");
+    }
+  };
+
+  // Botão de excluir (se existir no HTML)
+  const btnExcluir = document.getElementById("btnExcluirCliente");
+  if (btnExcluir) {
+    btnExcluir.onclick = async () => {
+      const confirmar = confirm(
+        `Tem certeza que deseja excluir o cliente "${cliente.nome}"?`
+      );
+      if (!confirmar) return;
+
+      try {
+        const res = await fetch(`/api/auth/admin/${cliente.id}`, {
+          method: "DELETE",
+        });
+
+        const result = await res.json();
+        if (!res.ok)
+          throw new Error(result.message || "Erro ao excluir cliente");
+
+        showToast("Cliente excluído com sucesso!", "success");
+        modal.style.display = "none";
+        carregarClientes();
+      } catch (err) {
+        console.error(err);
+        showToast("Erro ao excluir cliente: " + err.message, "error");
+      }
+    };
+  }
+}
+
+/* =====================
+ * UTILITÁRIOS DE MÁSCARA
+ * ===================== */
+
+function soDigitos(str) {
+  return (str || "").replace(/\D/g, "");
+}
+
+function aplicarMascaraCEP(valor) {
+  const digitos = soDigitos(valor).slice(0, 8);
+  if (digitos.length <= 5) return digitos;
+  return digitos.slice(0, 5) + "-" + digitos.slice(5);
+}
+
+function aplicarMascaraCelular(valor) {
+  const digitos = soDigitos(valor).slice(0, 11);
+  if (digitos.length <= 2) return digitos;
+  if (digitos.length <= 6) {
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+  }
+  if (digitos.length <= 10) {
+    // telefone fixo: (11) 2345-6789
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(
+      6
+    )}`;
+  }
+  // celular: (11) 91234-5678
+  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(
+    7
+  )}`;
+}
+
+function aplicarMascaraTelefone(valor) {
+  const digitos = soDigitos(valor).slice(0, 10);
+  if (digitos.length <= 2) return digitos;
+  if (digitos.length <= 6) {
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+  }
+  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(
+    6
+  )}`;
+}
+
+/* =====================
+ * AUTOCOMPLETE CEP (PAINEL)
+ * ===================== */
+
+async function buscarCEPCliente(cep) {
+  cep = (cep || "").replace(/\D/g, ""); // só dígitos
+
+  if (cep.length !== 8) return; // só busca CEP com 8 dígitos
+
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+
+    if (data.erro) {
+      showToast("CEP não encontrado!", "error");
+      return;
+    }
+
+    // Mapeia campos do ViaCEP -> IDs do modal
+    const campos = {
+      clienteEndereco: data.logradouro || "",
+      clienteBairro:   data.bairro     || "",
+      clienteCidade:   data.localidade || "",
+      clienteEstado:   data.uf         || ""
+    };
+
+    for (const [id, valor] of Object.entries(campos)) {
+      const campo = document.getElementById(id);
+      // Só preenche se estiver vazio, pra não sobrescrever algo editado na mão
+      if (campo && !campo.value.trim()) {
+        campo.value = valor;
+      }
+    }
+  } catch (err) {
+    console.error("[CEP] Erro ao buscar CEP:", err);
+    showToast("Erro ao buscar CEP", "error");
   }
 }
 
 
+
+
+
+/* =====================
+ * GRÁFICO DE FATURAMENTO (fake por enquanto)
+ * ===================== */
+
+function initChart() {
+  const ctxFat = document.getElementById("chartFaturamento");
+  if (!ctxFat || !window.Chart) return;
+
+  const dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const valores = [1890, 2150, 1780, 2420, 3100, 2890, 3320]; // fake
+
+  new Chart(ctxFat, {
+    type: "line",
+    data: {
+      labels: dias,
+      datasets: [
+        {
+          label: "Faturamento (R$)",
+          data: valores,
+          tension: 0.35,
+          fill: true,
+          borderWidth: 2,
+          borderColor: "rgba(249, 176, 0, 1)",
+          backgroundColor: "rgba(249, 176, 0, 0.12)",
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointBackgroundColor: "rgba(249, 176, 0, 1)",
+          pointBorderColor: "rgba(12, 12, 22, 1)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: "rgba(8,8,16,0.95)",
+          borderColor: "rgba(249,176,0,0.6)",
+          borderWidth: 1,
+          titleColor: "#ffffff",
+          bodyColor: "#f5f5f5",
+          padding: 8,
+          displayColors: false
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: "#b2b2d0",
+            font: {
+              size: 11
+            }
+          }
+        },
+        y: {
+          grid: {
+            color: "rgba(255,255,255,0.04)"
+          },
+          ticks: {
+            color: "#9b9bb0",
+            font: {
+              size: 11
+            },
+            callback: (value) => "R$ " + Number(value).toLocaleString("pt-BR")
+          }
+        }
+      }
+    }
+  });
+}

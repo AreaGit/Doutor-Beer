@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const email = sessionStorage.getItem("loginTempEmail");
   if (!email) {
     mostrarMensagem("E-mail não encontrado. Faça login novamente.", "erro");
-    setTimeout(() => window.location.href = "login.html", 3000);
+    setTimeout(() => window.location.href = "/login", 3000); // 👈 ajustado
     return;
   }
 
@@ -78,11 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "Erro ao validar código.");
+
+      // 👇 usa o destino que o backend mandou (painel-adm se admin, / se usuário comum)
+      const destino = data.redirectTo || "/";
 
       mostrarMensagem("Login realizado com sucesso!", "sucesso");
       sessionStorage.removeItem("loginTempEmail");
-      setTimeout(() => window.location.href = "/", 1500);
+      setTimeout(() => {
+        window.location.href = destino;
+      }, 1500);
 
     } catch (err) {
       mostrarMensagem(err.message, "erro");
@@ -102,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "Erro ao reenviar código.");
 
       mostrarMensagem("Código reenviado para seu e-mail!", "sucesso");
 

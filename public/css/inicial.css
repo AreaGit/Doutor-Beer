@@ -67,7 +67,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* centraliza tudo */
   background: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -414,6 +413,64 @@ body {
   color: #d9363e;
 }
 
+/* ==== Imagem clicável (link do produto) ==== */
+.cart-item-image-link img {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-item-image-link img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ==== Edição de COR no carrinho ==== */
+.cart-color-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 6px 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.cart-color-select label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.cart-color-select .color-select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+/* ==== Edição de REFIL no carrinho ==== */
+.cart-refil {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 6px 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.cart-refil .refil-label {
+  font-weight: 600;
+}
+
+.cart-refil .refil-input {
+  width: 70px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 
 
 
@@ -516,8 +573,7 @@ body {
   background-color: var(--light);
   color: var(--dark);
   font-weight: 600;
-  position: sticky;
-  top: 0;
+  position: relative; /* não é mais sticky */
   z-index: 999;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -696,8 +752,9 @@ body {
 
 .caixa {
   display: block;
-  width: 500px;
-  height: 500px;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1 / 1; 
   overflow: hidden;
   border-radius: 12px;
   cursor: pointer;
@@ -748,8 +805,9 @@ body {
   background-color: #fff;
   border-radius: 12px;
   overflow: hidden;
-  width: 350px;
-  height: 450px;
+  width: 100%;
+  max-width: 350px;   /* limita no desktop */
+  min-height: 380px;  /* garante um mínimo sem travar demais */
   text-align: center;
   color: #333;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -757,7 +815,6 @@ body {
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  /* Remove sublinhado do link */
 }
 
 .produto-card a {
@@ -1241,26 +1298,37 @@ body {
 
 /* ==== RESPONSIVIDADE ==== */
 
+
 @media (max-width: 480px) {
   .cart-sidebar {
-    width: 100%;      /* 📱 Em celulares muito pequenos ocupa 100% */
-    max-width: 100%;
-    box-shadow: none; /* Remove sombra para parecer um modal fullscreen */
-  }
-
-  .produto-card {
     width: 100%;
+    max-width: 100%;
+    box-shadow: none;
   }
 
+  /* 🔸 Produtos: 1 por linha, ocupando bem a largura 🔸 */
+  .secao .produtos-container {
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .secao .produtos-container .produto-card {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .secao .produtos-container .produto-card img {
+    height: 350px;         
+    object-fit: contain;   
+    padding: 10px;      
+  }
 }
 
-@media (max-width: 664px) {
-
-  
-}
 
 
-@media(max-width: 768px) {
+
+@media (max-width: 768px) {
 
   /* Header */
   .center-section {
@@ -1290,7 +1358,8 @@ body {
   }
 
   .cart-sidebar {
-    width: 50%;
+    width: 80%;
+    max-width: 80%;
   }
 
   /* Nav Bar*/
@@ -1343,18 +1412,23 @@ body {
     display: none;
   }
 
+  /* 🔸 Produtos: 2 por linha 🔸 */
+  .produtos-container {
+    gap: 16px;
+  }
+
   .produto-card {
     width: 48%;
+    max-width: none;
     margin-bottom: 20px;
+  }
+
+  .produto-card img {
+    height: 260px; /* reduz a altura da imagem no mobile médio */
   }
 
   .avaliacao {
     width: 90%;
-  }
-
-   .cart-sidebar {
-    width: 80%;       /* 📱 Em smartphones o carrinho ocupa mais espaço */
-    max-width: 80%;
   }
 }
 
@@ -1365,6 +1439,10 @@ body {
     width: 320px;
     max-width: 85%;   /* Tablets */
   }
+  .produto-card {
+    max-width: 320px;
+  }
 }
+
 
 

@@ -71,13 +71,47 @@ exports.deletarProduto = async (req, res) => {
 /* ================== Buscar Produtos por Seção ================== */
 exports.buscarPorSecao = async (req, res) => {
   try {
-    const { secao } = req.params;
-    const produtos = await Produto.findAll({ where: { secao } });
+    const { secao } = req.params; // ex: "Lançamentos"
+    const secaoAlvo = String(secao).toLowerCase().trim();
 
-    if (!produtos || produtos.length === 0)
+    // Busca todos e filtra na mão (independente se secao é JSON ou string)
+    const produtos = await Produto.findAll();
+
+    const produtosFiltrados = produtos.filter((prod) => {
+      if (!prod.secao) return false;
+
+      let secoes = prod.secao;
+
+      // Se veio como string (dados antigos), pode ser:
+      //  - "Lançamentos"
+      //  - '["Lançamentos","Mais vendidos"]'
+      if (typeof secoes === "string") {
+        // tenta parsear como JSON
+        try {
+          const parsed = JSON.parse(secoes);
+          secoes = parsed;
+        } catch {
+          // se não for JSON, compara direto como string
+          return secoes.toLowerCase().trim() === secaoAlvo;
+        }
+      }
+
+      // Se for array (JSON)
+      if (Array.isArray(secoes)) {
+        return secoes.some((s) =>
+          String(s).toLowerCase().trim() === secaoAlvo
+        );
+      }
+
+      // Qualquer outro tipo, compara string bruta
+      return String(secoes).toLowerCase().trim() === secaoAlvo;
+    });
+
+    if (!produtosFiltrados.length) {
       return res.status(404).json({ erro: "Nenhum produto encontrado para esta seção." });
+    }
 
-    res.json(produtos);
+    res.json(produtosFiltrados);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produtos por seção:", err);
     res.status(500).json({ erro: "Erro ao buscar produtos por seção." });

@@ -2,9 +2,14 @@ const enviarEmail = require("./email");
 
 // Função para gerar código 2FA com exatamente 6 dígitos
 function gerarCodigo(length = 6) {
-  // Gera número aleatório entre 0 e 999999, depois preenche com zeros à esquerda
-  const numeroAleatorio = Math.floor(Math.random() * Math.pow(10, length));
-  return String(numeroAleatorio).padStart(length, "0");
+  if (length <= 0) throw new Error("Tamanho inválido para código 2FA");
+
+  const min = Math.pow(10, length - 1);     // ex: 100000
+  const max = Math.pow(10, length) - 1;     // ex: 999999
+
+  const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
+  // Como min já é 100000, nunca vai ter leading zero
+  return String(numeroAleatorio);
 }
 
 // Gera código, grava no usuário e envia por e-mail

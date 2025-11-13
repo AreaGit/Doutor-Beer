@@ -41,7 +41,7 @@
             <input type="email" id="email" name="email" required>
 
             <label for="telefone">Telefone</label>
-            <input type="tel" id="telefone" name="telefone" placeholder="(XX) XXXXX-XXXX">
+            <input type="tel" id="telefone" name="telefone" placeholder="(XX) XXXXX-XXXX" required>
 
             <label for="pedido">Nº do pedido (opcional)</label>
             <input type="text" id="pedido" name="pedido" placeholder="#12345">
@@ -168,26 +168,7 @@
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
 
-  <script>
-    // Feedback simples de envio
-    const form = document.getElementById('contactForm');
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      form.reset();
-      document.querySelector('.success-message').style.display = 'block';
-      setTimeout(() => {
-        document.querySelector('.success-message').style.display = 'none';
-      }, 4000);
-    });
-
-    // FAQ interativo
-    document.querySelectorAll(".faq-question").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const item = btn.parentElement;
-        item.classList.toggle("active");
-      });
-    });
-  </script>
+  <script src="../js/fale-conosco.js"></script>
 
 </body>
 

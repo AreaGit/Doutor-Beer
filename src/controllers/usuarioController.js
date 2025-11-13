@@ -2,7 +2,7 @@ const Usuario = require("../models/Usuario");
 const Cart = require("../models/carrinho");
 const bcrypt = require("bcrypt");
 const gerarCodigo2FA = require("../utils/gerarCodigo2FA");
-const enviarEmail = require("../utils/email"); 
+const enviarEmail = require("../utils/email");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const Produto = require("../models/Produto");
@@ -125,7 +125,7 @@ exports.verificar2FA = async (req, res) => {
     await usuario.save();
 
     // Criar sessão do usuário
-    req.session.user = { id: usuario.id, nome: usuario.nome, email };
+    req.session.user = { id: usuario.id, nome: usuario.nome, email, isAdmin: usuario.isAdmin };
 
     // ==================== MESCLAGEM MELHORADA ====================
     const guestCart = req.session.tempLogin.guestCart || [];
@@ -133,7 +133,7 @@ exports.verificar2FA = async (req, res) => {
 
     if (guestCart.length > 0) {
       console.log(`[Login] Iniciando mesclagem de ${guestCart.length} itens do carrinho guest`);
-      
+
       for (const item of guestCart) {
         try {
           // Verificar se o produto existe
@@ -172,9 +172,10 @@ exports.verificar2FA = async (req, res) => {
     // Limpar tempLogin
     delete req.session.tempLogin;
 
-    res.json({ 
-      message: "Login realizado com sucesso!", 
-      mergedItems 
+    res.json({
+      message: "Login realizado com sucesso!",
+      mergedItems,
+      redirectTo: usuario.isAdmin ? "/painel-adm" : "/"
     });
   } catch (error) {
     console.error("Erro ao verificar 2FA:", error);
@@ -304,6 +305,138 @@ exports.mePedidos = async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar pedidos" });
   }
 };
+
+// ==================== LISTAR TODOS USUÁRIOS (ADMIN) ====================
+exports.listarUsuariosAdmin = async (req, res) => {
+  try {
+    // precisa estar logado
+    if (!req.session.user) {
+      return res.status(401).json({ message: "Não autenticado" });
+    }
+
+    // precisa ser admin
+    if (!req.session.user.isAdmin) {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
+
+    const usuarios = await Usuario.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+
+    // Não enviar senha, 2FA etc
+    const usuariosSanitizados = usuarios.map(u => ({
+      id: u.id,
+      isAdmin: u.isAdmin,
+      customer_asaas_id: u.customer_asaas_id,
+      nome: u.nome,
+      cpf: u.cpf,
+      celular: u.celular,
+      telefone: u.telefone,
+      sexo: u.sexo,
+      data_de_nascimento: u.data_de_nascimento,
+      cep: u.cep,
+      endereco: u.endereco,
+      numero: u.numero,
+      complemento: u.complemento,
+      referencia: u.referencia,
+      bairro: u.bairro,
+      cidade: u.cidade,
+      estado: u.estado,
+      email: u.email,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt
+    }));
+
+    res.json(usuariosSanitizados);
+  } catch (error) {
+    console.error("Erro ao listar usuários (admin):", error);
+    res.status(500).json({ message: "Erro ao listar usuários" });
+  }
+};
+
+// ==================== ATUALIZAR USUÁRIO (ADMIN) ====================
+exports.atualizarUsuarioAdmin = async (req, res) => {
+  try {
+    // Garantir que o admin está autenticado
+    if (!req.session.user || !req.session.user.isAdmin) {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
+
+    const { id } = req.params;
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) return res.status(404).json({ message: "Usuário não encontrado" });
+
+    // Campos que o admin pode atualizar
+    const camposPermitidos = [
+      "nome", "email", "celular", "telefone", "sexo", "data_de_nascimento",
+      "cep", "endereco", "numero", "complemento", "referencia",
+      "bairro", "cidade", "estado", "isAdmin"
+    ];
+
+    camposPermitidos.forEach(campo => {
+      if (req.body[campo] !== undefined) {
+        usuario[campo] = req.body[campo];
+      }
+    });
+
+    await usuario.save();
+
+    res.json({ message: "Cliente atualizado com sucesso!", usuario });
+  } catch (error) {
+    console.error("Erro ao atualizar cliente (admin):", error);
+    res.status(500).json({ message: "Erro ao atualizar cliente", error });
+  }
+};
+
+// ==================== DELETAR USUÁRIO (ADMIN) ====================
+exports.deletarUsuarioAdmin = async (req, res) => {
+  try {
+    // Garantir que o admin está autenticado
+    if (!req.session.user || !req.session.user.isAdmin) {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
+
+    const { id } = req.params;
+
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    // 1) Apagar itens de carrinho desse usuário (se houver)
+    await Cart.destroy({
+      where: { usuarioId: id }
+    });
+
+    // 2) Buscar pedidos desse usuário
+    const pedidos = await Pedido.findAll({
+      where: { usuarioId: id }
+    });
+
+    if (pedidos.length > 0) {
+      const pedidoIds = pedidos.map(p => p.id);
+
+      // 2.1) Apagar itens dos pedidos
+      await PedidoItem.destroy({
+        where: { pedidoId: pedidoIds }
+      });
+
+      // 2.2) Apagar os pedidos
+      await Pedido.destroy({
+        where: { id: pedidoIds }
+      });
+    }
+
+    // 3) Agora sim, apagar o usuário
+    await usuario.destroy();
+
+    return res.json({ message: "Cliente excluído com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao excluir cliente (admin):", error);
+    return res.status(500).json({ message: "Erro ao excluir cliente", error });
+  }
+};
+
 
 // ==================== LOGOUT ====================
 exports.logout = async (req, res) => {

@@ -52,7 +52,7 @@ const Produto = sequelize.define("Produto", {
     allowNull: true
   },
   secao: {
-    type: DataTypes.STRING,
+    type: DataTypes.JSON,
     allowNull: true
   },
   altura: {
