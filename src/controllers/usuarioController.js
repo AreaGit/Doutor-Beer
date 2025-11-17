@@ -1,6 +1,7 @@
 const Usuario = require("../models/Usuario");
 const Cart = require("../models/carrinho");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const gerarCodigo2FA = require("../utils/gerarCodigo2FA");
 const enviarEmail = require("../utils/email");
 const Pedido = require("../models/Pedido");
@@ -434,6 +435,206 @@ exports.deletarUsuarioAdmin = async (req, res) => {
   } catch (error) {
     console.error("Erro ao excluir cliente (admin):", error);
     return res.status(500).json({ message: "Erro ao excluir cliente", error });
+  }
+};
+
+// ==================== SOLICITAR RECUPERAÇÃO DE SENHA ====================
+exports.solicitarRecuperacaoSenha = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Informe um e-mail válido." });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ where: { email } });
+
+    // 🔒 Por segurança, SEMPRE retorna a mesma mensagem,
+    // mesmo se o usuário não existir.
+    if (!usuario) {
+      return res.json({
+        message:
+          "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."
+      });
+    }
+
+    // Gera token aleatório
+    const token = crypto.randomBytes(32).toString("hex");
+    const expira = new Date(Date.now() + 60 * 60 * 1000); // 1h
+
+    usuario.resetToken = token;
+    usuario.resetTokenExpira = expira;
+    await usuario.save();
+
+    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const linkReset = `${baseUrl}/redefinir-senha?token=${token}&email=${encodeURIComponent(
+      email
+    )}`;
+
+    // E-mail de recuperação
+    const assunto = "Recuperação de senha - Doutor Beer";
+
+    const corpoTexto = `
+Olá, ${usuario.nome}!
+
+Recebemos uma solicitação para redefinir a senha da sua conta na Doutor Beer.
+
+Para criar uma nova senha, acesse o link abaixo:
+${linkReset}
+
+Se você não fez essa solicitação, pode ignorar este e-mail.
+Este link é válido por 1 hora.
+    `.trim();
+
+    const corpoHtml = `
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>${assunto}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <tr>
+      <td align="center" style="padding:30px 15px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,0.08);">
+          
+          <!-- Cabeçalho -->
+          <tr>
+            <td align="center" style="background:#F9B000;padding:18px 20px;">
+              <h1 style="margin:0;font-size:20px;color:#4d1818;font-weight:700;font-family:Arial,Helvetica,sans-serif;">
+                Doutor Beer
+              </h1>
+              <p style="margin:4px 0 0;font-size:12px;color:#4d1818;opacity:.9;">
+                Recuperação de senha
+              </p>
+            </td>
+          </tr>
+
+          <!-- Conteúdo -->
+          <tr>
+            <td style="padding:24px 24px 10px 24px;">
+              <p style="margin:0 0 10px 0;font-size:15px;color:#333333;">
+                Olá, <strong>${usuario.nome}</strong>!
+              </p>
+              <p style="margin:0 0 14px 0;font-size:14px;color:#555555;line-height:1.6;">
+                Recebemos uma solicitação para redefinir a senha da sua conta na 
+                <strong>Doutor Beer</strong>.
+              </p>
+              <p style="margin:0 0 18px 0;font-size:14px;color:#555555;line-height:1.6;">
+                Para continuar, clique no botão abaixo e escolha uma nova senha com segurança:
+              </p>
+
+              <p style="margin:0 0 18px 0;text-align:center;">
+                <a href="${linkReset}"
+                   style="
+                     display:inline-block;
+                     padding:12px 26px;
+                     background:#F9B000;
+                     color:#4d1818;
+                     text-decoration:none;
+                     border-radius:999px;
+                     font-weight:bold;
+                     font-size:14px;
+                     box-shadow:0 6px 14px rgba(249,176,0,0.45);
+                   ">
+                  Redefinir minha senha
+                </a>
+              </p>
+
+              <p style="margin:0 0 10px 0;font-size:12px;color:#777777;line-height:1.6;">
+                Se o botão não funcionar, copie e cole o link abaixo no seu navegador:
+              </p>
+              <p style="margin:0 0 16px 0;font-size:11px;color:#999999;word-break:break-all;">
+                ${linkReset}
+              </p>
+
+              <p style="margin:0 0 4px 0;font-size:12px;color:#777777;">
+                ⏱ Este link é válido por <strong>1 hora</strong>.
+              </p>
+              <p style="margin:0 0 16px 0;font-size:12px;color:#777777;">
+                Se você não fez essa solicitação, nenhuma ação é necessária.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Rodapé -->
+          <tr>
+            <td style="padding:14px 24px 20px 24px;border-top:1px solid #eeeeee;">
+              <p style="margin:0 0 4px 0;font-size:12px;color:#999999;">
+                Este é um e-mail automático, por favor não responda.
+              </p>
+              <p style="margin:0;font-size:11px;color:#b3b3b3;">
+                © ${new Date().getFullYear()} Doutor Beer. Todos os direitos reservados.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim();
+
+    await enviarEmail(email, assunto, corpoTexto, corpoHtml);
+
+    return res.json({
+      message:
+        "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."
+    });
+  } catch (error) {
+    console.error("Erro ao solicitar recuperação de senha:", error);
+    return res.status(500).json({
+      message: "Erro ao solicitar recuperação de senha. Tente novamente."
+    });
+  }
+};
+
+// ==================== RESETAR SENHA COM TOKEN ====================
+exports.resetarSenha = async (req, res) => {
+  const { email, token, novaSenha } = req.body;
+
+  if (!email || !token || !novaSenha) {
+    return res.status(400).json({
+      message: "Dados incompletos. Envie e-mail, token e nova senha."
+    });
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ where: { email } });
+    if (!usuario) {
+      return res.status(400).json({ message: "Link inválido ou expirado." });
+    }
+
+    // Verifica token e validade
+    if (
+      !usuario.resetToken ||
+      !usuario.resetTokenExpira ||
+      usuario.resetToken !== token ||
+      new Date() > new Date(usuario.resetTokenExpira)
+    ) {
+      return res.status(400).json({ message: "Link inválido ou expirado." });
+    }
+
+    // Hash da nova senha
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
+
+    usuario.senha = senhaHash;
+    usuario.resetToken = null;
+    usuario.resetTokenExpira = null;
+
+    await usuario.save();
+
+    return res.json({
+      message: "Senha redefinida com sucesso! Você já pode fazer login."
+    });
+  } catch (error) {
+    console.error("Erro ao redefinir senha:", error);
+    return res.status(500).json({
+      message: "Erro ao redefinir senha. Tente novamente."
+    });
   }
 };
 

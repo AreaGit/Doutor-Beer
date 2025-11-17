@@ -1,47 +1,93 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redefinir senha - Doutor Beer</title>
+  <title>Definir nova senha - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+
+  <!-- Fonte & Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/register.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/nova-senha.css">
 </head>
+
 <body>
 
   <!-- Cabeçalho -->
   <header class="header">
     <div class="logo">
-      <a href="/html/inicial.html">
-        <img src="/images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
+      <a href="/">
+        <img src="../images/Doutor Beer Logo.png" alt="Logo Doutor Beer">
       </a>
     </div>
   </header>
 
-  <!-- Conteúdo Redefinir Senha -->
-  <div class="registro-container">
-    <h2>Redefinir senha</h2>
-    <p class="descricao">Digite sua nova senha e confirme para continuar.</p>
-    
-    <form action="#" method="post">
-      <div class="form-group">
-        <input type="password" name="novaSenha" id="novaSenha" placeholder=" " required>
-        <label for="novaSenha">Nova senha</label>
+  <!-- Container principal -->
+  <main class="recovery-main">
+    <div class="recovery-container">
+      <div class="icon-badge">
+        <div class="icon-circle">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <span class="badge">Definir nova senha</span>
       </div>
 
-      <div class="form-group">
-        <input type="password" name="confirmarSenha" id="confirmarSenha" placeholder=" " required>
-        <label for="confirmarSenha">Confirmar senha</label>
+      <h2>Crie uma nova senha</h2>
+      <p class="subtitle">
+        Sua nova senha deve ser <strong>segura e exclusiva</strong>.<br>
+        Capriche para manter sua conta protegida.
+      </p>
+
+      <!-- Caixa de feedback -->
+      <div id="caixaFeedback" class="feedback-box" style="display:none;"></div>
+
+      <form id="novaSenhaForm">
+        <div class="form-group senha-group">
+          <input type="password" id="novaSenha" placeholder=" " required>
+          <label for="novaSenha">Nova senha</label>
+          <span class="input-icon toggle-icon" data-target="novaSenha">
+            <i class="fa-solid fa-eye-slash"></i>
+          </span>
+          <small id="senhaRequisitos" class="senha-requisitos"></small>
+        </div>
+
+        <div class="form-group senha-group">
+          <input type="password" id="confirmarSenha" placeholder=" " required>
+          <label for="confirmarSenha">Confirmar nova senha</label>
+          <span class="input-icon toggle-icon" data-target="confirmarSenha">
+            <i class="fa-solid fa-eye-slash"></i>
+          </span>
+        </div>
+
+        <button type="submit">
+          <span>Salvar nova senha</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="helper-info">
+        <i class="fa-solid fa-lock"></i>
+        <p>Após redefinir, você poderá acessar normalmente com sua nova senha.</p>
       </div>
 
-      <button type="submit">Salvar nova senha</button>
-    </form>
+      <p class="back-login">
+        <i class="fa-solid fa-arrow-left"></i>
+        <a href="/login">Voltar para login</a>
+      </p>
+    </div>
+  </main>
 
-    <p class="login-link">
-      Já lembra da senha? <a href="/html/Fluxo de Autenticação/login.html">Voltar ao login</a>
-    </p>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
   </div>
 
+  <script src="../js/redefinir.js"></script>
+
 </body>
+
 </html>

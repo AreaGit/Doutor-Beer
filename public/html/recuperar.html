@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recuperar senha - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <!-- Fonte & Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/register.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/recuperar.css">
 </head>
+
 <body>
 
   <!-- Cabeçalho -->
@@ -19,24 +24,59 @@
     </div>
   </header>
 
-  <!-- Conteúdo Recuperar Senha -->
-  <div class="registro-container">
-    <h2>Recuperar senha</h2>
-    <p class="descricao">Digite seu e-mail para receber o link de redefinição.</p>
-    
-    <form action="#" method="post">
-      <div class="form-group">
-        <input type="email" name="email" id="email" placeholder=" " required>
-        <label for="email">E-mail</label>
+  <!-- Container principal -->
+  <main class="recovery-main">
+    <div class="recovery-container">
+      <div class="icon-badge">
+        <div class="icon-circle">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <span class="badge">Segurança primeiro</span>
       </div>
 
-      <button type="submit">Enviar link</button>
-    </form>
+      <h2>Recuperar senha</h2>
+      <p class="subtitle">
+        Informe o e-mail cadastrado para enviarmos um<br>
+        <strong>link seguro de redefinição de senha</strong>.
+      </p>
 
-    <p class="login-link">
-      Lembrou sua senha? <a href="login.html">Voltar ao login</a>
-    </p>
+      <!-- Caixa de feedback -->
+      <div id="caixaFeedback" class="feedback-box" style="display:none;"></div>
+
+      <form id="recuperarSenhaForm">
+        <div class="form-group">
+          <input type="email" name="email" id="email" placeholder=" " required>
+          <label for="email">E-mail cadastrado</label>
+          <span class="input-icon">
+            <i class="fa-solid fa-envelope"></i>
+          </span>
+        </div>
+
+        <button type="submit">
+          <span>Enviar link de recuperação</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="helper-info">
+        <i class="fa-solid fa-shield-halved"></i>
+        <p>Nós nunca enviaremos pedidos de senha ou dados sensíveis por e-mail. Verifique sempre o remetente.</p>
+      </div>
+
+      <p class="back-login">
+        <i class="fa-solid fa-arrow-left"></i>
+        <a href="/login">Voltar para login</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
   </div>
 
+  <script src="../js/recuperar.js"></script>
+
 </body>
+
 </html>

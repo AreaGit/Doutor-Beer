@@ -88,6 +88,15 @@ const Usuario = sequelize.define("Usuario", {
   expira2FA: {
     type: DataTypes.DATE,
     allowNull: true    
+  },
+
+  resetToken: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  resetTokenExpira: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 
 }, {

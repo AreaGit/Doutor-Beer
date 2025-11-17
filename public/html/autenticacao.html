@@ -6,14 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Autenticação de 2 Fatores - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+
+  <!-- Ícones & Fonte -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <!--<link rel="stylesheet" href="/css/inicial.css"-->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="../css/autenticacao.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
 
-    <!-- Cabeçalho -->
+  <!-- Cabeçalho -->
   <header class="header">
     <div class="logo">
       <a href="/">
@@ -22,37 +26,61 @@
     </div>
   </header>
 
-  
-  <!-- Container 2FA -->
-  <div class="registro-container">
-    <img src="../images/cyber-security.png" alt="Cadeado" class="cadeado-img">
-    <h2>Verificação em 2 Etapas</h2>
-    <p class="descricao">
-      Digite o código que enviamos para o seu e-mail
-    </p>
-
-    <!-- Mensagem de feedback -->
-    <div id="mensagem2FA" class="mensagem2FA"></div>
-
-    <form id="form2FA" class="form-otp">
-      <div class="otp-inputs">
-        <input type="text" maxlength="1" class="otp" required>
-        <input type="text" maxlength="1" class="otp" required>
-        <input type="text" maxlength="1" class="otp" required>
-        <input type="text" maxlength="1" class="otp" required>
-        <input type="text" maxlength="1" class="otp" required>
-        <input type="text" maxlength="1" class="otp" required>
+  <main class="twofa-main">
+    <!-- Container 2FA -->
+    <div class="registro-container">
+      <div class="icon-badge">
+        <div class="icon-circle">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <span class="badge">Segurança em duas etapas</span>
       </div>
 
-      <button type="submit" class="btn-confirmar">Confirmar</button>
-    </form>
+      <h2>Verificação em 2 Etapas</h2>
+      <p class="descricao">
+        Digite o código de <strong>6 dígitos</strong> que enviamos para o seu e-mail cadastrado.
+      </p>
 
-    <p class="login-link">
-      Não recebeu o código? <a href="#" id="reenviarCodigo">Reenviar</a>
-    </p>
+      <!-- Mensagem de feedback -->
+      <div id="mensagem2FA" class="mensagem2FA"></div>
+
+      <form id="form2FA" class="form-otp">
+        <div class="otp-inputs">
+          <input type="text" maxlength="1" class="otp" required>
+          <input type="text" maxlength="1" class="otp" required>
+          <input type="text" maxlength="1" class="otp" required>
+          <input type="text" maxlength="1" class="otp" required>
+          <input type="text" maxlength="1" class="otp" required>
+          <input type="text" maxlength="1" class="otp" required>
+        </div>
+
+        <button type="submit" class="btn-confirmar">
+          <span>Confirmar</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <p class="helper-info">
+        <i class="fa-regular fa-envelope"></i>
+        <span>
+          Verifique também sua caixa de <strong>spam</strong> ou <strong>promoções</strong>.
+          Se ainda não encontrar:
+        </span>
+      </p>
+
+      <p class="login-link">
+        Não recebeu o código?
+        <a href="#" id="reenviarCodigo">Reenviar</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Loading Overlay (opcional, caso use no JS) -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
   </div>
 
   <script src="../js/autenticacao.js"></script>
-    
+
 </body>
 </html>
