@@ -261,26 +261,26 @@ async function initCart() {
     transparent: "Transparente",
   };
 
-function renderCart() {
-  cartItemsContainer.innerHTML = "";
+  function renderCart() {
+    cartItemsContainer.innerHTML = "";
 
-  if (!cartItems.length) {
-    cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-    updateResumo();
-    return;
-  }
+    if (!cartItems.length) {
+      cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
+      updateResumo();
+      return;
+    }
 
-  cartItems.forEach((item, index) => {
-    // 🔹 Usa o preço que já veio ajustado (sem somar nada)
-    const preco = item.preco ?? item.precoPromocional ?? 0;
+    cartItems.forEach((item, index) => {
+      // 🔹 Usa o preço que já veio ajustado (sem somar nada)
+      const preco = item.preco ?? item.precoPromocional ?? 0;
 
-    // 🔹 Garante o ID do produto para o link
-    const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
+      // 🔹 Garante o ID do produto para o link
+      const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
 
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "cart-item";
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "cart-item";
 
-    itemDiv.innerHTML = `
+      itemDiv.innerHTML = `
       <a 
         href="${produtoId ? `/detalhes-produto?id=${produtoId}` : '#'}" 
         class="cart-item-image-link"
@@ -296,10 +296,10 @@ function renderCart() {
             </span>
             <span class="color-name">
               ${(() => {
-                const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
-                const corKey = corEn?.toLowerCase().trim();
-                return colorTranslations[corKey] || corEn;
-              })()}
+            const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+            const corKey = corEn?.toLowerCase().trim();
+            return colorTranslations[corKey] || corEn;
+          })()}
             </span>
           </div>
         ` : ""}
@@ -332,58 +332,58 @@ function renderCart() {
       </div>
     `;
 
-    cartItemsContainer.appendChild(itemDiv);
-  });
-
-  // Controles de quantidade e remover
-  document.querySelectorAll(".qty-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      const novoValor = btn.classList.contains("plus")
-        ? cartItems[idx].quantidade + 1
-        : Math.max(1, cartItems[idx].quantidade - 1);
-      await updateQuantity(idx, novoValor);
+      cartItemsContainer.appendChild(itemDiv);
     });
-  });
 
-  document.querySelectorAll(".quantity-input").forEach(input => {
-    input.addEventListener("change", async () => {
-      const idx = parseInt(input.dataset.index);
-      let novaQtd = parseInt(input.value);
-      if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
-      await updateQuantity(idx, novaQtd);
+    // Controles de quantidade e remover
+    document.querySelectorAll(".qty-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        const novoValor = btn.classList.contains("plus")
+          ? cartItems[idx].quantidade + 1
+          : Math.max(1, cartItems[idx].quantidade - 1);
+        await updateQuantity(idx, novoValor);
+      });
     });
-  });
 
-  document.querySelectorAll(".remove-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      await removeItem(idx);
+    document.querySelectorAll(".quantity-input").forEach(input => {
+      input.addEventListener("change", async () => {
+        const idx = parseInt(input.dataset.index);
+        let novaQtd = parseInt(input.value);
+        if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
+        await updateQuantity(idx, novaQtd);
+      });
     });
-  });
 
-  updateResumo();
-}
+    document.querySelectorAll(".remove-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        await removeItem(idx);
+      });
+    });
+
+    updateResumo();
+  }
 
 
   /* ================== Atualizar resumo ================== */
-function updateResumo() {
-  const totalItems = cartItems.length;
-  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+  function updateResumo() {
+    const totalItems = cartItems.length;
+    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-  // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
-  const total = cartItems.reduce((acc, i) => {
-    const precoBase = i.preco ?? i.precoPromocional ?? 0;
-    return acc + (precoBase * i.quantidade);
-  }, 0);
+    // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
+    const total = cartItems.reduce((acc, i) => {
+      const precoBase = i.preco ?? i.precoPromocional ?? 0;
+      return acc + (precoBase * i.quantidade);
+    }, 0);
 
-  cartCount.textContent = totalQuantity;
-  summaryItems.textContent = totalItems;
-  summaryQuantity.textContent = totalQuantity;
-  summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    cartCount.textContent = totalQuantity;
+    summaryItems.textContent = totalItems;
+    summaryQuantity.textContent = totalQuantity;
+    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (!isLoggedIn) saveGuestCartToLocalStorage();
-}
+    if (!isLoggedIn) saveGuestCartToLocalStorage();
+  }
 
   /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
@@ -478,12 +478,12 @@ function updateResumo() {
     const torneiraSelecionada = produto.torneira || produto.torneiraSelecionada || "padrao";
 
     // 🔹 Verifica se já existe o mesmo produto com MESMA cor e MESMA torneira
-const existingIndex = cartItems.findIndex(i =>
-  i.id === produto.id &&
-  (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
-  (i.torneira || "padrao") === torneiraSelecionada &&
-  (Number(i.refil) || 1) === (Number(produto.refil) || 1)
-);
+    const existingIndex = cartItems.findIndex(i =>
+      i.id === produto.id &&
+      (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
+      (i.torneira || "padrao") === torneiraSelecionada &&
+      (Number(i.refil) || 1) === (Number(produto.refil) || 1)
+    );
 
 
     if (existingIndex >= 0) {
@@ -821,44 +821,44 @@ async function carregarProduto() {
     produtoAtual = produto; // Salva produto atual
 
     // ================== Função central de sincronização de preço ==================
-   function atualizarPreco() {
-  const precoAntigoEl = document.querySelector(".produto-detalhes .preco .antigo");
-  const precoNovoEl = document.querySelector(".produto-detalhes .preco .novo");
+    function atualizarPreco() {
+      const precoAntigoEl = document.querySelector(".produto-detalhes .preco .antigo");
+      const precoNovoEl = document.querySelector(".produto-detalhes .preco .novo");
 
-  const base = Number(produtoAtual.preco) || 0;
-  const promo = Number(produtoAtual.precoPromocional) || null;
-  let precoFinal = base;
-  let precoPromoFinal = promo;
+      const base = Number(produtoAtual.preco) || 0;
+      const promo = Number(produtoAtual.precoPromocional) || null;
+      let precoFinal = base;
+      let precoPromoFinal = promo;
 
-  // 🔹 Adiciona preço da torneira
-  const torneira = produtoAtual.torneiraSelecionada;
-  if (torneira === "Tap Handle Prata" || torneira === "Tap Handle Preta") {
-    precoFinal += 15;
-    if (precoPromoFinal !== null) precoPromoFinal += 15;
-  }
+      // 🔹 Adiciona preço da torneira
+      const torneira = produtoAtual.torneiraSelecionada;
+      if (torneira === "Tap Handle Prata" || torneira === "Tap Handle Preta") {
+        precoFinal += 15;
+        if (precoPromoFinal !== null) precoPromoFinal += 15;
+      }
 
-  // 🔹 Adiciona preço de refil
-  const refil = Number(produtoAtual.refilSelecionado) || 1;
-  if (refil > 1) {
-    const extra = (refil - 1) * 40;
-    precoFinal += extra;
-    if (precoPromoFinal !== null) precoPromoFinal += extra;
-  }
+      // 🔹 Adiciona preço de refil
+      const refil = Number(produtoAtual.refilSelecionado) || 1;
+      if (refil > 1) {
+        const extra = (refil - 1) * 40;
+        precoFinal += extra;
+        if (precoPromoFinal !== null) precoPromoFinal += extra;
+      }
 
-  // 🔹 Atualiza DOM
-  precoAntigoEl.textContent = base
-    ? precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : "";
+      // 🔹 Atualiza DOM
+      precoAntigoEl.textContent = base
+        ? precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : "";
 
-  precoNovoEl.textContent = precoPromoFinal
-    ? precoPromoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-    : precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      precoNovoEl.textContent = precoPromoFinal
+        ? precoPromoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+        : precoFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  // 🔹 Atualiza produtoAtual globalmente
-  produtoAtual.precoAjustado = precoPromoFinal || precoFinal;
-  produtoAtual.precoFinal = precoFinal;
-  produtoAtual.precoPromocionalFinal = precoPromoFinal;
-}
+      // 🔹 Atualiza produtoAtual globalmente
+      produtoAtual.precoAjustado = precoPromoFinal || precoFinal;
+      produtoAtual.precoFinal = precoFinal;
+      produtoAtual.precoPromocionalFinal = precoPromoFinal;
+    }
 
 
     document.getElementById("imagemPrincipal").src = produto.imagem[0];
@@ -918,21 +918,12 @@ async function carregarProduto() {
 
       torneiraSection.style.display = "flex";
 
-      // Captura a seleção
-      // 🔹 Mapa de imagens por tipo de torre e tipo de torneira
-      const mapaTorneirasPorTipo = {
-        "Torre de Chopp": {
-          "Cromada": "https://i.imgur.com/KJ4yDTM.jpeg",
-          "Alavanca": "https://i.imgur.com/13TF5Cy.jpeg",
-          "Tap Handle Prata": "https://i.imgur.com/57k03HJ.jpeg",
-          "Tap Handle Preta": "https://i.imgur.com/hH5RwCR.jpeg"
-        },
-        "Torre de Tereré": {
-          "Cromada": "https://i.imgur.com/mK0haAE.png",
-          "Alavanca": "https://i.imgur.com/IfE2mif.png",
-          "Tap Handle Prata": "https://i.imgur.com/efnr93G.png",
-          "Tap Handle Preta": "https://i.imgur.com/Kblu3wE.png"
-        }
+      // 🔹 Mapa único de imagens por tipo de torneira
+      const mapaTorneiras = {
+        "Cromada": "https://i.imgur.com/vXXjFbS.jpeg",
+        "Alavanca": "https://i.imgur.com/5R4OSsb.jpeg",
+        "Tap Handle Prata": "https://i.imgur.com/K9dzoGw.jpeg",
+        "Tap Handle Preta": "https://i.imgur.com/awKaFcR.jpeg"
       };
 
       // Captura a seleção e muda imagem e preço
@@ -940,9 +931,8 @@ async function carregarProduto() {
         const selecionada = e.target.value;
         produtoAtual.torneiraSelecionada = selecionada;
 
-        // troca imagem da torneira (mantém)
-        const tipoTorre = produtoAtual.tipo || produtoAtual.nome?.includes("Tereré") ? "Torre de Tereré" : "Torre de Chopp";
-        const imagemCorrespondente = mapaTorneirasPorTipo[tipoTorre]?.[selecionada];
+        // troca imagem da torneira usando mapa único
+        const imagemCorrespondente = mapaTorneiras[selecionada];
         if (imagemCorrespondente) {
           const imgEl = document.getElementById("imagemPrincipal");
           imgEl.style.opacity = 0;

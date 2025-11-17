@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ative seu Benefício - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/beneficio.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
 
-     <!-- Cabeçalho -->
+  <!-- Cabeçalho -->
   <header class="header">
     <div class="logo">
       <a href="/">
@@ -21,40 +23,85 @@
   </header>
 
   <main>
+    <div class="container">
+      <span class="badge">Clube VIP Doutor Beer</span>
 
-<div class="container">
-    <h1>Ative seu benefício 🎁</h1>
-    <p class="subtitle">Bem-vindo ao <strong>Clube VIP Doutor Beer</strong>!  
-      <br>Ganhe descontos diretos, personalização e <br>atendimento exclusivo.</p>
+      <h1>Ative seu benefício 🎁</h1>
+      <p class="subtitle">
+        Bem-vindo ao <strong>Clube VIP Doutor Beer</strong>!<br>
+        Ganhe descontos diretos, personalização e atendimento exclusivo.
+      </p>
 
-    <form>
-      <label for="nome">Nome(obrigatório)</label>
-      <input type="text" id="nome" placeholder="Seu nome completo" required>
+      <div class="container-inner">
+        <form>
+          <div class="form-group">
+            <label for="nome">Nome <span class="required">*</span></label>
+            <input type="text" id="nome" placeholder="Seu nome completo" required>
+          </div>
 
-      <label for="empresa">Empresa / CNPJ</label>
-      <input type="text" id="empresa" placeholder="Nome da empresa ou CNPJ" required>
+          <div class="form-group">
+            <label for="cpfCnpj">CPF / CNPJ <span class="required">*</span></label>
+            <input type="text" id="cpfCnpj" placeholder="Informe seu CPF ou CNPJ" required>
+          </div>
 
-      <label for="whatsapp">WhatsApp(obrigatório)</label>
-      <input type="tel" id="whatsapp" placeholder="(11) 99999-9999" required>
+          <div class="form-group">
+            <label for="whatsapp">WhatsApp <span class="required">*</span></label>
+            <input type="tel" id="whatsapp" placeholder="(11) 99999-9999" required>
+          </div>
 
-      <label for="email">E-mail(obrigatório)</label>
-      <input type="email" id="email" placeholder="email@empresa.com" required>
+          <div class="form-group">
+            <label for="email">E-mail <span class="required">*</span></label>
+            <input type="email" id="email" placeholder="email@empresa.com" required>
+          </div>
 
-      <button type="submit">Ativar meu benefício</button>
-    </form>
+          <button type="submit">
+            <span>Ativar meu benefício</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
 
-    <ul class="benefits">
-      <li>Descontos diretos de fábrica</li>
-      <li>Personalização com seu logo</li>
-      <li>Entrega rápida em todo o Brasil</li>
-      <li>Atendimento direto com nosso time comercial</li>
-    </ul>
+          <p class="small-note">
+            <i class="fa-solid fa-lock"></i>
+            Seus dados são utilizados apenas para contato comercial.
+          </p>
+        </form>
 
-    <footer>© 2025 Doutor Beer - Todos os direitos reservados 🍻</footer>
-  </div>
+        <aside class="benefits-card">
+          <h2>Ao ativar, você garante:</h2>
+          <ul class="benefits">
+            <li>
+              <i class="fa-solid fa-tag"></i>
+              <span>Descontos diretos de fábrica</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-beer-mug-empty"></i>
+              <span>Personalização com o seu logo</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-truck-fast"></i>
+              <span>Entrega rápida em todo o Brasil</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-headset"></i>
+              <span>Atendimento direto com nosso time comercial</span>
+            </li>
+          </ul>
 
+          <div class="highlight-card">
+            <i class="fa-solid fa-crown"></i>
+            <div>
+              <strong>Experiência VIP</strong>
+              <p>Atendimento consultivo para escolher a melhor solução para sua empresa.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer>© 2025 Doutor Beer - Todos os direitos reservados 🍻</footer>
+    </div>
   </main>
 
-  
+  <script src="../js/beneficio.js"></script>
+
 </body>
+
 </html>

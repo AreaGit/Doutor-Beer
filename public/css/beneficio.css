@@ -1,155 +1,518 @@
- :root {
+:root {
   --primary: #F9B000;
-  --dark: #4d1818;
-  --light: #fff;
+  --primary-dark: #d99300;
+  --dark: #1b0c08;
+  --light: #ffffff;
   --gray: #f5f5f5;
+  --text: #222222;
+  --border-radius: 18px;
+  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.18);
+  --background: radial-gradient(circle at top left, #fff7e0 0%, #f5f5f5 40%, #eceff4 100%);
 }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
 
-    body {
-      background: linear-gradient(135deg, var(--background), #fff);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+/* BODY / GERAL */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--text);
+}
 
-    /* ==== HEADER ==== */
-    .header {
-      width: 100%;
-      padding: 15px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--light);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+/* HEADER */
+.header {
+  width: 100%;
+  padding: 15px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
 
-    .logo {
-      cursor: pointer;
-    }
+.logo {
+  cursor: pointer;
+}
 
-    .logo img {
-      height: 130px;
-      width: auto;
-      display: block;
-    }
+.logo img {
+  height: 130px;
+  width: auto;
+  display: block;
+}
 
-    /* ==== CONTEÚDO PRINCIPAL ==== */
-    main {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 3rem 1rem;
-    }
+/* MAIN */
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3.5rem 1.5rem;
+}
 
-    .container {
-      background-color: var(--light);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      border-radius: 16px;
-      padding: 3rem 2.5rem;
-      max-width: 520px;
-      width: 100%;
-      text-align: center;
-      transition: all 0.3s ease;
-    }
+/* CARD PRINCIPAL */
+.container {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 26px;
+  padding: 2.5rem 2.5rem 2rem;
+  max-width: 960px;
+  width: 100%;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+  animation: floatUp 0.6s ease-out;
+}
 
-    .container:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-    }
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(249, 176, 0, 0.18), transparent 60%);
+  pointer-events: none;
+}
 
-    h1 {
-      color: var(--primary);
-      font-size: 1.9rem;
-      margin-bottom: 0.5rem;
-    }
+/* Badge / Título */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(249, 176, 0, 0.12);
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.9rem;
+  position: relative;
+  z-index: 1;
+}
 
-    p.subtitle {
-      color: #555;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
+.badge::before {
+  content: "★";
+  font-size: 0.9rem;
+}
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      text-align: left;
-    }
+.container h1 {
+  color: var(--dark);
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+  position: relative;
+  z-index: 1;
+}
 
-    label {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #444;
-    }
+.subtitle {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
 
-    input {
-      padding: 0.8rem;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 1rem;
-      width: 100%;
-      transition: border-color 0.2s ease;
-    }
+/* LAYOUT INTERNO: FORM + BENEFÍCIOS */
+.container-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+  gap: 2rem;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
 
-    input:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
+/* FORMULÁRIO */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
 
-    button {
-      background-color: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 1rem;
-      font-size: 1.1rem;
-      cursor: pointer;
-      margin-top: 1rem;
-      transition: background 0.3s ease;
-    }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
 
-    button:hover {
-      background-color: #fcc034;
-    }
+label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
 
-    .benefits {
-      margin-top: 2rem;
-      text-align: left;
-      padding-left: 1rem;
-      line-height: 1.7;
-    }
+.required {
+  color: #e53935;
+  font-size: 0.85rem;
+}
 
-    .benefits li {
-      color: #555;
-      margin-bottom: 0.5rem;
-      list-style: '✨ ';
-    }
+input {
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #dddddd;
+  font-size: 0.95rem;
+  background: #fafafa;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    transform 0.08s ease;
+}
 
-    footer {
-      margin-top: 2rem;
-      font-size: 0.8rem;
-      color: #777;
-    }
+input::placeholder {
+  color: #aaaaaa;
+}
 
-    @media (max-width: 600px) {
-      .logo img {
-        height: 80px;
-      }
+input:focus {
+  border-color: var(--primary);
+  outline: none;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(249, 176, 0, 0.4),
+    0 8px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
 
-      .container {
-        padding: 2rem 1.5rem;
-      }
-    }
+/* BOTÃO */
+button {
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+  box-shadow: 0 12px 28px rgba(249, 176, 0, 0.45);
+}
+
+/* brilho suave no botão */
+button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 40%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ícone da seta */
+button i {
+  font-size: 0.95rem;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+/* HOVER DO BOTÃO + ANIMAÇÃO DA SETA */
+button:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.03);
+  box-shadow: 0 16px 32px rgba(249, 176, 0, 0.55);
+}
+
+button:hover::after {
+  animation: buttonShine 0.7s ease-out forwards;
+  opacity: 1;
+}
+
+button:hover i {
+  animation: arrowMove 0.6s ease-in-out infinite;
+}
+
+/* estado ativo */
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(249, 176, 0, 0.4);
+}
+
+/* NOTA ABAIXO DO FORM */
+.small-note {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: #777;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.small-note i {
+  font-size: 0.8rem;
+  color: #4caf50;
+}
+
+/* BENEFÍCIOS */
+.benefits-card {
+  background: radial-gradient(circle at top left, #4d1818 0%, #1f0a0a 55%, #120506 100%);
+  border-radius: 20px;
+  padding: 1.6rem 1.4rem;
+  color: #f9f4f1;
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.benefits-card::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(249, 176, 0, 0.35), transparent 60%);
+  top: -60px;
+  right: -40px;
+  opacity: 0.7;
+}
+
+/* leve destaque no hover do card de benefícios */
+.benefits-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+}
+
+.benefits-card h2 {
+  font-size: 1.05rem;
+  margin-bottom: 1.3rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.benefits {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.4rem;
+  position: relative;
+  z-index: 1;
+}
+
+.benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  padding: 0.35rem 0.3rem;
+  border-radius: 10px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.benefits li i {
+  margin-top: 0.1rem;
+  font-size: 1rem;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* micro animação nos itens de benefício */
+.benefits li:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: translateX(3px);
+}
+
+/* CARTÃO EXTRA (Experiência VIP) – manter visual */
+.highlight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 14px;
+  padding: 0.9rem 0.9rem;
+  position: relative;
+  z-index: 1;
+  /* leve transição sem mudar o visual */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.highlight-card i {
+  font-size: 1.1rem;
+  color: var(--primary);
+  margin-top: 0.1rem;
+}
+
+.highlight-card strong {
+  font-size: 0.9rem;
+}
+
+.highlight-card p {
+  font-size: 0.82rem;
+  opacity: 0.9;
+  margin-top: 0.15rem;
+}
+
+.highlight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* FOOTER */
+footer {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #777;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ANIMAÇÕES */
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* animação da seta do botão */
+@keyframes arrowMove {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* brilho passando no botão */
+@keyframes buttonShine {
+  0% {
+    transform: translateX(-140%);
+  }
+  100% {
+    transform: translateX(140%);
+  }
+}
+
+/* Estados de erro/sucesso do formulário */
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
+}
+
+.error-message {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: #fecaca;
+}
+
+/* Caixa de feedback geral */
+.form-feedback {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.form-feedback--error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.form-feedback--success {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+/* Estado de carregamento do botão */
+button.is-loading {
+  cursor: wait;
+  opacity: 0.9;
+}
+
+/* Ícone girando quando carregando */
+button.is-loading .loading-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Reaproveita a seta, mas girando ao enviar */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* RESPONSIVO */
+@media (max-width: 900px) {
+  .logo img {
+    height: 90px;
+  }
+
+  main {
+    padding: 2.5rem 1.2rem;
+  }
+
+  .container {
+    padding: 2rem 1.7rem 1.6rem;
+  }
+
+  .container-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .benefits-card {
+    order: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .logo img {
+    height: 80px;
+  }
+
+  .container {
+    border-radius: 20px;
+    padding: 1.8rem 1.4rem 1.4rem;
+  }
+
+  .container h1 {
+    font-size: 1.6rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
