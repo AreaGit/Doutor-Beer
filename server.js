@@ -6,10 +6,10 @@ const session = require("express-session");
 const sequelize = require("./src/config/database");
 
 // ================= Rotas =================
-const pagesRoutes   = require("./src/routes/pages.routes");
+const pagesRoutes = require("./src/routes/pages.routes");
 const usuarioRoutes = require("./src/routes/usuarioRoutes");
 const produtoRoutes = require("./src/routes/produtoRoutes");
-const adminRoutes   = require("./src/routes/adminRoutes"); 
+const adminRoutes = require("./src/routes/adminRoutes");
 const carrinhoRoutes = require("./src/routes/carrinhoRoutes");
 const freteRoutes = require("./src/routes/freteRoutes");
 const checkoutRoutes = require("./src/routes/checkoutRoutes");
@@ -27,10 +27,11 @@ app.use(session({
   secret: "chave-super-secreta",
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
     httpOnly: true,
-    secure: false,            // true se usar HTTPS
-    maxAge: 1000 * 60 * 60,   // 1h
+    secure: true,            
+    maxAge: 1 * 60 * 1000,   
     sameSite: "lax"
   }
 }));
@@ -47,7 +48,7 @@ sequelize.sync({ alter: true })
 app.use("/", pagesRoutes);
 app.use("/api/auth", usuarioRoutes);
 app.use("/api/produtos", produtoRoutes);
-app.use("/api/admin", adminRoutes); 
+app.use("/api/admin", adminRoutes);
 app.use("/api/carrinho", carrinhoRoutes);
 app.use("/api/frete", freteRoutes);
 app.use("/checkout", checkoutRoutes);

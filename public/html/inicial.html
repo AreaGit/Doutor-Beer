@@ -7,6 +7,7 @@
   <title>Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/inicial.css">
 </head>
 
@@ -15,7 +16,7 @@
   <!-- Linha amarela superior com avisos -->
   <div class="top-line">
     <div class="promo-container" id="promo-container">
-      <p class="promo-message">🍻 Promoção: Na compra de 10 Torres, ganhe um Banner de brinde!</p>
+      <p class="promo-message">🍻 Na compra de 10 Torres, ganhe um Banner de brinde!</p>
       <p class="promo-message">🚚 Frete grátis acima de R$199,00!</p>
       <p class="promo-message">🔥 Veio do Marketplace? Cadastre-se no Clube De Parceiros!</p>
     </div>
@@ -42,7 +43,7 @@
       <!-- Boas-vindas -->
       <div class="welcome">
         <p id="notLoggedIn" style="display: block;">
-          Olá!, bem-vindo! <br>
+          Olá! bem-vindo! <br>
           <a href="/login">Entre</a> ou <a href="/registrar">Cadastre-se</a>
         </p>
         <p id="loggedIn" style="display: none;">
@@ -92,16 +93,17 @@
 
   <!-- Overlay para escurecer fundo -->
   <div class="cart-overlay" id="cart-overlay"></div>
+
   <!-- Nav Bar de Categorias -->
   <nav class="categories-nav">
     <div class="nav-container">
       <button class="nav-toggle">☰</button>
       <ul class="categories-list">
-        <li><a href="/categoria?categoria=parceria_icechopp">PARCERIA - ICECHOPP</a></li>
 
         <li class="has-sub">
           <a href="/categoria?categoria=torres">TORRES <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=torres">Ver todas</a></li>
             <li><a href="/categoria?categoria=torres_de_chopp">Torres de Chopp</a></li>
             <li><a href="/categoria?categoria=torres_de_terere">Torres de Tereré</a></li>
             <li><a href="/categoria?categoria=torres_de_chopp_360">Torres de Chopp 360</a></li>
@@ -113,10 +115,12 @@
         </li>
 
         <li><a href="/categoria?categoria=combos">COMBOS</a></li>
+        <li><a href="/categoria?categoria=chopeiras">CHOPEIRAS</a></li>
 
         <li class="has-sub">
           <a href="/categoria?categoria=acessorios">ACESSÓRIOS <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=acessorios">Ver todos</a></li>
             <li><a href="/categoria?categoria=acessorios_para_torre_icechopp">Acessórios para Torre IceChopp</a></li>
             <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a>
             </li>
@@ -129,6 +133,7 @@
         <li class="has-sub">
           <a href="/categoria?categoria=marcas">MARCAS <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=marcas">Ver todas</a></li>
             <li><a href="/categoria?categoria=doutor_beer">Doutor Beer</a></li>
             <li><a href="/categoria?categoria=icechopp">IceChopp</a></li>
           </ul>
@@ -229,7 +234,7 @@
           <img src="../images/user.png" alt="Cliente 2">
           <div>
             <h3>João Victor Fractucello</h3>
-            <p class="estrelas">★★★★☆</p>
+            <p class="estrelas">★★★★★</p>
           </div>
         </div>
         <p class="comentario">
@@ -243,7 +248,7 @@
           <img src="../images/user.png" alt="Cliente 3">
           <div>
             <h3>Ana Costa</h3>
-            <p class="estrelas">★★★★★</p>
+            <p class="estrelas">★★★★☆</p>
           </div>
         </div>
         <p class="comentario">

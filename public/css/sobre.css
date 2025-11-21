@@ -77,6 +77,10 @@ body {
   .sobre-container p {
     font-size: 0.95rem;
   }
+
+  .logo img {
+    height: 90px;
+  }
 }
 
 @media (max-width: 480px) {

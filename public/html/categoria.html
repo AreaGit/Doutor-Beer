@@ -7,9 +7,9 @@
   <title>Categoria - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="../css/categoria.css">
-  <link rel="stylesheet" href="../css/inicial.css">
-  <link rel="stylesheet" href="../css/detalhes-produto.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -17,9 +17,9 @@
   <!-- Linha amarela superior com avisos -->
   <div class="top-line">
     <div class="promo-container" id="promo-container">
-      <p class="promo-message">🍻 Promoção: Na compra de 3 cervejas, ganhe 1 de brinde!</p>
-      <p class="promo-message">🚚 Frete grátis acima de R$100,00!</p>
-      <p class="promo-message">🔥 Happy Hour: 20% OFF das 18h às 20h!</p>
+      <p class="promo-message">🍻 Na compra de 10 Torres, ganhe um Banner de brinde!</p>
+      <p class="promo-message">🚚 Frete grátis acima de R$199,00!</p>
+      <p class="promo-message">🔥 Veio do Marketplace? Cadastre-se no Clube De Parceiros!</p>
     </div>
   </div>
 
@@ -55,7 +55,7 @@
         </p>
       </div>
 
-          <!-- Carrinho -->
+      <!-- Carrinho -->
       <div class="cart" id="cart-button">
         <img src="../images/shopping-cart.png" alt="Carrinho de compras">
         <span class="cart-count" id="cart-count">0</span>
@@ -88,7 +88,7 @@
       </div>
 
 
-      <button class="checkout-btn" id ="finalizar">Finalizar Compra</button>
+      <button class="checkout-btn" id="finalizar">Finalizar Compra</button>
     </div>
   </div>
 
@@ -97,15 +97,15 @@
 
 
   <!-- Nav Bar de Categorias -->
- <nav class="categories-nav">
+  <nav class="categories-nav">
     <div class="nav-container">
       <button class="nav-toggle">☰</button>
       <ul class="categories-list">
-        <li><a href="/categoria?categoria=parceria_icechopp">PARCERIA - ICECHOPP</a></li>
 
         <li class="has-sub">
           <a href="/categoria?categoria=torres">TORRES <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=torres">Ver todas</a></li>
             <li><a href="/categoria?categoria=torres_de_chopp">Torres de Chopp</a></li>
             <li><a href="/categoria?categoria=torres_de_terere">Torres de Tereré</a></li>
             <li><a href="/categoria?categoria=torres_de_chopp_360">Torres de Chopp 360</a></li>
@@ -117,10 +117,12 @@
         </li>
 
         <li><a href="/categoria?categoria=combos">COMBOS</a></li>
+        <li><a href="/categoria?categoria=chopeiras">CHOPEIRAS</a></li>
 
         <li class="has-sub">
           <a href="/categoria?categoria=acessorios">ACESSÓRIOS <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=acessorios">Ver todos</a></li>
             <li><a href="/categoria?categoria=acessorios_para_torre_icechopp">Acessórios para Torre IceChopp</a></li>
             <li><a href="/categoria?categoria=acessorios_para_torre_doutor_beer">Acessórios para Torre Doutor Beer</a>
             </li>
@@ -133,6 +135,7 @@
         <li class="has-sub">
           <a href="/categoria?categoria=marcas">MARCAS <span class="arrow">▾</span></a>
           <ul class="sub-menu">
+            <li><a href="/categoria?categoria=marcas">Ver todas</a></li>
             <li><a href="/categoria?categoria=doutor_beer">Doutor Beer</a></li>
             <li><a href="/categoria?categoria=icechopp">IceChopp</a></li>
           </ul>
@@ -147,71 +150,138 @@
     <aside class="filters">
       <h3>Filtrar por</h3>
 
+      <!-- Grupo: Torres -->
       <div class="filter-group">
-        <a href="/categoria?categoria=parceria_icechopp" class="filter-link">
-          <h4>PARCERIA - ICECHOPP</h4>
-        </a>
+        <button class="filter-group-header" type="button">
+          <span>Torres</span>
+          <span class="material-icons">expand_more</span>
+        </button>
+        <div class="filter-group-body">
+          <a href="/categoria?categoria=torres" class="filter-link filter-link-main">Ver todas</a>
+          <a href="/categoria?categoria=torres_de_chopp" class="filter-link">Torres de Chopp</a>
+          <a href="/categoria?categoria=torres_de_terere" class="filter-link">Torres de Tereré</a>
+          <a href="/categoria?categoria=torres_de_chopp_360" class="filter-link">Torres de Chopp 360</a>
+          <a href="/categoria?categoria=torres_de_chopp_icechopp" class="filter-link">Torres de Chopp IceChopp</a>
+          <a href="/categoria?categoria=torres_de_terere_360" class="filter-link">Torres de Tereré 360</a>
+          <a href="/categoria?categoria=torres_de_terere_icechopp" class="filter-link">Torres de Tereré Icechopp</a>
+          <a href="/categoria?categoria=torres_de_drinks" class="filter-link">Torres de Drinks</a>
+        </div>
       </div>
 
+      <!-- Grupo: Combos -->
       <div class="filter-group">
-        <a href="/categoria?categoria=torres" class="filter-link">
-          <h4>Torres</h4>
-        </a>
-        <a href="/categoria?categoria=torres_de_terere" class="filter-link">Torres de Tereré</a>
-        <a href="/categoria?categoria=torres_de_chopp" class="filter-link">Torres de Chopp</a>
-        <a href="/categoria?categoria=torres_de_chopp_360" class="filter-link">Torres de Chopp 360</a>
-        <a href="/categoria?categoria=torres_de_chopp_icechopp" class="filter-link">Torres de Chopp IceChopp</a>
-        <a href="/categoria?categoria=torres_de_terere_360" class="filter-link">Torres de Tereré 360</a>
-        <a href="/categoria?categoria=torres_de_terere_icechopp" class="filter-link">Torres de Tereré Icechopp</a>
-        <a href="/categoria?categoria=torres_de_drinks" class="filter-link">Torres de Drinks</a>
+        <button class="filter-group-header" type="button">
+          <span>Combos</span>
+          <span class="material-icons">expand_more</span>
+        </button>
+        <div class="filter-group-body">
+          <a href="/categoria?categoria=combos" class="filter-link filter-link-main">Ver combos</a>
+        </div>
       </div>
 
+      <!-- Grupo: Chopeiras -->
       <div class="filter-group">
-        <a href="/categoria?categoria=combos" class="filter-link">
-          <h4>Combos</h4>
-        </a>
+        <button class="filter-group-header" type="button">
+          <span>Chopeiras</span>
+          <span class="material-icons">expand_more</span>
+        </button>
+        <div class="filter-group-body">
+          <a href="/categoria?categoria=chopeiras" class="filter-link filter-link-main">Ver chopeiras</a>
+        </div>
       </div>
 
+      <!-- Grupo: Acessórios -->
       <div class="filter-group">
-        <a href="/categoria?categoria=acessorios" class="filter-link">
-          <h4>Acessórios</h4>
-        </a>
-        <a href="/categoria?categoria=acessorios_para_torre_icechopp" class="filter-link">Acessórios para Torre
-          Icechopp</a>
-        <a href="/categoria?categoria=acessorios_para_torre_doutor_beer" class="filter-link">Acessórios para Torre
-          Doutor Beer</a>
-        <a href="/categoria?categoria=baldes_de_gelo" class="filter-link">Baldes de Gelo</a>
-        <a href="/categoria?categoria=canudos_inox" class="filter-link">Canudos Inox</a>
-        <a href="/categoria?categoria=torneiras" class="filter-link">Torneiras</a>
+        <button class="filter-group-header" type="button">
+          <span>Acessórios</span>
+          <span class="material-icons">expand_more</span>
+        </button>
+        <div class="filter-group-body">
+          <a href="/categoria?categoria=acessorios" class="filter-link filter-link-main">Ver todos</a>
+          <a href="/categoria?categoria=acessorios_para_torre_icechopp" class="filter-link">Acessórios para Torre
+            Icechopp</a>
+          <a href="/categoria?categoria=acessorios_para_torre_doutor_beer" class="filter-link">Acessórios para Torre
+            Doutor Beer</a>
+          <a href="/categoria?categoria=baldes_de_gelo" class="filter-link">Baldes de Gelo</a>
+          <a href="/categoria?categoria=canudos_inox" class="filter-link">Canudos Inox</a>
+          <a href="/categoria?categoria=torneiras" class="filter-link">Torneiras</a>
+        </div>
       </div>
 
+      <!-- Grupo: Marcas -->
       <div class="filter-group">
-        <a href="/categoria?categoria=marcas" class="filter-link">
-          <h4>Marcas</h4>
-        </a>
-        <a href="/categoria?categoria=doutor_beer" class="filter-link">Doutor Beer</a>
-        <a href="/categoria?categoria=icechopp" class="filter-link">Icechopp</a>
+        <button class="filter-group-header" type="button">
+          <span>Marcas</span>
+          <span class="material-icons">expand_more</span>
+        </button>
+        <div class="filter-group-body">
+          <a href="/categoria?categoria=marcas" class="filter-link filter-link-main">Ver todas</a>
+          <a href="/categoria?categoria=doutor_beer" class="filter-link">Doutor Beer</a>
+          <a href="/categoria?categoria=icechopp" class="filter-link">Icechopp</a>
+        </div>
       </div>
-
     </aside>
 
     <!-- ÁREA PRINCIPAL -->
     <section class="category-content">
-      <!-- HEADER DA CATEGORIA -->
-      <div class="category-header">
-        <h2>Torres de Chopp</h2>
-        <select class="sort">
-          <option value="relevance">Relevância</option>
-          <option value="price-low">Menor preço</option>
-          <option value="price-high">Maior preço</option>
-          <option value="newest">Mais recentes</option>
-        </select>
+      <!-- HERO DA CATEGORIA -->
+      <div class="category-hero">
+        <div class="category-hero-text">
+          <p class="category-breadcrumb">
+            <a href="/">Início</a>
+            <span class="breadcrumb-sep">/</span>
+            <span id="category-breadcrumb-name">Categoria</span>
+          </p>
+
+          <h1 id="category-title">Torres de Chopp</h1>
+
+          <p id="category-subtitle">
+            Sirva chope gelado com estilo profissional na sua resenha, bar ou evento. Escolha o modelo perfeito para o
+            seu rolê. 🍻
+          </p>
+        </div>
+
+        <div class="category-hero-meta">
+          <div class="category-hero-badge">
+            <span class="material-icons">local_offer</span>
+            <span id="category-count-badge">0 produtos</span>
+          </div>
+
+          <div class="category-sort-wrapper">
+            <label for="sort" class="sort-label">Ordenar por</label>
+            <select class="sort" id="sort">
+              <option value="relevance">Relevância</option>
+              <option value="price-low">Menor preço</option>
+              <option value="price-high">Maior preço</option>
+              <option value="newest">Mais recentes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHIPS DE FILTROS ATIVOS + TOGGLE VISUAL -->
+      <div class="category-toolbar">
+        <div class="active-filters" id="active-filters">
+          <!-- Chips são preenchidos via JS -->
+        </div>
+
+        <div class="view-toggle" aria-label="Filtros rápidos">
+          <button class="view-btn active" data-mode="all" type="button">
+            <span class="material-icons">grid_view</span>
+            <span>Todos</span>
+          </button>
+          <button class="view-btn" data-mode="promo" type="button">
+            <span class="material-icons">local_offer</span>
+            <span>Promoções</span>
+          </button>
+        </div>
       </div>
 
       <!-- GRADE DE PRODUTOS -->
       <div class="products-grid">
         <!-- Os produtos serão carregados aqui via JavaScript -->
       </div>
+
     </section>
   </main>
 
@@ -226,28 +296,28 @@
     <img src="../images/whatsapp-icon.webp" alt="WhatsApp">
   </a>
 
- <!-- ================= Modal de Login ================= -->
-<div id="modalLogin" class="modal-login">
-  <div class="modal-content">
-    <h2>⚠️ Você precisa estar logado</h2>
-    <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
-    <div class="modal-actions">
-      <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
-      <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+  <!-- ================= Modal de Login ================= -->
+  <div id="modalLogin" class="modal-login">
+    <div class="modal-content">
+      <h2>⚠️ Você precisa estar logado</h2>
+      <p>Para finalizar sua compra, entre na sua conta ou cadastre-se gratuitamente.</p>
+      <div class="modal-actions">
+        <button id="btnIrLogin" class="btn-modal-login">Fazer Login</button>
+        <button id="btnFecharModal" class="btn-modal-fechar">Fechar</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ================= Modal Carrinho Vazio ================= -->
-<div id="modalCarrinhoVazio" class="modal-login">
-  <div class="modal-content">
-    <h2>⚠️ Seu carrinho está vazio</h2>
-    <p>Adicione produtos antes de finalizar a compra.</p>
-    <div class="modal-actions modal-actions-center">
-      <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+  <!-- ================= Modal Carrinho Vazio ================= -->
+  <div id="modalCarrinhoVazio" class="modal-login">
+    <div class="modal-content">
+      <h2>⚠️ Seu carrinho está vazio</h2>
+      <p>Adicione produtos antes de finalizar a compra.</p>
+      <div class="modal-actions modal-actions-center">
+        <button id="btnFecharCarrinho" class="btn-modal-fechar">Fechar</button>
+      </div>
     </div>
   </div>
-</div>
 
   <script src="../js/categoria.js"></script>
 </body>

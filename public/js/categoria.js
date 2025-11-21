@@ -126,110 +126,302 @@ async function checkLoginStatus() {
 ================================================ */
 function initCategoriaProdutos() {
   const grid = document.querySelector(".products-grid");
-  const header = document.querySelector(".category-header h2");
-  const sortSelect = document.querySelector(".sort");
+  const headerTitle = document.getElementById("category-title");
+  const breadcrumbName = document.getElementById("category-breadcrumb-name");
+  const subtitleEl = document.getElementById("category-subtitle");
+  const countBadge = document.getElementById("category-count-badge");
+  const sortSelect = document.getElementById("sort");
+  const chipsContainer = document.getElementById("active-filters");
+  const viewButtons = document.querySelectorAll(".view-btn");
+
   const params = new URLSearchParams(window.location.search);
   const categoria = params.get("categoria");
+  const searchTerm = params.get("search");
 
-  if (!categoria) {
-    grid.innerHTML = "<p>Nenhuma categoria informada.</p>";
+  // estado interno
+  let currentSort = "relevance";
+  let showPromoOnly = false;
+
+  if (!grid || !categoria) {
+    if (grid) grid.innerHTML = "<p>Nenhuma categoria informada.</p>";
     return;
   }
 
-  header.textContent = categoria.replace(/_/g, " ").toUpperCase();
+const CATEGORY_CONFIG = {
+  torres: {
+    title: "Torres",
+    subtitle: "Encontre a torre de bebida ideal para bares, festas, restaurantes e eventos. Modelos modernos e resistentes, perfeitos para servir bebidas geladas com estilo e praticidade."
+  },
 
-  async function carregarProdutos(ordenar = "relevance") {
-  try {
-    const resp = await fetch(`/api/produtos/categoria/${categoria}`);
-    if (!resp.ok) throw new Error(`Erro ${resp.status}`);
+  torres_de_chopp: {
+    title: "Torres de Chopp",
+    subtitle: "Torres de Chopp profissionais com excelente desempenho térmico. A torre para bar perfeita para servir chopp gelado em festas, restaurantes, resenhas e eventos. Ideal para quem busca uma torre moderna para bebidas."
+  },
 
-    let produtos = await resp.json();
-    if (!produtos || !produtos.length) {
-      grid.innerHTML = "<p>Nenhum produto encontrado.</p>";
-      return;
+  torres_de_terere: {
+    title: "Torres de Tereré",
+    subtitle: "Torres de Tereré com alta capacidade térmica, mantendo o tereré gelado por horas. Ideais para festas, bares e quem busca uma torre de bebidas geladas prática e estilosa."
+  },
+
+  torres_de_chopp_360: {
+    title: "Torres de Chopp 360",
+    subtitle: "Torres de Chopp 360° com visual inovador e distribuição uniforme. Perfeitas para eventos, bares e restaurantes que desejam uma torre para servir bebidas com impacto visual e eficiência."
+  },
+
+  torres_de_chopp_icechopp: {
+    title: "Torres de Chopp IceChopp",
+    subtitle: "Modelos IceChopp com tecnologia avançada que mantém o chopp gelado por muito mais tempo. A torre de bebidas ideal para bar, festas e eventos, com tubo de alumínio e design premium."
+  },
+
+  torres_de_terere_360: {
+    title: "Torres de Tereré 360",
+    subtitle: "Torres de Tereré 360° com visual moderno e excelente conservação térmica. perfeitas para quem busca torre de bebida gelada com estilo para festas, bares e eventos."
+  },
+
+  torres_de_terere_icechopp: {
+    title: "Torres de Tereré IceChopp",
+    subtitle: "A tecnologia IceChopp aplicada ao tereré: torre com tubo de alumínio que mantém a bebida gelada por horas. Ideal para eventos, bares e quem busca uma torre moderna para bebidas."
+  },
+
+  torres_de_drinks: {
+    title: "Torres de Drinks",
+    subtitle: "Torres para drinks compartilhados com design premium. A escolha ideal para bares, festas e eventos que desejam uma torre para servir bebidas com apresentação diferenciada."
+  },
+
+  combos: {
+    title: "Combos Doutor Beer",
+    subtitle: "Combos especiais com torres de bebida, acessórios e itens essenciais para bares e eventos. A melhor opção para quem deseja economia e mais valor na operação."
+  },
+
+  chopeiras: {
+    title: "Chopeiras",
+    subtitle: "Chopeiras profissionais para servir chopp gelado com qualidade superior. Ideais para bares, festas, eventos e restaurantes que precisam de alto desempenho e estabilidade."
+  },
+
+  acessorios: {
+    title: "Acessórios",
+    subtitle: "Acessórios essenciais para sua torre de bebida ou chopeira. Itens que aumentam durabilidade, praticidade e eficiência na hora de servir bebidas em bares, festas e eventos."
+  },
+
+  acessorios_para_torre_icechopp: {
+    title: "Acessórios para Torre IceChopp",
+    subtitle: "Acessórios originais IceChopp, desenvolvidos para manter sua torre de bebidas geladas com máximo desempenho. Compatibilidade perfeita com modelos para bar, festas e eventos."
+  },
+
+  acessorios_para_torre_doutor_beer: {
+    title: "Acessórios para Torre Doutor Beer",
+    subtitle: "Acessórios exclusivos Doutor Beer para otimizar sua torre de bebida. Projetados para quem busca maior durabilidade, praticidade e performance em bares e eventos."
+  },
+
+  baldes_de_gelo: {
+    title: "Baldes de Gelo",
+    subtitle: "Baldes de gelo resistentes e elegantes para manter bebidas geladas em festas, bares, restaurantes e eventos. Complemento ideal para torres de bebida e chopeiras."
+  },
+
+  canudos_inox: {
+    title: "Canudos Inox",
+    subtitle: "Canudos de inox reutilizáveis e sustentáveis, perfeitos para drinks, bares e consumo diário. Uma opção moderna e durável para complementar suas torres de drinks."
+  },
+
+  torneiras: {
+    title: "Torneiras",
+    subtitle: "Torneiras para torres e chopeiras com fluxo perfeito e alta durabilidade. Compatíveis com torres de bebida para bar, festas e eventos, oferecendo maior controle ao servir bebidas."
+  },
+
+  marcas: {
+    title: "Marcas",
+    subtitle: "Explore as marcas Doutor Beer e IceChopp, referência em torres modernas para bebidas, acessórios profissionais e produtos de alta performance."
+  },
+
+  doutor_beer: {
+    title: "Linha Doutor Beer",
+    subtitle: "Linha oficial Doutor Beer com torres de bebida, acessórios e produtos profissionais. Perfeita para bares, festas e eventos que buscam qualidade superior."
+  },
+
+  icechopp: {
+    title: "Linha IceChopp",
+    subtitle: "Linha IceChopp com tecnologia de resfriamento avançada e tubo de alumínio. Ideal para quem deseja uma torre para bebida gelada com desempenho máximo."
+  }
+};
+
+
+
+  const cfg = CATEGORY_CONFIG[categoria] || {
+    title: categoria.replace(/_/g, " "),
+    subtitle: "Confira os produtos disponíveis nesta categoria."
+  };
+
+  if (headerTitle) headerTitle.textContent = cfg.title;
+  if (breadcrumbName) breadcrumbName.textContent = cfg.title;
+  if (subtitleEl) subtitleEl.textContent = cfg.subtitle;
+
+  function renderFilterChips() {
+    if (!chipsContainer) return;
+    const chips = [];
+
+    // Chip da categoria
+    chips.push(`
+      <div class="filter-chip">
+        <span class="material-icons">category</span>
+        <span>${cfg.title}</span>
+      </div>
+    `);
+
+    // Chip da busca, se existir
+    if (searchTerm) {
+      chips.push(`
+        <div class="filter-chip">
+          <span class="material-icons">search</span>
+          <span>Busca: "${searchTerm}"</span>
+        </div>
+      `);
     }
 
-    // 🔹 Ordenação no frontend
-    produtos = produtos.sort((a, b) => {
-      switch (ordenar) {
-        case "price-low":
-          return (a.precoPromocional ?? a.preco ?? 0) - (b.precoPromocional ?? b.preco ?? 0);
-        case "price-high":
-          return (b.precoPromocional ?? b.preco ?? 0) - (a.precoPromocional ?? a.preco ?? 0);
-        case "newest":
-          // Ordena por id ou data se disponível
-          return (b.createdAt ?? b.id ?? 0) - (a.createdAt ?? a.id ?? 0);
-        case "relevance":
-        default:
-          return 0; // mantém a ordem original
-      }
-    });
-
-    console.log(`[Categoria] Ordenando por: ${ordenar}`, produtos);
-
-    // 🔹 Renderiza produtos
-    grid.innerHTML = produtos.map(prod => {
-      const imagemUrl = Array.isArray(prod.imagem) ? prod.imagem[0] : prod.imagem || '../images/placeholder.png';
-      const precoAntigo = prod.preco
-        ? `<span class="antigo">${prod.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`
-        : "";
-      const precoNovo = prod.precoPromocional
-        ? prod.precoPromocional.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-        : prod.preco?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || "R$ 0,00";
-
-      return `
-        <a href="/detalhes-produto?id=${prod.id}" class="produto">
-          <img src="${imagemUrl}" alt="${prod.nome}">
-          <h3>${prod.nome}</h3>
-          <p class="preco">
-            ${precoAntigo}
-            <span class="novo">${precoNovo}</span>
-          </p>
-        </a>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error("[Categoria] Erro ao carregar produtos:", err);
-    grid.innerHTML = "<p>Erro ao carregar os produtos.</p>";
+    chipsContainer.innerHTML = chips.join("");
   }
-}
 
-  // Carrega produtos inicialmente
+  renderFilterChips();
+
+  async function carregarProdutos() {
+    try {
+      grid.innerHTML = `
+        <div class="produto skeleton-card"></div>
+        <div class="produto skeleton-card"></div>
+        <div class="produto skeleton-card"></div>
+      `;
+
+      const resp = await fetch(`/api/produtos/categoria/${categoria}`);
+      if (!resp.ok) throw new Error(`Erro ${resp.status}`);
+
+      let produtos = await resp.json();
+      if (!produtos || !produtos.length) {
+        grid.innerHTML = "<p>Nenhum produto encontrado.</p>";
+        if (countBadge) countBadge.textContent = "0 produtos";
+        return;
+      }
+
+      // 🔹 Ordenação
+      produtos = produtos.sort((a, b) => {
+        const precoA = a.precoPromocional ?? a.preco ?? 0;
+        const precoB = b.precoPromocional ?? b.preco ?? 0;
+
+        switch (currentSort) {
+          case "price-low":
+            return precoA - precoB;
+          case "price-high":
+            return precoB - precoA;
+          case "newest":
+            return (b.createdAt ?? b.id ?? 0) - (a.createdAt ?? a.id ?? 0);
+          case "relevance":
+          default:
+            return 0;
+        }
+      });
+
+      // 🔥 Filtro: apenas promoções, se estiver ativado
+      if (showPromoOnly) {
+        produtos = produtos.filter(prod => {
+          const preco = Number(prod.preco) || 0;
+          const precoPromocional =
+            prod.precoPromocional != null ? Number(prod.precoPromocional) : null;
+          return precoPromocional && precoPromocional < preco;
+        });
+      }
+
+      if (!produtos.length) {
+        grid.innerHTML = showPromoOnly
+          ? "<p>Nenhum produto em promoção no momento.</p>"
+          : "<p>Nenhum produto encontrado.</p>";
+        if (countBadge) countBadge.textContent = "0 produtos";
+        return;
+      }
+
+      // Atualiza badge de contagem
+      if (countBadge) {
+        countBadge.textContent =
+          produtos.length === 1 ? "1 produto" : `${produtos.length} produtos`;
+      }
+
+      // Renderização dos cards
+      grid.innerHTML = produtos
+        .map(prod => {
+          const imagens = Array.isArray(prod.imagem) ? prod.imagem : [prod.imagem];
+          const imagemUrl = imagens[0] || "../images/placeholder.png";
+
+          const preco = Number(prod.preco) || 0;
+          const precoPromocional =
+            prod.precoPromocional != null ? Number(prod.precoPromocional) : null;
+
+          const precoAntigoHtml =
+            precoPromocional && precoPromocional < preco
+              ? `<span class="antigo">${preco.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL"
+              })}</span>`
+              : "";
+
+          const precoNovoValor =
+            precoPromocional && precoPromocional < preco ? precoPromocional : preco;
+
+          const precoNovoHtml = precoNovoValor.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+          });
+
+          let badgeHtml = "";
+          if (precoPromocional && precoPromocional < preco) {
+            const discount = Math.round(100 - (precoPromocional * 100) / preco);
+            badgeHtml = `
+              <span class="product-badge promo">
+                -${discount}% OFF
+              </span>
+            `;
+          }
+
+          return `
+            <a href="/detalhes-produto?id=${prod.id}" class="produto">
+              ${badgeHtml}
+              <img src="${imagemUrl}" alt="${prod.nome}">
+              <h3>${prod.nome}</h3>
+              <div class="preco">
+                ${precoAntigoHtml}
+                <span class="novo">${precoNovoHtml}</span>
+              </div>
+            </a>
+          `;
+        })
+        .join("");
+    } catch (err) {
+      console.error("[Categoria] Erro ao carregar produtos:", err);
+      grid.innerHTML = "<p>Erro ao carregar os produtos.</p>";
+      if (countBadge) countBadge.textContent = "–";
+    }
+  }
+
+  // 🔹 Inicial: carrega com sort padrão + filtro atual
   carregarProdutos();
 
-  // Listener para ordenação
+  // 🔹 Ordenação (select)
   sortSelect?.addEventListener("change", () => {
-    carregarProdutos(sortSelect.value);
+    currentSort = sortSelect.value;
+    carregarProdutos();
+  });
+
+  // 🔹 Toggle "Todos" x "Promoções"
+  viewButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode; // "all" ou "promo"
+
+      viewButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      showPromoOnly = mode === "promo";
+      carregarProdutos();
+    });
   });
 }
 
 
-/* ================================================
-   SLIDER DE BANNER
-================================================ */
-function initSlider() {
-  const slides = document.querySelectorAll('.slide');
-  const dots = document.querySelectorAll('.dot');
-  const prev = document.querySelector('.prev');
-  const next = document.querySelector('.next');
-  let currentIndex = 0;
-
-  function showSlide(index) {
-    if (!slides.length) return;
-    if (index < 0) index = slides.length - 1;
-    if (index >= slides.length) index = 0;
-    document.querySelector('.slides').style.transform = `translateX(-${index * 100}%)`;
-    dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
-    currentIndex = index;
-  }
-
-  prev?.addEventListener('click', () => showSlide(currentIndex - 1));
-  next?.addEventListener('click', () => showSlide(currentIndex + 1));
-  dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
-
-  if (slides.length) { showSlide(0); setInterval(() => showSlide(currentIndex + 1), 5000); }
-}
 
 /* ================================================
    BOTÃO "VOLTAR AO TOPO"
@@ -387,26 +579,26 @@ async function initCart() {
     transparent: "Transparente",
   };
 
-function renderCart() {
-  cartItemsContainer.innerHTML = "";
+  function renderCart() {
+    cartItemsContainer.innerHTML = "";
 
-  if (!cartItems.length) {
-    cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
-    updateResumo();
-    return;
-  }
+    if (!cartItems.length) {
+      cartItemsContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
+      updateResumo();
+      return;
+    }
 
-  cartItems.forEach((item, index) => {
-    // 🔹 Usa o preço que já veio ajustado (sem somar nada)
-    const preco = item.preco ?? item.precoPromocional ?? 0;
+    cartItems.forEach((item, index) => {
+      // 🔹 Usa o preço que já veio ajustado (sem somar nada)
+      const preco = item.preco ?? item.precoPromocional ?? 0;
 
-    // 🔹 Garante o ID do produto para o link
-    const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
+      // 🔹 Garante o ID do produto para o link
+      const produtoId = item.produtoId || item.id || (item.produto && item.produto.id);
 
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "cart-item";
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "cart-item";
 
-    itemDiv.innerHTML = `
+      itemDiv.innerHTML = `
       <a 
         href="${produtoId ? `/detalhes-produto?id=${produtoId}` : '#'}" 
         class="cart-item-image-link"
@@ -422,10 +614,10 @@ function renderCart() {
             </span>
             <span class="color-name">
               ${(() => {
-                const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
-                const corKey = corEn?.toLowerCase().trim();
-                return colorTranslations[corKey] || corEn;
-              })()}
+            const corEn = typeof item.cor === "object" ? (item.cor.nome || item.cor.hex || "") : item.cor;
+            const corKey = corEn?.toLowerCase().trim();
+            return colorTranslations[corKey] || corEn;
+          })()}
             </span>
           </div>
         ` : ""}
@@ -458,58 +650,58 @@ function renderCart() {
       </div>
     `;
 
-    cartItemsContainer.appendChild(itemDiv);
-  });
-
-  // Controles de quantidade e remover
-  document.querySelectorAll(".qty-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      const novoValor = btn.classList.contains("plus")
-        ? cartItems[idx].quantidade + 1
-        : Math.max(1, cartItems[idx].quantidade - 1);
-      await updateQuantity(idx, novoValor);
+      cartItemsContainer.appendChild(itemDiv);
     });
-  });
 
-  document.querySelectorAll(".quantity-input").forEach(input => {
-    input.addEventListener("change", async () => {
-      const idx = parseInt(input.dataset.index);
-      let novaQtd = parseInt(input.value);
-      if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
-      await updateQuantity(idx, novaQtd);
+    // Controles de quantidade e remover
+    document.querySelectorAll(".qty-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        const novoValor = btn.classList.contains("plus")
+          ? cartItems[idx].quantidade + 1
+          : Math.max(1, cartItems[idx].quantidade - 1);
+        await updateQuantity(idx, novoValor);
+      });
     });
-  });
 
-  document.querySelectorAll(".remove-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const idx = parseInt(btn.dataset.index);
-      await removeItem(idx);
+    document.querySelectorAll(".quantity-input").forEach(input => {
+      input.addEventListener("change", async () => {
+        const idx = parseInt(input.dataset.index);
+        let novaQtd = parseInt(input.value);
+        if (isNaN(novaQtd) || novaQtd < 1) novaQtd = 1;
+        await updateQuantity(idx, novaQtd);
+      });
     });
-  });
 
-  updateResumo();
-}
+    document.querySelectorAll(".remove-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = parseInt(btn.dataset.index);
+        await removeItem(idx);
+      });
+    });
+
+    updateResumo();
+  }
 
 
   /* ================== Atualizar resumo ================== */
-function updateResumo() {
-  const totalItems = cartItems.length;
-  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+  function updateResumo() {
+    const totalItems = cartItems.length;
+    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-  // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
-  const total = cartItems.reduce((acc, i) => {
-    const precoBase = i.preco ?? i.precoPromocional ?? 0;
-    return acc + (precoBase * i.quantidade);
-  }, 0);
+    // 🔹 O preço já vem ajustado do produtoAtual (com torneira/refil incluídos)
+    const total = cartItems.reduce((acc, i) => {
+      const precoBase = i.preco ?? i.precoPromocional ?? 0;
+      return acc + (precoBase * i.quantidade);
+    }, 0);
 
-  cartCount.textContent = totalQuantity;
-  summaryItems.textContent = totalItems;
-  summaryQuantity.textContent = totalQuantity;
-  summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    cartCount.textContent = totalQuantity;
+    summaryItems.textContent = totalItems;
+    summaryQuantity.textContent = totalQuantity;
+    summaryTotal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if (!isLoggedIn) saveGuestCartToLocalStorage();
-}
+    if (!isLoggedIn) saveGuestCartToLocalStorage();
+  }
 
   /* ================== Atualizar quantidade ================== */
   async function updateQuantity(idx, quantidade) {
@@ -604,12 +796,12 @@ function updateResumo() {
     const torneiraSelecionada = produto.torneira || produto.torneiraSelecionada || "padrao";
 
     // 🔹 Verifica se já existe o mesmo produto com MESMA cor e MESMA torneira
-const existingIndex = cartItems.findIndex(i =>
-  i.id === produto.id &&
-  (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
-  (i.torneira || "padrao") === torneiraSelecionada &&
-  (Number(i.refil) || 1) === (Number(produto.refil) || 1)
-);
+    const existingIndex = cartItems.findIndex(i =>
+      i.id === produto.id &&
+      (i.cor?.hex || i.cor || "padrao") === corSelecionada &&
+      (i.torneira || "padrao") === torneiraSelecionada &&
+      (Number(i.refil) || 1) === (Number(produto.refil) || 1)
+    );
 
 
     if (existingIndex >= 0) {
@@ -719,6 +911,60 @@ const existingIndex = cartItems.findIndex(i =>
   });
 }
 
+/* ================================================
+   ACORDEÃO DA SIDEBAR DE FILTROS
+================================================ */
+function initFilterAccordion() {
+  const groups = document.querySelectorAll(".filters .filter-group");
+  if (!groups.length) return;
+
+  function applyResponsiveState() {
+    const isMobile = window.innerWidth <= 900;
+
+    groups.forEach(group => {
+      const body = group.querySelector(".filter-group-body");
+      if (!body) return;
+
+      if (isMobile) {
+        // Em mobile, começa tudo fechado (a não ser que já tenha sido aberto pelo usuário)
+        if (group.classList.contains("open")) {
+          body.style.maxHeight = body.scrollHeight + "px";
+        } else {
+          body.style.maxHeight = "0px";
+        }
+      } else {
+        // Em desktop, tudo aberto por padrão
+        group.classList.add("open");
+        body.style.maxHeight = body.scrollHeight + "px";
+      }
+    });
+  }
+
+  groups.forEach(group => {
+    const header = group.querySelector(".filter-group-header");
+    const body = group.querySelector(".filter-group-body");
+    if (!header || !body) return;
+
+    // Estado inicial será aplicado depois via applyResponsiveState()
+
+    header.addEventListener("click", () => {
+      const isOpen = group.classList.toggle("open");
+
+      if (isOpen) {
+        // Expande suavemente
+        body.style.maxHeight = body.scrollHeight + "px";
+      } else {
+        // Fecha
+        body.style.maxHeight = "0px";
+      }
+    });
+  });
+
+  // Aplica estado inicial (mobile x desktop)
+  applyResponsiveState();
+  window.addEventListener("resize", applyResponsiveState);
+}
+
 
 /* ================================================
    INICIALIZAÇÃO
@@ -729,7 +975,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMenu();
   checkLoginStatus();
   initCategoriaProdutos();
-  initSlider();
   initBtnTopo();
   initCart();
+  initFilterAccordion();
 });
