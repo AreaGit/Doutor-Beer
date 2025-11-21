@@ -23,15 +23,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Sessão (antes das rotas)
+const isProduction = process.env.NODE_ENV === "production";
+
+if (isProduction) {
+  app.set("trust proxy", 1); // se estiver atrás de proxy (NGINX, etc)
+}
+
 app.use(session({
-  secret: "chave-super-secreta",
+  secret: process.env.SESSION_SECRET || "chave-super-secreta",
   resave: false,
   saveUninitialized: false,
-  rolling: true,
+  rolling: true,              // renova o maxAge a cada request
   cookie: {
     httpOnly: true,
-    secure: true,            
-    maxAge: 1 * 60 * 1000,   
+    secure: isProduction,     // em dev = false, em prod = true
+    maxAge: 1000 * 60 * 60 * 2, // 2 horas de inatividade
     sameSite: "lax"
   }
 }));

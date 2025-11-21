@@ -80,15 +80,11 @@ exports.login = async (req, res) => {
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
     if (!senhaValida) return res.status(400).json({ message: "Senha incorreta" });
 
-    // Gerar código 2FA e enviar para o e-mail
-    const codigo = await gerarCodigo2FA(usuario);
-
-    usuario.codigo2FA = codigo;
-    usuario.expira2FA = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
-    await usuario.save();
+    // Gerar código 2FA e enviar para o e-mail (já salva no usuário)
+    await gerarCodigo2FA(usuario);
 
     // Salvar guestCart temporário na sessão para mesclar após 2FA
-    req.session.tempLogin = { email, codigo, guestCart };
+    req.session.tempLogin = { email, guestCart };
 
     res.json({ message: "Código enviado para seu e-mail" });
   } catch (error) {
