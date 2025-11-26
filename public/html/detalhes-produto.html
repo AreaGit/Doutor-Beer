@@ -7,8 +7,8 @@
   <title>Detalhes do Produto - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/inicial.css">
   <link rel="stylesheet" href="../css/detalhes-produto.css">
+  <link rel="stylesheet" href="../css/header.css">
 </head>
 
 <body>
@@ -77,6 +77,9 @@
       <div class="cart-summary">
         <p>Total de itens: <span id="summary-items">0</span></p>
         <p>Quantidade total: <span id="summary-quantity">0</span></p>
+        <p id="summary-discount-line" style="display:none;">
+          Desconto: <span id="summary-discount">R$ 0,00</span>
+        </p>
         <p>Valor total: <span id="summary-total">R$ 0,00</span></p>
       </div>
 
@@ -84,6 +87,7 @@
       <div class="cart-coupon">
         <input type="text" id="coupon-code" placeholder="Digite seu cupom">
         <button id="apply-coupon">Aplicar</button>
+        <p id="coupon-message" class="coupon-message"></p>
       </div>
 
 
@@ -143,180 +147,180 @@
     </div>
   </nav>
 
-<main class="product-page">
+  <main class="product-page">
 
-  <!-- Breadcrumb / trilha -->
-  <div class="section-wrapper">
-    <nav class="product-breadcrumb">
-      <a href="/">Início</a>
-      <span>/</span>
-      <a href="/categoria" id="breadcrumbCategoria">Categoria</a>
-      <span>/</span>
-      <span id="breadcrumbProduto">Produto</span>
-    </nav>
-  </div>
-
-  <!-- CONTAINER PRINCIPAL DO PRODUTO -->
-  <section class="produto-container section-wrapper">
-    <!-- COLUNA ESQUERDA: GALERIA -->
-    <div class="produto-imagens produto-card">
-      <div class="produto-tag-row">
-        <span class="product-tag destaque-tag"></span>
-        <span class="product-tag estoque-tag" id="tagEstoque"></span>
-      </div>
-
-      <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
-
-      <div class="miniaturas-wrapper">
-        <button class="miniatura-nav esquerda" id="miniaturaAnterior">‹</button>
-        <div class="miniaturas" id="miniaturasContainer"></div>
-        <button class="miniatura-nav direita" id="miniaturaProxima">›</button>
-      </div>
+    <!-- Breadcrumb / trilha -->
+    <div class="section-wrapper">
+      <nav class="product-breadcrumb">
+        <a href="/">Início</a>
+        <span>/</span>
+        <a href="/categoria" id="breadcrumbCategoria">Categoria</a>
+        <span>/</span>
+        <span id="breadcrumbProduto">Produto</span>
+      </nav>
     </div>
 
-    <!-- COLUNA DIREITA: DETALHES / COMPRA -->
-    <div class="produto-detalhes produto-card">
-      <header class="produto-header">
-        <p class="product-brand-pill" id="produtoMarca">Doutor Beer</p>
-        <h1></h1>
-
-        <div class="product-meta-row">
-          <div class="avaliacao">
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-regular fa-star"></i>
-            <span>(Avaliações em breve)</span>
-          </div>
-          <span class="product-sku" id="produtoSku">Cód. interno</span>
-        </div>
-      </header>
-
-      <!-- BLOCO DE PREÇO -->
-      <div class="product-price-block">
-        <p class="preco">
-          <span class="antigo"></span>
-          <span class="novo"></span>
-        </p>
-        <p class="product-price-note">
-          Pagamento facilitado no cartão ou boleto. Valores finais calculados na próxima etapa.
-        </p>
-      </div>
-
-      <!-- CONTROLES DE COMPRA -->
-      <div class="product-controls">
-        <!-- Quantidade -->
-        <div class="quantidade-container">
-          <span class="label-caption">Quantidade</span>
-          <div class="quantidade-actions">
-            <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
-            <input type="number" id="quantidade" value="1" min="1">
-            <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
-          </div>
+    <!-- CONTAINER PRINCIPAL DO PRODUTO -->
+    <section class="produto-container section-wrapper">
+      <!-- COLUNA ESQUERDA: GALERIA -->
+      <div class="produto-imagens produto-card">
+        <div class="produto-tag-row">
+          <span class="product-tag destaque-tag"></span>
+          <span class="product-tag estoque-tag" id="tagEstoque"></span>
         </div>
 
-        <!-- Cor -->
-        <div class="cores-produto">
-          <h4>Escolha a cor</h4>
-          <div class="lista-cores" id="coresContainer"></div>
-        </div>
+        <img src="" alt="Produto Principal" class="imagem-principal" id="imagemPrincipal">
 
-        <!-- Torneira -->
-        <div class="torneira-produto" style="display:none;">
-          <h4>Escolha a torneira</h4>
-          <select id="torneiraSelect" class="select-torneira"></select>
-        </div>
-
-        <!-- Refil -->
-        <div class="refil-produto" style="display:none;">
-          <h4>Quantidade de refil</h4>
-          <select id="refilSelect">
-            <option value="1">1 (incluso)</option>
-            <option value="2">+1 refil extra</option>
-            <option value="3">+2 refis extras</option>
-            <option value="4">+3 refis extras</option>
-          </select>
-        </div>
-
-        <!-- BOTÕES PRINCIPAIS -->
-        <div class="botoes-container">
-          <button class="btn-carrinho">
-            <i class="fa-solid fa-cart-plus"></i>
-            Adicionar ao carrinho
-          </button>
-          <button class="btn-comprar">
-            <i class="fa-solid fa-bolt"></i>
-            Comprar agora
-          </button>
-        </div>
-
-        <!-- FRETE INLINE -->
-        <div class="frete-inline-hint">
-          <i class="fa-solid fa-truck"></i>
-          <span>Calcule o frete para ver prazos e opções de entrega:</span>
-        </div>
-
-        <div class="frete-container">
-          <input type="text" id="cepInput" placeholder="Digite seu CEP">
-          <button id="calcularFrete">Calcular frete</button>
-        </div>
-
-        <div id="freteResultado"></div>
-      </div>
-
-      <!-- BENEFÍCIOS / TRUST -->
-      <div class="product-perks-row">
-        <div class="product-perk">
-          <div class="perk-icon">
-            <i class="fa-solid fa-box-open"></i>
-          </div>
-          <div class="perk-text">
-            <strong>Envio rápido</strong>
-            <span>Despachamos seu pedido em poucos dias úteis.</span>
-          </div>
-        </div>
-
-        <div class="product-perk">
-          <div class="perk-icon">
-            <i class="fa-solid fa-shield-heart"></i>
-          </div>
-          <div class="perk-text">
-            <strong>Produto original</strong>
-            <span>Fabricado e enviado pela Doutor Beer.</span>
-          </div>
-        </div>
-
-        <div class="product-perk">
-          <div class="perk-icon">
-            <i class="fa-solid fa-headset"></i>
-          </div>
-          <div class="perk-text">
-            <strong>Suporte parceiro</strong>
-            <span>Atendimento especializado para bares e eventos.</span>
-          </div>
+        <div class="miniaturas-wrapper">
+          <button class="miniatura-nav esquerda" id="miniaturaAnterior">‹</button>
+          <div class="miniaturas" id="miniaturasContainer"></div>
+          <button class="miniatura-nav direita" id="miniaturaProxima">›</button>
         </div>
       </div>
 
-      <!-- DESCRIÇÃO -->
-      <div class="descricao">
-        <h3>Descrição do produto</h3>
-        <!-- JS preenche o <p> -->
-      </div>
-    </div>
-  </section>
+      <!-- COLUNA DIREITA: DETALHES / COMPRA -->
+      <div class="produto-detalhes produto-card">
+        <header class="produto-header">
+          <p class="product-brand-pill" id="produtoMarca">Doutor Beer</p>
+          <h1></h1>
 
-  <!-- PRODUTOS RELACIONADOS -->
-  <section class="relacionados section-wrapper">
-    <div class="relacionados-header">
-      <h2>Você também pode gostar</h2>
-      <p>Produtos que combinam com esse estilo de torre e ajudam a vender mais.</p>
-    </div>
-    <div class="produtos-grid">
-      <!-- preenchido via JS -->
-    </div>
-  </section>
-</main>
+          <div class="product-meta-row">
+            <div class="avaliacao">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-regular fa-star"></i>
+              <span>(Avaliações em breve)</span>
+            </div>
+            <span class="product-sku" id="produtoSku">Cód. interno</span>
+          </div>
+        </header>
+
+        <!-- BLOCO DE PREÇO -->
+        <div class="product-price-block">
+          <p class="preco">
+            <span class="antigo"></span>
+            <span class="novo"></span>
+          </p>
+          <p class="product-price-note">
+            Pagamento facilitado no cartão ou boleto. Valores finais calculados na próxima etapa.
+          </p>
+        </div>
+
+        <!-- CONTROLES DE COMPRA -->
+        <div class="product-controls">
+          <!-- Quantidade -->
+          <div class="quantidade-container">
+            <span class="label-caption">Quantidade</span>
+            <div class="quantidade-actions">
+              <button type="button" class="btn-qty" onclick="alterarQuantidade(-1)">-</button>
+              <input type="number" id="quantidade" value="1" min="1">
+              <button type="button" class="btn-qty" onclick="alterarQuantidade(1)">+</button>
+            </div>
+          </div>
+
+          <!-- Cor -->
+          <div class="cores-produto">
+            <h4>Escolha a cor</h4>
+            <div class="lista-cores" id="coresContainer"></div>
+          </div>
+
+          <!-- Torneira -->
+          <div class="torneira-produto" style="display:none;">
+            <h4>Escolha a torneira</h4>
+            <select id="torneiraSelect" class="select-torneira"></select>
+          </div>
+
+          <!-- Refil -->
+          <div class="refil-produto" style="display:none;">
+            <h4>Quantidade de refil</h4>
+            <select id="refilSelect">
+              <option value="1">1 (incluso)</option>
+              <option value="2">+1 refil extra</option>
+              <option value="3">+2 refis extras</option>
+              <option value="4">+3 refis extras</option>
+            </select>
+          </div>
+
+          <!-- BOTÕES PRINCIPAIS -->
+          <div class="botoes-container">
+            <button class="btn-carrinho">
+              <i class="fa-solid fa-cart-plus"></i>
+              Adicionar ao carrinho
+            </button>
+            <button class="btn-comprar">
+              <i class="fa-solid fa-bolt"></i>
+              Comprar agora
+            </button>
+          </div>
+
+          <!-- FRETE INLINE -->
+          <div class="frete-inline-hint">
+            <i class="fa-solid fa-truck"></i>
+            <span>Calcule o frete para ver prazos e opções de entrega:</span>
+          </div>
+
+          <div class="frete-container">
+            <input type="text" id="cepInput" placeholder="Digite seu CEP">
+            <button id="calcularFrete">Calcular frete</button>
+          </div>
+
+          <div id="freteResultado"></div>
+        </div>
+
+        <!-- BENEFÍCIOS / TRUST -->
+        <div class="product-perks-row">
+          <div class="product-perk">
+            <div class="perk-icon">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <div class="perk-text">
+              <strong>Envio rápido</strong>
+              <span>Despachamos seu pedido em poucos dias úteis.</span>
+            </div>
+          </div>
+
+          <div class="product-perk">
+            <div class="perk-icon">
+              <i class="fa-solid fa-shield-heart"></i>
+            </div>
+            <div class="perk-text">
+              <strong>Produto original</strong>
+              <span>Fabricado e enviado pela Doutor Beer.</span>
+            </div>
+          </div>
+
+          <div class="product-perk">
+            <div class="perk-icon">
+              <i class="fa-solid fa-headset"></i>
+            </div>
+            <div class="perk-text">
+              <strong>Suporte parceiro</strong>
+              <span>Atendimento especializado para bares e eventos.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="descricao">
+          <h3>Descrição do produto</h3>
+          <!-- JS preenche o <p> -->
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUTOS RELACIONADOS -->
+    <section class="relacionados section-wrapper">
+      <div class="relacionados-header">
+        <h2>Você também pode gostar</h2>
+        <p>Produtos que combinam com esse estilo de torre e ajudam a vender mais.</p>
+      </div>
+      <div class="produtos-grid">
+        <!-- preenchido via JS -->
+      </div>
+    </section>
+  </main>
 
   <!-- Botão de voltar ao topo -->
   <a href="#" id="btnTop">

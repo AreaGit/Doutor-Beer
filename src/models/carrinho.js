@@ -1,71 +1,67 @@
-  const { DataTypes } = require("sequelize");
-  const sequelize = require("../config/database");
-  const Usuario = require("./Usuario"); // Vincula ao usuário
-  const Produto = require("./Produto"); // Vincula aos produtos
+// models/Carrinho.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const Usuario = require("./Usuario");
 
-  // Definição do Model Cart
-  const Cart = sequelize.define("Cart", {
+const Carrinho = sequelize.define(
+  "Carrinho",
+  {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true
+      autoIncrement: true,
     },
+
+    // Usuário dono do carrinho (apenas logado)
     usuarioId: {
       type: DataTypes.INTEGER,
-      allowNull: true
-    },
-    guestId: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    produtoId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    quantidade: {
-      type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 1
     },
 
-    cor: {
+    // Código do cupom aplicado nesse carrinho (se houver)
+    cupomCodigo: {
       type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "padrao"
+      allowNull: true,
     },
 
-    torneira: {
-      type: DataTypes.STRING,
+    // Valor absoluto de desconto em R$ (ex: 150)
+    desconto: {
+      type: DataTypes.FLOAT,
       allowNull: false,
-      defaultValue: "padrao"
+      defaultValue: 0,
     },
 
-    refil: {
-    type: DataTypes.INTEGER,
-    allowNull: true,   
-    defaultValue: null 
+    // Soma de (precoFinal * quantidade) de TODOS os itens (sem frete)
+    subtotal: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+
+    // subtotal - desconto (sem frete)
+    total: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+
+    // ABERTO, FINALIZADO, CANCELADO, etc.
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "ABERTO",
+    },
   },
-    cupom: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    precoFinal: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-    defaultValue: 0
-  }
-
-
-
-  }, {
+  {
     tableName: "carrinhos",
-    timestamps: true
-  });
+    timestamps: true,
+  }
+);
 
-  // Relacionamentos
-  Cart.belongsTo(Usuario, { foreignKey: "usuarioId", as: "Usuario" });
-  Cart.belongsTo(Produto, { foreignKey: "produtoId", as: "Produto" });
+// 1 usuário -> N carrinhos (em geral você vai usar só 1 "ABERTO")
+Carrinho.belongsTo(Usuario, {
+  foreignKey: "usuarioId",
+  as: "Usuario",
+});
 
-  // Exporta o model
-  module.exports = Cart;
-
+module.exports = Carrinho;

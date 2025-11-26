@@ -795,8 +795,8 @@ body {
 }
 
 .modal-content {
-  max-width: 520px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: 150px auto;
   background: #101018;
   border-radius: 20px;
   padding: 16px 16px 12px;
@@ -809,14 +809,14 @@ body {
 }
 
 .modal-content h2 {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   margin-bottom: 4px;
 }
 
 .modal-content p {
-  font-size: 0.84rem;
-  color: var(--muted);
-  margin-bottom: 8px;
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 8px;
 }
 
 .modal-close {
@@ -1088,20 +1088,21 @@ body {
   background: #101018;
 }
 .item-card img {
-  width: 46px;
-  height: 46px;
+  width: 200px;
+  height: 200px;
   border-radius: 10px;
   object-fit: cover;
 }
 .item-details {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8rem;
-  gap: 2px;
+    display: flex;
+    flex-direction: column;
+    font-size: 1rem;
+    gap: 20px;
+    padding: 20px;
 }
 .pedido-totais {
-  margin-top: 10px;
-  font-size: 0.86rem;
+    margin-top: 10px;
+    font-size: 165px;
 }
 
 /* Modal cliente */

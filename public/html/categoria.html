@@ -7,6 +7,7 @@
   <title>Categoria - Doutor Beer</title>
   <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
   <link rel="stylesheet" href="../css/categoria.css">
+  <link rel="stylesheet" href="../css/header.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -55,7 +56,7 @@
         </p>
       </div>
 
-      <!-- Carrinho -->
+    <!-- Carrinho -->
       <div class="cart" id="cart-button">
         <img src="../images/shopping-cart.png" alt="Carrinho de compras">
         <span class="cart-count" id="cart-count">0</span>
@@ -78,6 +79,9 @@
       <div class="cart-summary">
         <p>Total de itens: <span id="summary-items">0</span></p>
         <p>Quantidade total: <span id="summary-quantity">0</span></p>
+        <p id="summary-discount-line" style="display:none;">
+          Desconto: <span id="summary-discount">R$ 0,00</span>
+        </p>
         <p>Valor total: <span id="summary-total">R$ 0,00</span></p>
       </div>
 
@@ -85,6 +89,7 @@
       <div class="cart-coupon">
         <input type="text" id="coupon-code" placeholder="Digite seu cupom">
         <button id="apply-coupon">Aplicar</button>
+        <p id="coupon-message" class="coupon-message"></p>
       </div>
 
 

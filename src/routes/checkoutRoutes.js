@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { calcularFrete } = require("../services/melhorEnvio");
-const Cart = require("../models/carrinho");
+const Carrinho = require("../models/carrinho");
+const CarrinhoItem = require("../models/CarrinhoItem");
 const Produto = require("../models/Produto");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
@@ -99,30 +100,45 @@ router.get("/resumo", async (req, res) => {
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
 
   try {
-    const items = await Cart.findAll({
-      where: { usuarioId },
-      include: [{ model: Produto, as: "Produto" }]
+    const carrinho = await Carrinho.findOne({
+      where: { usuarioId, status: "ABERTO" },
+      include: [
+        {
+          model: CarrinhoItem,
+          as: "itens",
+          include: [{ model: Produto, as: "Produto" }]
+        }
+      ]
     });
 
-    if (!items.length) return res.status(400).json({ error: "Carrinho vazio" });
+    if (!carrinho || !carrinho.itens || !carrinho.itens.length) {
+      return res.status(400).json({ error: "Carrinho vazio" });
+    }
 
-    // 🔹 Calcula subtotal com variações (torneira/refil)
-    const subtotal = items.reduce((acc, item) => {
-      const base = item.Produto.precoPromocional ?? item.Produto.preco ?? 0;
-      let precoFinal = base;
-
-      if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") precoFinal += 15;
-      const refilQtd = Number(item.refil) || 1;
-      if (refilQtd > 1) precoFinal += (refilQtd - 1) * 40;
-
-      return acc + precoFinal * item.quantidade;
-    }, 0);
+    const subtotal = Number(carrinho.subtotal || 0);     // soma itens, sem cupom
+    const desconto = Number(carrinho.desconto || 0);     // desconto do cupom
+    const subtotalComDesconto = Math.max(subtotal - desconto, 0);
 
     const checkoutSession = req.session.checkout || {};
-    const frete = Number(checkoutSession.frete || 0);
+    const freteOriginal = Number(checkoutSession.frete || 0);
+
+    const LIMITE_FRETE_GRATIS = 200;
+
+    let frete = freteOriginal;
+    let freteGratis = false;
+
+    // 👉 Regra: se subtotal COM desconto >= 200, cliente não paga frete
+    if (subtotalComDesconto >= LIMITE_FRETE_GRATIS) {
+      frete = 0;
+      freteGratis = true;
+    }
+
+    const total = subtotalComDesconto + frete;
+
+    const cupomSessao = req.session.cupom || null;
 
     res.json({
-      produtos: items.map(i => ({
+      produtos: carrinho.itens.map((i) => ({
         produtoId: i.Produto.id,
         id: i.Produto.id,
         nome: i.Produto.nome,
@@ -131,17 +147,25 @@ router.get("/resumo", async (req, res) => {
         cor: i.cor,
         torneira: i.torneira,
         refil: i.refil,
-        imagem: i.Produto.imagem || null
+        imagem: Array.isArray(i.Produto.imagem)
+          ? i.Produto.imagem[0]
+          : i.Produto.imagem || null
       })),
-      subtotal,
-      frete,
-      total: subtotal + frete
+      subtotal,              // antes do cupom
+      desconto,              // valor do cupom
+      subtotalComDesconto,   // depois do cupom
+      frete,                 // frete que o cliente vê (0 se frete grátis)
+      freteOriginal,         // custo real calculado (pra você usar depois, se quiser)
+      freteGratis,           // flag booleana p/ o front
+      total,                 // subtotalComDesconto + frete (0 ou não)
+      cupom: cupomSessao
     });
   } catch (err) {
     console.error("[Checkout] Erro ao carregar resumo:", err);
     res.status(500).json({ error: "Erro ao carregar resumo do pedido" });
   }
 });
+
 
 /* ================== PAGAMENTOS ================== */
 router.post("/gerar-pix", checkoutController.gerarPix);
@@ -152,56 +176,105 @@ router.post("/gerar-cartao", checkoutController.gerarCartao);
 router.post("/finalizar", async (req, res) => {
   try {
     const usuarioIdSessao = req.session.user?.id;
-    if (!usuarioIdSessao) return res.status(401).json({ error: "Usuário não logado" });
+    if (!usuarioIdSessao) {
+      return res.status(401).json({ error: "Usuário não logado" });
+    }
 
     const { itens, formaPagamento } = req.body;
-    if (!itens?.length) return res.status(400).json({ error: "Itens do pedido ausentes" });
+    if (!itens?.length) {
+      return res.status(400).json({ error: "Itens do pedido ausentes" });
+    }
 
-    // Dados de endereço e frete da sessão
-    const sessionData = req.session.checkout || {};
-    const endereco = sessionData.endereco || {};
-    const frete = Number(sessionData.frete || 0);
+    // 🔹 Dados de checkout da sessão
+    const checkout = req.session.checkout || {};
 
-    // 🔹 Calcula subtotal com base no preço final enviado do front
-    const subtotal = itens.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
-    const total = subtotal + frete;
+    // Cupom e desconto vindos da sessão
+    const cupomSessao = req.session.cupom || {};
+    const cupom = cupomSessao.codigo || checkout.cupom || null;
+    const descontoCupom = Number(cupomSessao.desconto || checkout.desconto || 0);
 
-    // 🔹 Define status inicial conforme método de pagamento
+    // 🔹 FRETE
+    // - freteOriginal: quanto custaria o frete sem promoção
+    const freteOriginal = Number(
+      checkout.freteOriginal !== undefined
+        ? checkout.freteOriginal
+        : (checkout.frete ?? 0)
+    );
+
+    // Endereço salvo na sessão
+    const endereco = checkout.endereco || {};
+
+    // Subtotal calculado pelos itens enviados
+    const subtotal = itens.reduce((acc, item) => {
+      const preco = Number(item.precoUnitario || 0);
+      const qtd = Number(item.quantidade || 1);
+      return acc + (preco * qtd);
+    }, 0);
+
+    // 🔹 Total de produtos após desconto (base para regra de frete grátis)
+    const totalProdutos = subtotal - descontoCupom;
+
+    // 🔹 Regra de frete grátis:
+    // se total de produtos > 200 → frete = 0
+    let freteGratis = checkout.freteGratis === true;
+    if (totalProdutos > 200) {
+      freteGratis = true;
+    }
+
+    const freteFinal = freteGratis ? 0 : freteOriginal;
+
+    // Se você já tiver o total calculado na sessão (o mesmo que o usuário viu),
+    // pode usar ele. Senão, calculamos: totalProdutos + freteFinal
+    const total =
+      checkout.total !== undefined
+        ? Number(checkout.total)
+        : (totalProdutos + freteFinal);
+
+    // 🔹 Status inicial baseado na forma de pagamento
     let statusInicial = "PENDENTE";
     const metodo = (formaPagamento || "").toUpperCase();
 
-    if (metodo === "PIX" || metodo === "CARTAO") {
-      statusInicial = "PAGO";
+    if (metodo === "PIX" || metodo === "CARTAO" || metodo === "CARTAO_CREDITO") {
+      statusInicial = "PENDENTE"; // se for usar webhook ASAAS, mantém pendente
     } else if (metodo === "BOLETO") {
       statusInicial = "AGUARDANDO_PAGAMENTO";
     }
 
-    // 🔹 Cria o pedido
+    // 🔹 Cria o pedido SALVANDO CUPOM E FRETE
     const pedido = await Pedido.create({
       usuarioId: usuarioIdSessao,
       status: statusInicial,
-      frete,
+      frete: freteFinal,          // 0 se frete grátis, valor real se não for
       total,
       enderecoEntrega: endereco,
-      formaPagamento: metodo || "INDEFINIDO"
+      formaPagamento: metodo || "INDEFINIDO",
+      cupom: cupom || null,
+      descontoCupom: descontoCupom || 0
     });
 
-    // 🔹 Cria os itens
-    const pedidoItems = itens.map(item => ({
-      pedidoId: pedido.id,
-      produtoId: item.produtoId || item.id,
-      quantidade: Number(item.quantidade || 1),
-      precoUnitario: Number(item.precoUnitario || 0),
-      subtotal: Number(item.precoUnitario * item.quantidade),
-      cor: item.cor || "padrao",
-      torneira: item.torneira || "padrao",
-      refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
-    }));
+    // 🔹 Cria os itens do pedido
+    const pedidoItems = itens.map(item => {
+      const preco = Number(item.precoUnitario || 0);
+      const qtd = Number(item.quantidade || 1);
+
+      return {
+        pedidoId: pedido.id,
+        produtoId: item.produtoId || item.id,
+        quantidade: qtd,
+        precoUnitario: preco,
+        subtotal: preco * qtd,
+        cor: item.cor || "padrao",
+        torneira: item.torneira || "padrao",
+        refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
+      };
+    });
 
     await PedidoItem.bulkCreate(pedidoItems);
 
-    // 🔹 Limpa carrinho após sucesso
-    await Cart.destroy({ where: { usuarioId: usuarioIdSessao } });
+    // 🔹 Limpa carrinho e sessão de checkout/cupom
+    await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } });
+    delete req.session.checkout;
+    delete req.session.cupom;
 
     res.json({
       sucesso: true,

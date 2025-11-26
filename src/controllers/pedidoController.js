@@ -27,14 +27,12 @@ exports.getPedidoById = async (req, res) => {
 
     if (!pedido) return res.status(404).json({ error: "Pedido não encontrado" });
 
-    // 🔹 Formata os itens e calcula subtotal
     let subtotal = 0;
     const itensFormatados = pedido.Itens.map(i => {
       const precoUnit = i.precoUnitario ?? 0;
       const qtd = i.quantidade ?? 1;
       subtotal += precoUnit * qtd;
 
-      // Captura imagem (caso seja array)
       const imagemProduto = Array.isArray(i.Produto?.imagem)
         ? i.Produto.imagem[0]
         : i.Produto?.imagem || "/images/no-image.png";
@@ -53,9 +51,11 @@ exports.getPedidoById = async (req, res) => {
     res.json({
       id: pedido.id,
       status: pedido.status,
-      total: pedido.total,
-      subtotal,
-      frete: pedido.frete ?? 0,
+      total: pedido.total,              // valor final já com desconto + freteFinal
+      subtotal,                         // soma dos itens
+      frete: pedido.frete ?? 0,         // já vem 0 se frete grátis
+      descontoCupom: pedido.descontoCupom ?? 0,
+      cupom: pedido.cupom || null,
       metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento || "Não informado",
       enderecoEntrega: pedido.enderecoEntrega ?? {},
       Itens: itensFormatados

@@ -2,7 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const Usuario = require("./Usuario");
-const PedidoItem = require("./PedidoItem"); // <--- IMPORTANTE
+const PedidoItem = require("./PedidoItem"); 
 
 const Pedido = sequelize.define("Pedido", {
   id: {
@@ -40,6 +40,12 @@ const Pedido = sequelize.define("Pedido", {
     type: DataTypes.STRING,
     allowNull: true
   },
+
+    descontoCupom: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0
+  },
   // Campos adicionados para integração ASAAS
   paymentId: { type: DataTypes.STRING, allowNull: true }, // ID da cobrança no ASAAS
   paymentStatus: { type: DataTypes.STRING, allowNull: true }, // Ex: RECEIVED, PENDING, OVERDUE, etc
@@ -53,7 +59,7 @@ const Pedido = sequelize.define("Pedido", {
   timestamps: true
 });
 
-// Relacionamentos
+// Relacionamentos  
 Pedido.belongsTo(Usuario, { foreignKey: "usuarioId", as: "Usuario" });
 Pedido.hasMany(PedidoItem, { foreignKey: "pedidoId", as: "Itens" }); 
 

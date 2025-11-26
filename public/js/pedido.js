@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const totalEl = document.getElementById("total");
   const loadingEl = document.getElementById("loadingPedido");
 
+  const descontoCupomEl = document.getElementById("descontoCupom");
+  const cupomCodigoEl = document.getElementById("cupomCodigo");
+
   try {
     if (loadingEl) loadingEl.style.display = "block";
 
@@ -19,6 +22,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!res.ok) throw new Error("Pedido não encontrado");
 
     const pedido = await res.json();
+
+    console.log(pedido);
 
     // ================== Preencher informações do pedido ==================
     pedidoIdEl.textContent = `#${pedido.id}`;
@@ -35,18 +40,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       ? `${endereco.rua}, ${endereco.numero}${endereco.complemento ? " - " + endereco.complemento : ""}, ${endereco.cidade}, ${endereco.estado} - CEP: ${endereco.cep}`
       : "Endereço não informado";
 
-    // ================== Exibir itens do pedido ==================
+     // ================== Exibir itens do pedido ==================
     itensList.innerHTML = "";
-    let subtotal = 0;
+    let subtotalCalculado = 0;
 
     if (pedido.Itens && pedido.Itens.length > 0) {
       pedido.Itens.forEach(item => {
         const precoProduto = item.precoUnitario ?? 0;
         const quantidade = item.quantidade ?? 1;
         const precoTotal = precoProduto * quantidade;
-        subtotal += precoTotal;
+        subtotalCalculado += precoTotal;
 
-        // Monta HTML com as informações adicionais
         const li = document.createElement("li");
         li.classList.add("produto-item");
         li.innerHTML = `
@@ -77,12 +81,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       itensList.innerHTML = "<li>Nenhum item encontrado no pedido.</li>";
     }
 
-    // ================== Calcular total com frete ==================
+    // ================== Usar valores vindos da API ==================
+    // Se o backend mandou "subtotal", "frete" e "total", usamos eles como fonte da verdade
+    const subtotal = pedido.subtotal ?? subtotalCalculado;
     const frete = pedido.frete ?? 0;
-    const total = subtotal + frete;
+    const total = pedido.total ?? (subtotal + frete);
+    const descontoCupom = pedido.descontoCupom ?? 0;
+    const cupomCodigo = pedido.cupom || null;
 
     subtotalEl.textContent = `R$ ${subtotal.toFixed(2).replace(".", ",")}`;
-    freteEl.textContent = `R$ ${frete.toFixed(2).replace(".", ",")}`;
+
+    // Exibir "Grátis" quando o frete for 0
+    if (frete === 0) {
+      freteEl.textContent = "Grátis";
+    } else {
+      freteEl.textContent = `R$ ${frete.toFixed(2).replace(".", ",")}`;
+    }
+
+     // ✅ Desconto do cupom (só mostra valor se tiver cupom e desconto > 0)
+    if (descontoCupomEl) {
+      if (cupomCodigo && descontoCupom > 0) {
+        descontoCupomEl.textContent = `- R$ ${descontoCupom
+          .toFixed(2)
+          .replace(".", ",")}`;
+      } else {
+        descontoCupomEl.textContent = `R$ 0,00`;
+      }
+    }
+
+    // Cupom (código)
+    if (cupomCodigoEl) {
+      cupomCodigoEl.textContent = cupomCodigo || "Nenhum";
+    }
+
     totalEl.textContent = `R$ ${total.toFixed(2).replace(".", ",")}`;
 
   } catch (err) {
