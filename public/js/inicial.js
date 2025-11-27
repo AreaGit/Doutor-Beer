@@ -963,6 +963,81 @@ async function carregarSecao(secaoNome, containerId) {
   }
 }
 
+/* ==================== Módulo: Newsletter ==================== */
+function initNewsletter() {
+  const form = document.getElementById("newsletterForm");
+  const emailInput = document.getElementById("email");
+  const confirmarBtn = document.getElementById("confirmarBtn");
+  const mensagem = document.getElementById("mensagem");
+
+  if (!form || !emailInput || !confirmarBtn || !mensagem) return;
+
+  let emailPendente = null;
+
+  confirmarBtn.style.display = "none";
+  mensagem.textContent = "";
+  mensagem.className = "mensagem";
+
+  // 1º passo: usuário clica em "Cadastrar"
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const email = emailInput.value.trim();
+    if (!email) {
+      mensagem.textContent = "Por favor, preencha o e-mail 😉";
+      mensagem.className = "mensagem erro";
+      return;
+    }
+
+    emailPendente = email;
+    mensagem.textContent = "Quase lá! Clique em \"Confirmar Cadastro\" para finalizar.";
+    mensagem.className = "mensagem aviso";
+    confirmarBtn.style.display = "inline-block";
+  });
+
+  // 2º passo: usuário confirma
+  confirmarBtn.addEventListener("click", async () => {
+    if (!emailPendente) return;
+
+    confirmarBtn.disabled = true;
+    confirmarBtn.textContent = "Enviando...";
+    mensagem.textContent = "";
+    mensagem.className = "mensagem";
+
+    try {
+      const resp = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailPendente,
+          origem: "home",
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok || !data.success) {
+        mensagem.textContent = data.message || "Não foi possível cadastrar. Tente novamente 🙏";
+        mensagem.className = "mensagem erro";
+      } else {
+        mensagem.textContent = data.message;
+        mensagem.className = "mensagem sucesso";
+        emailInput.value = "";
+        emailPendente = null;
+        confirmarBtn.style.display = "none";
+      }
+    } catch (err) {
+      console.error("[Newsletter] Erro no fetch:", err);
+      mensagem.textContent = "Erro de conexão. Tente novamente mais tarde 🙏";
+      mensagem.className = "mensagem erro";
+    } finally {
+      confirmarBtn.disabled = false;
+      confirmarBtn.textContent = "Confirmar Cadastro";
+    }
+  });
+}
+
+
 
 /* ==================== Inicialização ==================== */
 document.addEventListener("DOMContentLoaded", () => {
@@ -973,6 +1048,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCart();
   initSlider();
   initBtnTopo();
+  initNewsletter();
 
   carregarSecao("lancamentos", "secao-lancamentos");
   carregarSecao("acessorios", "secao-acessorios");
