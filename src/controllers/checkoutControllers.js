@@ -3,6 +3,7 @@
 const { calcularFrete } = require("../services/melhorEnvio"); // função que você já criou
 const Cart = require("./carrinhoControllers").Cart; // seu model de carrinho
 const Carrinho = require("../models/carrinho");
+const CarrinhoItem = require("../models/CarrinhoItem");
 const Produto = require("../models/Produto");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
@@ -70,7 +71,7 @@ exports.calcularFreteHandler = async (req, res) => {
       return res.status(400).json({ error: "Nenhum produto encontrado para calcular o frete." });
 
     // 🚚 Chama o serviço do Melhor Envio
-    const opcoes = await calcularFrete({
+    let opcoes = await calcularFrete({
       toPostalCode: cepDestino,
       products: produtosParaEnvio
     });
@@ -78,7 +79,57 @@ exports.calcularFreteHandler = async (req, res) => {
     if (!opcoes || opcoes.length === 0)
       return res.status(400).json({ error: "Nenhuma opção de frete disponível" });
 
-    res.json(opcoes);
+    // ===== Verifica se devemos injetar a opção de Frete Grátis =====
+    try {
+      if (usuarioId) {
+        // busca carrinho com itens para calcular subtotal
+        const carrinho = await Carrinho.findOne({
+          where: { usuarioId, status: "ABERTO" },
+          include: [
+            {
+              model: CarrinhoItem,
+              as: "itens",
+              include: [{ model: Produto, as: "Produto" }]
+            }
+          ]
+        });
+
+        if (carrinho && Array.isArray(carrinho.itens)) {
+          const subtotal = carrinho.itens.reduce((acc, it) => {
+            // prefere precoFinal (campo do item) senão preço do produto
+            const unit = Number(it.precoFinal ?? it.Produto?.preco ?? 0);
+            return acc + unit * (Number(it.quantidade) || 0);
+          }, 0);
+
+          const CUPOM_FRETE = "DBFRETEGRATIS";
+          const MINIMO_FRETE = 200;
+
+          const freteGratisAplicavel =
+            String(carrinho.cupomCodigo || "").toUpperCase() === CUPOM_FRETE &&
+            subtotal >= MINIMO_FRETE;
+
+          if (freteGratisAplicavel) {
+            // cria uma opção minimalista de frete grátis compatível com o shape do MelhorEnvio
+            const freteGratisOpc = {
+              company: { name: "Nossa Loja", picture: "/images/label-free.png" },
+              name: "Frete Grátis (Cupom)",
+              price: 0,
+              delivery_time: 0,
+              service_code: "FRETE_GRATIS"
+            };
+
+            // coloca frete grátis no topo das opções
+            opcoes = [freteGratisOpc, ...opcoes];
+          }
+        }
+      }
+    } catch (innerErr) {
+      // não falha o cálculo de frete por essa verificação — apenas loga
+      console.warn("[Checkout] Não foi possível verificar cupom de frete grátis:", innerErr.message || innerErr);
+    }
+
+    // devolve as opções (com frete grátis injetado apenas quando aplicável)
+    return res.json(opcoes);
 
   } catch (err) {
     console.error("[Checkout] Erro ao calcular frete:", err.response?.data || err.message);

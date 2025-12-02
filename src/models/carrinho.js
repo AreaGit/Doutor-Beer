@@ -24,6 +24,13 @@ const Carrinho = sequelize.define(
       allowNull: true,
     },
 
+      // Se o cupom aplicado torna o frete grátis
+    freteGratis: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
     // Valor absoluto de desconto em R$ (ex: 150)
     desconto: {
       type: DataTypes.FLOAT,

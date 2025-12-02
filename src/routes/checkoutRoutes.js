@@ -8,6 +8,16 @@ const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const checkoutController = require("../controllers/checkoutControllers");
 
+// tenta pegar sequelize a partir do index dos models (ajuste conforme sua exportação)
+let sequelize;
+try {
+  const db = require("../models");
+  sequelize = db.sequelize || (db.default && db.default.sequelize);
+} catch (err) {
+  // caso não exista, sequelize permanecerá undefined — transação será ignorada (mas é recomendado ajustar)
+  console.warn("[CheckoutRoutes] não foi possível carregar sequelize do ../models. Transactions podem não estar disponíveis.");
+}
+
 /* ================== FUNÇÕES AUXILIARES ================== */
 function limparCEP(cep) {
   return (cep || "").replace(/\D/g, "");
@@ -25,26 +35,34 @@ router.post("/frete", async (req, res) => {
     cepDestino = limparCEP(cepDestino);
 
     if (!validarCEP(cepDestino)) {
-      return res.status(400).json({ error: `CEP inválido: ${req.body.cepDestino}` });
+      return res.status(400).json({ error: `CEP inválido: ${cepDestino}` });
     }
 
     let products = [];
 
     if (usuarioId) {
-      // Usuário logado → pega do carrinho
-      const items = await Cart.findAll({
-        where: { usuarioId },
-        include: [{ model: Produto, as: "Produto" }]
+      // Usuário logado → pega do carrinho (itens do carrinho)
+      const carrinho = await Carrinho.findOne({
+        where: { usuarioId, status: "ABERTO" },
+        include: [
+          {
+            model: CarrinhoItem,
+            as: "itens",
+            include: [{ model: Produto, as: "Produto" }]
+          }
+        ]
       });
 
-      if (!items.length) return res.status(400).json({ error: "Carrinho vazio" });
+      if (!carrinho || !carrinho.itens || !carrinho.itens.length) {
+        return res.status(400).json({ error: "Carrinho vazio" });
+      }
 
-      products = items.map(i => ({
-        width: i.Produto.width || 20,
-        height: i.Produto.height || 20,
-        length: i.Produto.length || 20,
-        weight: i.Produto.weight || 0.3,
-        insurance_value: i.Produto.precoPromocional ?? i.Produto.preco ?? 0,
+      products = carrinho.itens.map(i => ({
+        width: i.Produto?.width || 20,
+        height: i.Produto?.height || 20,
+        length: i.Produto?.length || 20,
+        weight: i.Produto?.weight || 0.3,
+        insurance_value: i.Produto?.precoPromocional ?? i.Produto?.preco ?? 0,
         quantity: i.quantidade || 1
       }));
     } else if (Array.isArray(produtos) && produtos.length) {
@@ -62,7 +80,7 @@ router.post("/frete", async (req, res) => {
     }
 
     const opcoesFrete = await calcularFrete({ toPostalCode: cepDestino, products });
-    const filtradas = opcoesFrete.filter(o => o.company?.name !== "Jadlog" && o.company?.name !== "Azul");
+    const filtradas = (opcoesFrete || []).filter(o => o.company?.name !== "Jadlog" && o.company?.name !== "Azul");
 
     if (!filtradas.length)
       return res.status(404).json({ error: "Nenhuma opção de frete disponível." });
@@ -75,18 +93,56 @@ router.post("/frete", async (req, res) => {
 });
 
 /* ================== ROTA: Salvar endereço + frete ================== */
-router.post("/salvar-endereco-frete", (req, res) => {
+router.post("/salvar-endereco-frete", async (req, res) => {
   const usuarioId = req.session.user?.id;
   if (!usuarioId) return res.status(401).json({ error: "Usuário não logado" });
 
   const { endereco, frete } = req.body;
+  // frete agora pode ser objeto { freteValue, freteGratis, freteOriginal } ou número antigo
   if (!endereco || frete == null) {
     return res.status(400).json({ error: "Endereço ou frete inválido" });
   }
 
+  // normaliza payload compatível com versão anterior
+  let freteObj = {};
+  if (typeof frete === "number") {
+    freteObj = { freteValue: Number(frete), freteGratis: Number(frete) === 0, freteOriginal: Number(frete) };
+  } else {
+    freteObj = {
+      freteValue: Number(frete.freteValue ?? frete.frete ?? 0),
+      freteGratis: !!frete.freteGratis,
+      freteOriginal: Number(frete.freteOriginal ?? frete.frete ?? frete.freteValue ?? 0)
+    };
+  }
+
+  // Se usuário quer escolher frete grátis, valida que o carrinho atende ao requisito
+  const LIMITE_FRETE_GRATIS = 200;
+  if (freteObj.freteGratis) {
+    // pega subtotalComDesconto do carrinho
+    const carrinho = await Carrinho.findOne({
+      where: { usuarioId, status: "ABERTO" },
+      include: [{ model: CarrinhoItem, as: "itens", include: [{ model: Produto, as: "Produto" }] }]
+    });
+
+    if (!carrinho || !carrinho.itens || !carrinho.itens.length) {
+      return res.status(400).json({ error: "Carrinho vazio ao validar frete grátis." });
+    }
+
+    const subtotal = Number(carrinho.subtotal || 0);
+    const desconto = Number(carrinho.desconto || 0);
+    const subtotalComDesconto = Math.max(subtotal - desconto, 0);
+
+    if (subtotalComDesconto < LIMITE_FRETE_GRATIS) {
+      return res.status(400).json({ error: `Frete grátis disponível apenas para pedidos a partir de R$ ${LIMITE_FRETE_GRATIS}.` });
+    }
+  }
+
+  // salva na sessão de forma explícita
   req.session.checkout = {
     endereco,
-    frete: Number(frete),
+    freteValue: freteObj.freteValue,
+    freteGratis: freteObj.freteGratis,
+    freteOriginal: freteObj.freteOriginal,
     timestamp: Date.now()
   };
 
@@ -120,18 +176,25 @@ router.get("/resumo", async (req, res) => {
     const subtotalComDesconto = Math.max(subtotal - desconto, 0);
 
     const checkoutSession = req.session.checkout || {};
-    const freteOriginal = Number(checkoutSession.frete || 0);
+
+    // normaliza freteOriginal: pode vir de várias chaves antigas/novas
+    const freteOriginal = Number(
+      checkoutSession.freteOriginal ??
+      checkoutSession.freteValue ??
+      checkoutSession.frete ??
+      0
+    );
 
     const LIMITE_FRETE_GRATIS = 200;
 
-    let frete = freteOriginal;
-    let freteGratis = false;
+    // disponibilidade do frete grátis (para o front renderizar a opção)
+    const freteGratisAvailable = subtotalComDesconto >= LIMITE_FRETE_GRATIS;
 
-    // 👉 Regra: se subtotal COM desconto >= 200, cliente não paga frete
-    if (subtotalComDesconto >= LIMITE_FRETE_GRATIS) {
-      frete = 0;
-      freteGratis = true;
-    }
+    // se o usuário já escolheu frete grátis anteriormente (persistido na sessão)
+    const freteGratisSelected = !!checkoutSession.freteGratis;
+
+    // valor de frete que será mostrado ao cliente (0 se ele escolheu frete grátis)
+    const frete = freteGratisSelected ? 0 : freteOriginal;
 
     const total = subtotalComDesconto + frete;
 
@@ -147,17 +210,16 @@ router.get("/resumo", async (req, res) => {
         cor: i.cor,
         torneira: i.torneira,
         refil: i.refil,
-        imagem: Array.isArray(i.Produto.imagem)
-          ? i.Produto.imagem[0]
-          : i.Produto.imagem || null
+        imagem: Array.isArray(i.Produto.imagem) ? i.Produto.imagem[0] : i.Produto.imagem || null
       })),
-      subtotal,              // antes do cupom
-      desconto,              // valor do cupom
-      subtotalComDesconto,   // depois do cupom
-      frete,                 // frete que o cliente vê (0 se frete grátis)
-      freteOriginal,         // custo real calculado (pra você usar depois, se quiser)
-      freteGratis,           // flag booleana p/ o front
-      total,                 // subtotalComDesconto + frete (0 ou não)
+      subtotal,                    // antes do cupom
+      desconto,                    // valor do cupom
+      subtotalComDesconto,         // depois do cupom
+      frete,                       // frete que o cliente vê (0 se usuário escolheu frete grátis)
+      freteOriginal,               // custo real calculado (pra mostrar "R$ X → Grátis" se quiser)
+      freteGratisAvailable,        // boolean: está disponível para escolha?
+      freteGratisSelected,         // boolean: usuário já escolheu frete grátis?
+      total,                       // subtotalComDesconto + frete
       cupom: cupomSessao
     });
   } catch (err) {
@@ -165,7 +227,6 @@ router.get("/resumo", async (req, res) => {
     res.status(500).json({ error: "Erro ao carregar resumo do pedido" });
   }
 });
-
 
 /* ================== PAGAMENTOS ================== */
 router.post("/gerar-pix", checkoutController.gerarPix);
@@ -180,8 +241,8 @@ router.post("/finalizar", async (req, res) => {
       return res.status(401).json({ error: "Usuário não logado" });
     }
 
-    const { itens, formaPagamento } = req.body;
-    if (!itens?.length) {
+    const { itens: itensFront, formaPagamento } = req.body;
+    if (!itensFront?.length) {
       return res.status(400).json({ error: "Itens do pedido ausentes" });
     }
 
@@ -193,38 +254,72 @@ router.post("/finalizar", async (req, res) => {
     const cupom = cupomSessao.codigo || checkout.cupom || null;
     const descontoCupom = Number(cupomSessao.desconto || checkout.desconto || 0);
 
-    // 🔹 FRETE
-    // - freteOriginal: quanto custaria o frete sem promoção
+    // 🔹 FRETE (normaliza possíveis campos)
     const freteOriginal = Number(
-      checkout.freteOriginal !== undefined
-        ? checkout.freteOriginal
-        : (checkout.frete ?? 0)
+      checkout.freteOriginal ??
+      checkout.freteValue ??
+      checkout.frete ??
+      0
     );
+    const freteSelected = Number(checkout.freteValue ?? freteOriginal);
+    const freteGratisSelected = !!checkout.freteGratis;
 
     // Endereço salvo na sessão
     const endereco = checkout.endereco || {};
 
-    // Subtotal calculado pelos itens enviados
-    const subtotal = itens.reduce((acc, item) => {
-      const preco = Number(item.precoUnitario || 0);
-      const qtd = Number(item.quantidade || 1);
-      return acc + (preco * qtd);
-    }, 0);
+    // === RECOMPUTAR ITEMS NO SERVIDOR (não confiar em preços enviados pelo cliente) ===
+    const produtoIds = itensFront.map(i => i.produtoId || i.id).filter(Boolean);
+    const produtos = await Produto.findAll({ where: { id: produtoIds } });
+    const produtosMap = new Map(produtos.map(p => [p.id, p]));
+
+    // monta itens confiáveis baseados no DB
+    const itensServer = itensFront.map(item => {
+      const produto = produtosMap.get(item.produtoId || item.id);
+      if (!produto) {
+        throw new Error(`Produto inválido ou não encontrado: ${item.produtoId || item.id}`);
+      }
+
+      let precoFinal = produto.precoPromocional ?? produto.preco ?? 0;
+
+      // regra: torneira soma +15 se aplicável
+      if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") {
+        precoFinal += 15;
+      }
+
+      const refilQtd = Number(item.refil) || 1;
+      if (refilQtd > 1) {
+        precoFinal += (refilQtd - 1) * 40;
+      }
+
+      return {
+        produtoId: produto.id,
+        quantidade: Number(item.quantidade || 1),
+        precoUnitario: precoFinal,
+        cor: item.cor || null,
+        torneira: item.torneira || null,
+        refil: refilQtd
+      };
+    });
+
+    // Subtotal calculado pelos itens confiáveis
+    const subtotal = itensServer.reduce((acc, i) => acc + i.precoUnitario * i.quantidade, 0);
 
     // 🔹 Total de produtos após desconto (base para regra de frete grátis)
     const totalProdutos = subtotal - descontoCupom;
 
-    // 🔹 Regra de frete grátis:
-    // se total de produtos > 200 → frete = 0
-    let freteGratis = checkout.freteGratis === true;
-    if (totalProdutos > 200) {
-      freteGratis = true;
+    const LIMITE_FRETE_GRATIS = 200;
+
+    // 🔹 Revalidação: se o usuário escolheu frete grátis, garante que a condição ainda é válida
+    if (freteGratisSelected && totalProdutos < LIMITE_FRETE_GRATIS) {
+      return res.status(400).json({
+        error: `A condição para frete grátis não é mais válida (pedido menor que R$ ${LIMITE_FRETE_GRATIS}). Atualize o frete e tente novamente.`
+      });
     }
 
-    const freteFinal = freteGratis ? 0 : freteOriginal;
+    // 🔹 Determina frete final: se usuário escolheu frete grátis => 0, senão usa o selecionado/original
+    const freteFinal = freteGratisSelected ? 0 : freteSelected;
 
-    // Se você já tiver o total calculado na sessão (o mesmo que o usuário viu),
-    // pode usar ele. Senão, calculamos: totalProdutos + freteFinal
+    // 🔹 Calcula total final (produtos - desconto + frete)
     const total =
       checkout.total !== undefined
         ? Number(checkout.total)
@@ -235,44 +330,74 @@ router.post("/finalizar", async (req, res) => {
     const metodo = (formaPagamento || "").toUpperCase();
 
     if (metodo === "PIX" || metodo === "CARTAO" || metodo === "CARTAO_CREDITO") {
-      statusInicial = "PENDENTE"; // se for usar webhook ASAAS, mantém pendente
+      statusInicial = "PENDENTE";
     } else if (metodo === "BOLETO") {
       statusInicial = "AGUARDANDO_PAGAMENTO";
     }
 
-    // 🔹 Cria o pedido SALVANDO CUPOM E FRETE
-    const pedido = await Pedido.create({
-      usuarioId: usuarioIdSessao,
-      status: statusInicial,
-      frete: freteFinal,          // 0 se frete grátis, valor real se não for
-      total,
-      enderecoEntrega: endereco,
-      formaPagamento: metodo || "INDEFINIDO",
-      cupom: cupom || null,
-      descontoCupom: descontoCupom || 0
-    });
+    // 🔹 Cria o pedido SALVANDO CUPOM E FRETE - usa transação se sequelize estiver disponível
+    let pedido;
+    if (sequelize) {
+      await sequelize.transaction(async (t) => {
+        pedido = await Pedido.create({
+          usuarioId: usuarioIdSessao,
+          status: statusInicial,
+          frete: freteFinal,
+          total,
+          enderecoEntrega: endereco,
+          formaPagamento: metodo || "INDEFINIDO",
+          cupom: cupom || null,
+          descontoCupom: descontoCupom || 0
+        }, { transaction: t });
 
-    // 🔹 Cria os itens do pedido
-    const pedidoItems = itens.map(item => {
-      const preco = Number(item.precoUnitario || 0);
-      const qtd = Number(item.quantidade || 1);
+        const pedidoItems = itensServer.map(item => ({
+          pedidoId: pedido.id,
+          produtoId: item.produtoId,
+          quantidade: item.quantidade,
+          precoUnitario: item.precoUnitario,
+          subtotal: item.precoUnitario * item.quantidade,
+          cor: item.cor || "padrao",
+          torneira: item.torneira || "padrao",
+          refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
+        }));
 
-      return {
+        await PedidoItem.bulkCreate(pedidoItems, { transaction: t });
+
+        // Limpa carrinho do usuário
+        await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } }, { transaction: t });
+
+        // remove sessão de checkout/cupom dentro da transação lógica (sessão não transaciona DB)
+        // ainda assim excluímos depois fora da transação para garantir consistência
+      });
+    } else {
+      // sem sequelize, cria sem transação (menos seguro)
+      pedido = await Pedido.create({
+        usuarioId: usuarioIdSessao,
+        status: statusInicial,
+        frete: freteFinal,
+        total,
+        enderecoEntrega: endereco,
+        formaPagamento: metodo || "INDEFINIDO",
+        cupom: cupom || null,
+        descontoCupom: descontoCupom || 0
+      });
+
+      const pedidoItems = itensServer.map(item => ({
         pedidoId: pedido.id,
-        produtoId: item.produtoId || item.id,
-        quantidade: qtd,
-        precoUnitario: preco,
-        subtotal: preco * qtd,
+        produtoId: item.produtoId,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario,
+        subtotal: item.precoUnitario * item.quantidade,
         cor: item.cor || "padrao",
         torneira: item.torneira || "padrao",
         refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
-      };
-    });
+      }));
 
-    await PedidoItem.bulkCreate(pedidoItems);
+      await PedidoItem.bulkCreate(pedidoItems);
+      await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } });
+    }
 
-    // 🔹 Limpa carrinho e sessão de checkout/cupom
-    await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } });
+    // 🔹 Limpa sessão de checkout/cupom
     delete req.session.checkout;
     delete req.session.cupom;
 
@@ -283,6 +408,10 @@ router.post("/finalizar", async (req, res) => {
     });
   } catch (err) {
     console.error("[Checkout] Erro ao finalizar pedido:", err);
+    // Se o erro veio de validação (mensagem amigável), repassamos 400
+    if (err && err.message && err.message.startsWith("Produto inválido")) {
+      return res.status(400).json({ error: err.message });
+    }
     res.status(500).json({ error: "Erro ao finalizar pedido" });
   }
 });

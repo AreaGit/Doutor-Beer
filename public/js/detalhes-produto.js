@@ -468,40 +468,40 @@ async function initCart() {
   }
 
   /* ================== Atualizar resumo ================== */
-  function updateResumo() {
-    const totalItems = cartItems.length;
-    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+function updateResumo() {
+  const totalItems = cartItems.length;
+  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-    const subtotalCalc = cartItems.reduce((acc, i) => {
-      const precoBase = i.preco ?? i.precoPromocional ?? 0;
-      return acc + precoBase * i.quantidade;
-    }, 0);
+  const subtotalCalc = cartItems.reduce((acc, i) => {
+    const precoBase = i.preco ?? i.precoPromocional ?? 0;
+    return acc + precoBase * i.quantidade;
+  }, 0);
 
-    let totalParaMostrar = subtotalCalc;
-    let descontoParaMostrar = 0;
+  let totalParaMostrar = subtotalCalc;
+  let descontoParaMostrar = 0;
 
-    if (isLoggedIn && resumoServidor) {
-      totalParaMostrar = resumoServidor.total ?? subtotalCalc;
-      descontoParaMostrar = resumoServidor.desconto ?? 0;
-    }
-
-    if (cartCount) cartCount.textContent = totalQuantity;
-    if (summaryItems) summaryItems.textContent = totalItems;
-    if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
-    if (summaryTotal) summaryTotal.textContent = formatBRL(totalParaMostrar);
-
-    if (summaryDiscountLine && summaryDiscount) {
-      if (descontoParaMostrar > 0) {
-        summaryDiscountLine.style.display = "block";
-        summaryDiscount.textContent = formatBRL(descontoParaMostrar);
-      } else {
-        summaryDiscountLine.style.display = "none";
-        summaryDiscount.textContent = formatBRL(0);
-      }
-    }
-
-    if (!isLoggedIn) saveGuestCartToLocalStorage();
+  if (isLoggedIn && resumoServidor) {
+    totalParaMostrar = resumoServidor.total ?? subtotalCalc;
+    descontoParaMostrar = resumoServidor.desconto ?? 0;
   }
+
+  if (cartCount) cartCount.textContent = totalQuantity;
+  if (summaryItems) summaryItems.textContent = totalItems;
+  if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
+  if (summaryTotal) summaryTotal.textContent = formatBRL(totalParaMostrar);
+
+  if (summaryDiscountLine && summaryDiscount) {
+    if (descontoParaMostrar > 0) {
+      summaryDiscountLine.style.display = "block";
+      summaryDiscount.textContent = formatBRL(descontoParaMostrar);
+    } else {
+      summaryDiscountLine.style.display = "none";
+      summaryDiscount.textContent = formatBRL(0);
+    }
+  }
+
+  if (!isLoggedIn) saveGuestCartToLocalStorage();
+}
 
   /* ================== Aplicar cupom ================== */
   if (applyCouponBtn && couponInput && couponMessage) {
@@ -1064,30 +1064,70 @@ function initMiniaturas(produto) {
   const container = document.getElementById("miniaturasContainer");
   const btnPrev = document.getElementById("miniaturaAnterior");
   const btnNext = document.getElementById("miniaturaProxima");
-  const maxVisiveis = 3;
+
+  if (!produto || !produto.imagem || !produto.imagem.length) return;
+
+  // 🔥 Quantidade de miniaturas visíveis conforme a largura da tela
+  function calcularMaxVisiveis() {
+    const w = window.innerWidth;
+    if (w >= 1280) return 6;  // desktop grande
+    if (w >= 992) return 5;   // notebook / tablet landscape
+    if (w >= 600) return 4;   // tablet / mobile grande
+    return 3;                 // mobile menor (mantém usabilidade)
+  }
+
+  let maxVisiveis = calcularMaxVisiveis();
   let indexInicial = 0;
 
   function renderMiniaturas() {
     container.innerHTML = "";
-    const miniaturasVisiveis = produto.imagem.slice(indexInicial, indexInicial + maxVisiveis);
-    miniaturasVisiveis.forEach(src => {
+
+    const miniaturasVisiveis = produto.imagem.slice(
+      indexInicial,
+      indexInicial + maxVisiveis
+    );
+
+    miniaturasVisiveis.forEach((src, idx) => {
       const img = document.createElement("img");
       img.src = src;
-      img.alt = "Miniatura";
-      img.onclick = () => document.getElementById("imagemPrincipal").src = src;
+      img.alt = "Miniatura do produto";
+
+      // marca a primeira como selecionada na primeira renderização
+      if (indexInicial === 0 && idx === 0) {
+        img.classList.add("selecionada");
+      }
+
+      img.addEventListener("click", () => {
+        const imgPrincipal = document.getElementById("imagemPrincipal");
+        if (imgPrincipal) {
+          imgPrincipal.style.opacity = 0;
+          setTimeout(() => {
+            imgPrincipal.src = src;
+            imgPrincipal.style.opacity = 1;
+          }, 120);
+        }
+
+        // marca visualmente a miniatura ativa
+        container.querySelectorAll("img").forEach(i => i.classList.remove("selecionada"));
+        img.classList.add("selecionada");
+      });
+
       container.appendChild(img);
     });
 
+    // habilita/desabilita botões
     btnPrev.disabled = indexInicial === 0;
     btnNext.disabled = indexInicial + maxVisiveis >= produto.imagem.length;
   }
 
+  // Navegação
   btnPrev.onclick = () => {
     if (indexInicial > 0) {
       indexInicial--;
       renderMiniaturas();
     }
   };
+
   btnNext.onclick = () => {
     if (indexInicial + maxVisiveis < produto.imagem.length) {
       indexInicial++;
@@ -1095,6 +1135,17 @@ function initMiniaturas(produto) {
     }
   };
 
+  // Recalcula quando mudar o tamanho da tela (responsivo)
+  window.addEventListener("resize", () => {
+    const novoMax = calcularMaxVisiveis();
+    if (novoMax !== maxVisiveis) {
+      maxVisiveis = novoMax;
+      indexInicial = 0;
+      renderMiniaturas();
+    }
+  });
+
+  // Primeira renderização
   renderMiniaturas();
 }
 

@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const formEndereco = document.getElementById("formEndereco");
 
   let subtotal = 0;
-  let freteSelecionado = 0;
+  let freteSelecionado = undefined; // valor atualmente escolhido (pode ser 0)
   let cart = [];
 
   let descontoCupom = 0;
@@ -67,199 +67,275 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   /* ================== Resumo (TELA DE ENDEREÇO) ================== */
-  async function carregarResumo() {
-    const ulResumo = document.querySelector(".produtos-summary");
-    if (!ulResumo || !subtotalEl || !freteEl || !totalEl) return;
+async function carregarResumo() {
+  const ulResumo = document.querySelector(".produtos-summary");
+  if (!ulResumo || !subtotalEl || !freteEl || !totalEl) return;
 
-    try {
-      // Busca resumo (com cupom/frete) + carrinho completo (pra frete)
-      const [resResumo, resCarrinho] = await Promise.all([
-        fetch("/checkout/resumo", { credentials: "include" }),
-        fetch("/api/carrinho", { credentials: "include" })
-      ]);
+  try {
+    // Busca resumo (com cupom/frete) + carrinho completo (pra frete)
+    const [resResumo, resCarrinho] = await Promise.all([
+      fetch("/checkout/resumo", { credentials: "include" }),
+      fetch("/api/carrinho", { credentials: "include" })
+    ]);
 
-      if (!resResumo.ok) throw new Error("Erro ao buscar resumo do checkout");
-      const resumo = await resResumo.json();
+    if (!resResumo.ok) throw new Error("Erro ao buscar resumo do checkout");
+    const resumo = await resResumo.json();
 
-      // Trata formatos possíveis do carrinho
-      let dataCart = [];
-      if (resCarrinho.ok) dataCart = await resCarrinho.json();
-      cart = Array.isArray(dataCart) ? dataCart : (dataCart.items || []);
+    // Trata formatos possíveis do carrinho
+    let dataCart = [];
+    if (resCarrinho.ok) dataCart = await resCarrinho.json();
+    cart = Array.isArray(dataCart) ? dataCart : (dataCart.items || []);
 
-      // Atualiza variáveis globais com base no resumo
-      subtotal = Number(resumo.subtotal || 0);
-      descontoCupom = Number(resumo.desconto || 0);
+    // Atualiza variáveis globais com base no resumo
+    subtotal = Number(resumo.subtotal || 0);
+    descontoCupom = Number(resumo.desconto || 0);
 
-      subtotalComDesconto =
-        typeof resumo.subtotalComDesconto === "number"
-          ? Number(resumo.subtotalComDesconto)
-          : Math.max(subtotal - descontoCupom, 0);
+    subtotalComDesconto =
+      typeof resumo.subtotalComDesconto === "number"
+        ? Number(resumo.subtotalComDesconto)
+        : Math.max(subtotal - descontoCupom, 0);
 
-      // frete que veio do backend já considerando frete grátis
-      freteSelecionado = Number(resumo.frete || 0);
-      window.freteSelecionado = resumo.freteOriginal ?? freteSelecionado;
+    // frete vindo do backend: valor que deve ser mostrado ao cliente por padrão
+    window.freteOriginal = Number(resumo.freteOriginal ?? 0);
+    freteSelecionado = Number(resumo.frete ?? resumo.freteOriginal ?? 0);
+    window.freteSelecionado = freteSelecionado;
 
-      // Monta lista de produtos do resumo
-      ulResumo.innerHTML = "";
-      (resumo.produtos || []).forEach(p => {
-        let precoFinal = p.preco ?? 0;
+    // flags de frete grátis: backend autoritativo
+    // resumo.cupom?.freteGratis ou resumo.freteGratis (ambos aceitos)
+    const cupomDoResumo = resumo.cupom || null;
+    window.freteGratisAvailable = !!(cupomDoResumo && cupomDoResumo.freteGratis === true) || !!resumo.freteGratis;
+    window.freteGratisSelected = !!resumo.freteGratis; // true se backend já marcou frete grátis como escolhido
 
-        if (p.torneira === "Tap Handle Prata" || p.torneira === "Tap Handle Preta") {
-          precoFinal += 15;
-        }
-        const refilQtd = Number(p.refil) || 1;
-        if (refilQtd > 1) {
-          precoFinal += (refilQtd - 1) * 40;
-        }
+    // Monta lista de produtos do resumo
+    ulResumo.innerHTML = "";
+    (resumo.produtos || []).forEach(p => {
+      let precoFinal = p.preco ?? 0;
 
-        const precoTotal = precoFinal * (p.quantidade || 1);
-
-        const li = document.createElement("li");
-        li.innerHTML = `
-    <div class="produto-item">
-      <img src="${p.imagem || '/images/no-image.png'}" alt="${p.nome}" class="img-produto">
-      <div class="produto-info">
-        <span class="nome-produto">
-          ${p.quantidade || 1}x ${p.nome}
-        </span>
-        ${p.cor && p.cor !== "padrao" ? `<p>Cor: ${p.cor}</p>` : ""}
-        ${p.torneira && p.torneira !== "padrao" ? `<p>Torneira: ${p.torneira}</p>` : ""}
-        ${p.refil && Number(p.refil) > 1 ? `<p>Refis: ${p.refil}</p>` : ""}
-        <strong class="preco-produto">
-          R$ ${formatMoney(precoTotal)}
-        </strong>
-      </div>
-    </div>
-  `;
-
-        ulResumo.appendChild(li);
-      });
-
-      // Atualiza textos de resumo
-      subtotalEl.textContent = formatMoney(subtotalComDesconto);
-
-      if (resumo.freteGratis) {
-        freteEl.textContent = "Grátis";
-      } else {
-        freteEl.textContent = formatMoney(freteSelecionado);
+      if (p.torneira === "Tap Handle Prata" || p.torneira === "Tap Handle Preta") {
+        precoFinal += 15;
+      }
+      const refilQtd = Number(p.refil) || 1;
+      if (refilQtd > 1) {
+        precoFinal += (refilQtd - 1) * 40;
       }
 
-      const totalBackend =
-        typeof resumo.total === "number"
-          ? Number(resumo.total)
-          : subtotalComDesconto + freteSelecionado;
+      const precoTotal = precoFinal * (p.quantidade || 1);
 
-      totalEl.textContent = formatMoney(totalBackend);
+      const li = document.createElement("li");
+      li.innerHTML = `
+<div class="produto-item">
+  <img src="${p.imagem || '/images/no-image.png'}" alt="${p.nome}" class="img-produto">
+  <div class="produto-info">
+    <span class="nome-produto">
+      ${p.quantidade || 1}x ${p.nome}
+    </span>
+    ${p.cor && p.cor !== "padrao" ? `<p>Cor: ${p.cor}</p>` : ""}
+    ${p.torneira && p.torneira !== "padrao" ? `<p>Torneira: ${p.torneira}</p>` : ""}
+    ${p.refil && Number(p.refil) > 1 ? `<p>Refis: ${p.refil}</p>` : ""}
+    <strong class="preco-produto">
+      R$ ${formatMoney(precoTotal)}
+    </strong>
+  </div>
+</div>
+`;
 
-      // Linha de desconto, se existir no HTML
-      const descontoRow = document.getElementById("row-desconto");
-      const descontoSpan = document.getElementById("desconto");
-      if (descontoRow && descontoSpan) {
-        if (descontoCupom > 0) {
-          descontoRow.style.display = "flex";
-          descontoSpan.textContent = formatMoney(descontoCupom);
-        } else {
-          descontoRow.style.display = "none";
-          descontoSpan.textContent = "0,00";
-        }
-      }
+      ulResumo.appendChild(li);
+    });
 
-    } catch (err) {
-      console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
+    // Atualiza textos de resumo
+    subtotalEl.textContent = formatMoney(subtotalComDesconto);
+
+    // Mostrar frete conforme escolha do usuário (respeita frete grátis já selecionado)
+    if (window.freteGratisSelected) {
+      freteEl.textContent = "Grátis";
+    } else {
+      freteEl.textContent = formatMoney(Number(resumo.frete ?? window.freteOriginal ?? 0));
     }
+
+    const totalBackend =
+      typeof resumo.total === "number"
+        ? Number(resumo.total)
+        : subtotalComDesconto + (window.freteGratisSelected ? 0 : Number(resumo.frete ?? window.freteOriginal ?? 0));
+
+    totalEl.textContent = formatMoney(totalBackend);
+
+    // Linha de desconto, se existir no HTML
+    const descontoRow = document.getElementById("row-desconto");
+    const descontoSpan = document.getElementById("desconto");
+    if (descontoRow && descontoSpan) {
+      if (descontoCupom > 0) {
+        descontoRow.style.display = "flex";
+        descontoSpan.textContent = formatMoney(descontoCupom);
+      } else {
+        descontoRow.style.display = "none";
+        descontoSpan.textContent = "0,00";
+      }
+    }
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao carregar resumo do pedido:", err);
   }
+}
+
 
   /* ================== Calcular frete (TELA DE ENDEREÇO) ================== */
   async function calcularFrete(cep) {
-    if (!freteContainer) return;
-    freteContainer.innerHTML = "<p>Calculando frete...</p>";
+  if (!freteContainer) return;
+  freteContainer.innerHTML = "<p>Calculando frete...</p>";
 
-    if (!cart || !cart.length) {
-      freteContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
+  if (!cart || !cart.length) {
+    freteContainer.innerHTML = "<p>Seu carrinho está vazio.</p>";
+    return;
+  }
+
+  try {
+    const produtosParaFrete = cart.map(item => {
+      const produto = item.Produto || {};
+
+      return {
+        width: produto.width || 20,
+        height: produto.height || 20,
+        length: produto.length || 20,
+        weight: produto.weight || 0.3,
+        insurance_value:
+          item.precoPromocional ??
+          item.preco ??
+          produto.precoPromocional ??
+          produto.preco ??
+          0,
+        quantity: item.quantidade || 1
+      };
+    });
+
+    const resp = await fetch("/api/frete/calcular", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cepDestino: cep, produtos: produtosParaFrete })
+    });
+
+    if (!resp.ok) throw new Error("Erro ao calcular frete");
+
+    let opcoes = await resp.json();
+
+    opcoes = opcoes.filter(o =>
+      o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
+    );
+
+    if (!opcoes.length) {
+      freteContainer.innerHTML = "<p>Nenhuma opção de frete disponível.</p>";
       return;
     }
 
-    try {
-      const produtosParaFrete = cart.map(item => {
-        const produto = item.Produto || {};
+    // Gera HTML das opções de frete (transportadoras)
+    let htmlOpcoes = opcoes.map(o => {
+      const empresa = o.company?.name || "Transportadora";
+      const logo = o.company?.picture || "/images/default-shipping.png";
+      const nomeServico = o.name || "Serviço";
+      const preco = parseFloat(o.price);
+      const prazo = o.delivery_time || "N/A";
 
-        return {
-          width: produto.width || 20,
-          height: produto.height || 20,
-          length: produto.length || 20,
-          weight: produto.weight || 0.3,
-          insurance_value:
-            item.precoPromocional ??
-            item.preco ??
-            produto.precoPromocional ??
-            produto.preco ??
-            0,
-          quantity: item.quantidade || 1
-        };
-      });
+      return `
+        <div class="frete-card" data-valor="${preco}">
+          <img src="${logo}" alt="${empresa}" class="frete-logo">
+          <div class="frete-info">
+            <h4>${empresa} - ${nomeServico}</h4>
+            <p>Valor: <strong>${preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></p>
+            <p>Prazo: <strong>${prazo} dias úteis</strong></p>
+          </div>
+        </div>
+      `;
+    }).join("");
 
-      const resp = await fetch("/api/frete/calcular", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cepDestino: cep, produtos: produtosParaFrete })
-      });
+    // Só adiciona Frete Grátis se backend indicou explicitamente (cupom DBFRETEGRATIS)
+    const podeFreteGratis = !!window.freteGratisAvailable;
 
-      if (!resp.ok) throw new Error("Erro ao calcular frete");
+    if (podeFreteGratis) {
+      const freteGratisHtml = `
+        <div class="frete-card frete-gratis" data-valor="0" data-cupom="DBFRETEGRATIS" style="border:2px dashed #4CAF50;">
+          <img src="https://i.imgur.com/DmOpWel.png" alt="Frete Grátis" class="frete-logo">
+          <div class="frete-info">
+            <h4>Frete Grátis</h4>
+            <p>Valor: <strong>Grátis</strong></p>
+            <p>Condição: Cupom aplicado</p>
+          </div>
+        </div>
+      `;
+      htmlOpcoes = freteGratisHtml + htmlOpcoes;
+    }
 
-      let opcoes = await resp.json();
+    freteContainer.innerHTML = htmlOpcoes;
 
-      opcoes = opcoes.filter(o =>
-        o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
-      );
+    // Seleciona automaticamente o cartão que corresponde ao window.freteSelecionado (se existir)
+    function syncSelectedCard() {
+      document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
 
-      if (!opcoes.length) {
-        freteContainer.innerHTML = "<p>Nenhuma opção de frete disponível.</p>";
-        return;
+      // se backend já marcou frete grátis como escolha, prioriza ele
+      if (window.freteGratisSelected) {
+        const matchGratis = document.querySelector('.frete-card[data-valor="0"]');
+        if (matchGratis) {
+          matchGratis.classList.add("selecionado");
+          freteSelecionado = 0;
+          window.freteSelecionado = 0;
+          return;
+        }
       }
 
-      freteContainer.innerHTML = opcoes.map(o => {
-        const empresa = o.company?.name || "Transportadora";
-        const logo = o.company?.picture || "/images/default-shipping.png";
-        const nomeServico = o.name || "Serviço";
-        const preco = parseFloat(o.price);
-        const prazo = o.delivery_time || "N/A";
+      // senão tenta selecionar pelo valor salvo em window.freteSelecionado
+      if (window.freteSelecionado != null) {
+        const cards = Array.from(document.querySelectorAll(".frete-card"));
+        const match = cards.find(c => parseFloat(c.dataset.valor || "0") === Number(window.freteSelecionado));
+        if (match) {
+          match.classList.add("selecionado");
+          return;
+        }
+      }
 
-        return `
-          <div class="frete-card" data-valor="${preco}">
-            <img src="${logo}" alt="${empresa}" class="frete-logo">
-            <div class="frete-info">
-              <h4>${empresa} - ${nomeServico}</h4>
-              <p>Valor: <strong>${preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></p>
-              <p>Prazo: <strong>${prazo} dias úteis</strong></p>
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      document.querySelectorAll(".frete-card").forEach(card => {
-        card.addEventListener("click", () => {
-          document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
-          card.classList.add("selecionado");
-
-          freteSelecionado = parseFloat(card.dataset.valor || "0");
-          window.freteSelecionado = freteSelecionado;
-
-          // Se já tem direito a frete grátis, só soma produtos
-          if (subtotalComDesconto >= 200) {
-            freteEl.textContent = "Grátis";
-            totalEl.textContent = formatMoney(subtotalComDesconto);
-          } else {
-            freteEl.textContent = formatMoney(freteSelecionado);
-            totalEl.textContent = formatMoney(subtotalComDesconto + freteSelecionado);
-          }
-        });
-      });
-
-    } catch (err) {
-      console.error("[Checkout] Erro ao calcular frete:", err);
-      freteContainer.innerHTML = "<p>Não foi possível calcular o frete. Tente novamente.</p>";
+      // fallback: primeira opção paga
+      const firstPaid = Array.from(document.querySelectorAll(".frete-card")).find(c => !c.classList.contains("frete-gratis"));
+      if (firstPaid) firstPaid.classList.add("selecionado");
     }
+
+    syncSelectedCard();
+
+    // Click handlers
+    document.querySelectorAll(".frete-card").forEach(card => {
+      card.addEventListener("click", () => {
+        // remove seleção de todos
+        document.querySelectorAll(".frete-card").forEach(c => c.classList.remove("selecionado"));
+        card.classList.add("selecionado");
+
+        const valor = parseFloat(card.dataset.valor || "0");
+
+        // Se clicou no cartão de frete grátis, marca como escolhido; caso contrário, desmarca freteGratisSelected
+        if (valor === 0 && card.classList.contains("frete-gratis")) {
+          window.freteSelecionado = 0;
+          window.freteGratisSelected = true;
+          freteSelecionado = 0;
+        } else {
+          window.freteSelecionado = valor;
+          freteSelecionado = valor;
+          window.freteGratisSelected = false;
+          // garante que freteOriginal tenha um valor real (útil ao salvar)
+          window.freteOriginal = Number(window.freteOriginal || valor);
+        }
+
+        // Atualiza visual do resumo
+        if (window.freteGratisSelected) {
+          freteEl.textContent = "Grátis";
+          totalEl.textContent = formatMoney(subtotalComDesconto);
+        } else {
+          freteEl.textContent = formatMoney(freteSelecionado);
+          totalEl.textContent = formatMoney(subtotalComDesconto + (Number(freteSelecionado) || 0));
+        }
+      });
+    });
+
+  } catch (err) {
+    console.error("[Checkout] Erro ao calcular frete:", err);
+    freteContainer.innerHTML = "<p>Não foi possível calcular o frete. Tente novamente.</p>";
   }
+}
+
 
   /* ================== Autocompletar CEP ================== */
   if (cepInput) {
@@ -296,7 +372,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     formEndereco.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      if (!window.freteSelecionado) {
+      // aceitar frete 0 (quando o usuário escolheu frete grátis)
+      if (window.freteSelecionado == null) {
         mostrarToast("Selecione uma opção de frete antes de continuar.");
         return;
       }
@@ -324,21 +401,31 @@ document.addEventListener("DOMContentLoaded", async () => {
           console.warn("[Checkout] Não foi possível atualizar endereço do usuário, mas segue o fluxo:", e);
         }
 
+        // envia o objeto de frete esperado pelo backend
+        const fretePayload = {
+          freteValue: Number(window.freteSelecionado || 0),
+          freteGratis: !!window.freteGratisSelected,
+          freteOriginal: Number(window.freteOriginal || 0)
+        };
+
         const res = await fetch("/checkout/salvar-endereco-frete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             endereco: enderecoPayload,
-            frete: window.freteSelecionado
+            frete: fretePayload
           })
         });
 
-        if (!res.ok) throw new Error("Erro ao salvar endereço e frete");
+        if (!res.ok) {
+          const err = await res.json().catch(()=>({}));
+          throw new Error(err.error || "Erro ao salvar endereço e frete");
+        }
         window.location.href = "/pagamento";
       } catch (err) {
         console.error("[Checkout] Erro ao enviar dados:", err);
-        mostrarToast("Não foi possível continuar. Tente novamente.");
+        mostrarToast(err.message || "Não foi possível continuar. Tente novamente.");
       }
     });
   }
@@ -505,6 +592,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             cidade: usuario.cidade,
             estado: usuario.estado
           },
+          // usamos o frete que veio do resumo (que reflete a escolha do usuário)
           frete: resumo.frete,
           itens: resumo.produtos.map((p) => {
             let precoFinal = p.preco ?? 0;
@@ -536,9 +624,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
 
-        // ... (DAQUI PRA BAIXO pode manter igual ao que você já tem:
-        // gerar-pix, gerar-boleto, gerar-cartao, modais, monitoramento, finalizarPedido etc.)
-        // ------------------------------
+        // ... (fluxo de pagamento continua igual)
         // PIX
         if (metodo === "pix") {
           const response = await fetch("/checkout/gerar-pix", {
@@ -604,8 +690,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         throw new Error("Método de pagamento inválido.");
-        // ------------------------------
-
       } catch (err) {
         console.error("[Checkout] Erro ao finalizar compra:", err);
         mostrarToast(err.message || "Erro ao finalizar compra.");
@@ -639,12 +723,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.execCommand("copy");
         mostrarToast("Código PIX copiado!");
       });
-      document.getElementById("fecharPixModal").addEventListener("click", fecharModalPix);
+      document.getElementById("fecharPixModal").addEventListener("click", fecharPixModal);
     }
 
-    function fecharModalPix() {
-      document.getElementById("pixModal")?.remove();
-    }
+    function fecharPixModal() { document.getElementById("pixModal")?.remove(); }
 
     function abrirModalBoleto({ boletoUrl, linhaDigitavel, vencimento, valor, pedidoId }) {
       const modalHtml = `
@@ -675,6 +757,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         fecharModalBoleto();
       });
 
+      // auto fecha e redireciona depois de um tempo (comportamento que você já tinha)
       setTimeout(() => {
         fecharModalBoleto();
         mostrarToast("Pedido criado! Aguardando pagamento do boleto.");
@@ -703,9 +786,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("fecharCartaoModal").addEventListener("click", fecharModalCartao);
     }
 
-    function fecharModalCartao() {
-      document.getElementById("cartaoModal")?.remove();
-    }
+    function fecharModalCartao() { document.getElementById("cartaoModal")?.remove(); }
 
     /* ================== Monitoramento de Pagamentos ================== */
     function monitorarPagamento(paymentId) {

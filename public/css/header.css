@@ -588,6 +588,44 @@ a {
   transform: translateY(-1px);
 }
 
+/* ===== SUMMARY: Badge Frete Grátis ===== */
+#summary-frete-gratis {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e6f4ea;            /* tom suave verde */
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.06);
+  color: #065f46;                       /* verde escuro (acento) */
+  font-weight: 700;
+  font-size: 0.94rem;
+}
+
+/* ícone circular */
+#summary-frete-gratis .badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34d399, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(6, 95, 70, 0.12);
+}
+
+/* texto explicativo (quebra responsiva) */
+#summary-frete-gratis .badge-text {
+  line-height: 1.05;
+  color: #064e3b;
+  font-weight: 700;
+}
+
+
 /* ==== NAVBAR ==== */
 .categories-nav {
   width: 100%;
@@ -816,4 +854,6 @@ a {
   .newsletter {
     margin: 40px auto;
   }
+  #summary-frete-gratis { font-size: 0.86rem; padding: 10px; gap: 8px; }
+  #summary-frete-gratis .badge-icon { width: 30px; height: 30px; font-size: 0.85rem; }
 }

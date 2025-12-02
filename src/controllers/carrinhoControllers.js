@@ -37,16 +37,40 @@ async function recomputarTotais(carrinho) {
     0
   );
 
-  // regra do cupom aqui também
-  const CUPOM = "NHGSYS150S";
-  const MINIMO = 500;
+  // Regras de cupom existentes
+  const CUPOM_DESCONTO = "NHGSYS150S";
+  const MINIMO_DESCONTO = 500;
 
-  let desconto = carrinho.desconto || 0;
+  // Novo cupom de frete grátis
+  const CUPOM_FRETE_GRATIS = "DBFRETEGRATIS";
+  const MINIMO_FRETE_GRATIS = 200; // se ficar abaixo disso, remove o cupom de frete grátis
 
-  // se tem cupom aplicado mas subtotal ficou abaixo do mínimo, remove/desativa
-  if (carrinho.cupomCodigo === CUPOM && subtotal < MINIMO) {
-    carrinho.cupomCodigo = null;
-    desconto = 0;
+  let desconto = 0;
+  let freteGratis = false;
+
+  // Se já havia cupom aplicado no carrinho, respeitamos seu efeito
+  if (carrinho.cupomCodigo === CUPOM_DESCONTO) {
+    // se tem cupom monetário e subtotal >= minimo mantém, senão remove
+    if (subtotal >= MINIMO_DESCONTO) {
+      desconto = carrinho.desconto || 0; // valor já salvo (150)
+    } else {
+      // remove cupom se não atende mais ao mínimo
+      carrinho.cupomCodigo = null;
+      desconto = 0;
+    }
+  } else if (carrinho.cupomCodigo === CUPOM_FRETE_GRATIS) {
+    // frete grátis: permite aplicação independente do subtotal, mas se subtotal < MINIMO_FRETE_GRATIS remove
+    if (subtotal >= MINIMO_FRETE_GRATIS) {
+      freteGratis = true;
+      desconto = 0;
+    } else {
+      // se não atinge o mínimo de permanência, remove o cupom
+      carrinho.cupomCodigo = null;
+      freteGratis = false;
+      desconto = 0;
+    }
+  } else {
+    desconto = carrinho.desconto || 0;
   }
 
   const total = Math.max(subtotal - desconto, 0);
@@ -54,9 +78,11 @@ async function recomputarTotais(carrinho) {
   carrinho.subtotal = subtotal;
   carrinho.desconto = desconto;
   carrinho.total = total;
+  // salva flag pra front-end se quiser usar
+  carrinho.freteGratis = !!freteGratis;
   await carrinho.save();
 
-  return { subtotal, desconto, total };
+  return { subtotal, desconto, total, freteGratis: !!freteGratis };
 }
 
 
@@ -102,7 +128,7 @@ exports.getCart = async (req, res) => {
         {
           model: CarrinhoItem,
           as: "itens",
-          include: [{ model: Produto, as: "Produto" }]
+          include: [{ model: Produto, as: "Produto" } ]
         }
       ]
     });
@@ -117,14 +143,15 @@ exports.getCart = async (req, res) => {
       });
     }
 
-    const { subtotal, desconto, total } = await recomputarTotais(carrinho);
+    const { subtotal, desconto, total, freteGratis } = await recomputarTotais(carrinho);
 
     let cupom = null;
     if (carrinho.cupomCodigo) {
       cupom = {
         codigo: carrinho.cupomCodigo,
-        desconto: carrinho.desconto,
-        minimo: 500 // se quiser pode deixar fixo por enquanto
+        desconto: carrinho.desconto || 0,
+        minimo: carrinho.cupomCodigo === "NHGSYS150S" ? 500 : undefined,
+        freteGratis: !!freteGratis
       };
     }
 
@@ -140,6 +167,7 @@ exports.getCart = async (req, res) => {
     res.status(500).json({ error: "Erro ao carregar carrinho" });
   }
 };
+
 
 /* ================== POST /api/carrinho/add ================== */
 exports.addToCart = async (req, res) => {
@@ -344,7 +372,6 @@ exports.applyCoupon = async (req, res) => {
   const { codigo } = req.body;
   const usuarioId = req.session.user?.id;
 
-  // Regras de negócio → sempre 200 com success: false
   if (!usuarioId) {
     return res.json({
       success: false,
@@ -353,24 +380,25 @@ exports.applyCoupon = async (req, res) => {
     });
   }
 
-  // Cupom fixo por enquanto
-  const CUPOM = "NHGSYS150S";
+  // Cupom monetário antigo
+  const CUPOM_DESCONTO = "NHGSYS150S";
   const DESCONTO = 150;
   const MINIMO = 500;
 
-  if (!codigo || codigo.toUpperCase().trim() !== CUPOM) {
-    return res.json({
-      success: false,
-      code: "CUPOM_INVALIDO",
-      message: "Cupom inválido. Confira se digitou certinho 😉"
-    });
+  // Novo cupom de frete grátis
+  const CUPOM_FRETE_GRATIS = "DBFRETEGRATIS";
+
+  if (!codigo || typeof codigo !== "string") {
+    return res.json({ success: false, code: "CUPOM_INVALIDO" });
   }
+
+  const upper = codigo.toUpperCase().trim();
 
   try {
     const carrinho = await getOrCreateCarrinho(usuarioId);
 
-    // já aplicado neste carrinho
-    if (carrinho.cupomCodigo === CUPOM) {
+    // já aplicado
+    if (carrinho.cupomCodigo === upper) {
       return res.json({
         success: false,
         code: "JA_APLICADO_NO_CARRINHO",
@@ -378,14 +406,8 @@ exports.applyCoupon = async (req, res) => {
       });
     }
 
-    // já usado em pedido anterior
-    const usos = await Pedido.count({
-      where: {
-        usuarioId,
-        cupom: CUPOM
-      }
-    });
-
+    // já usado em pedido anterior?
+    const usos = await Pedido.count({ where: { usuarioId, cupom: upper } });
     if (usos >= 1) {
       return res.json({
         success: false,
@@ -394,45 +416,84 @@ exports.applyCoupon = async (req, res) => {
       });
     }
 
-    // garante subtotal atualizado
-    const { subtotal } = await recomputarTotais(carrinho);
+    // lógica por cupom
+    if (upper === CUPOM_DESCONTO) {
+      // cupom monetário (mesma lógica antiga)
+      const { subtotal } = await recomputarTotais(carrinho);
+      if (subtotal < MINIMO) {
+        const faltam = MINIMO - subtotal;
+        return res.json({
+          success: false,
+          code: "MINIMO_NAO_ATINGIDO",
+          message: `Este cupom é válido para compras a partir de R$ ${MINIMO.toFixed(2).replace(".", ",")}.`,
+          subtotal,
+          minimo: MINIMO,
+          faltam
+        });
+      }
 
-    if (subtotal < MINIMO) {
-      const faltam = MINIMO - subtotal;
+      carrinho.cupomCodigo = CUPOM_DESCONTO;
+      carrinho.desconto = DESCONTO;
+      const { desconto, total } = await recomputarTotais(carrinho);
+
+      const cupomData = {
+        codigo: CUPOM_DESCONTO,
+        desconto,
+        minimo: MINIMO
+      };
+
+      req.session.cupom = cupomData;
+
+      return res.json({
+        success: true,
+        cupom: cupomData,
+        subtotal: carrinho.subtotal,
+        desconto,
+        total,
+        message: `Cupom aplicado: - R$ ${DESCONTO.toFixed(2).replace(".", ",")}`
+      });
+    } else if (upper === CUPOM_FRETE_GRATIS) {
+      // cupom de frete grátis — AQUI: pode aplicar independente do subtotal
+      carrinho.cupomCodigo = CUPOM_FRETE_GRATIS;
+      // garante que desconto monetário não é afetado
+      carrinho.desconto = 0;
+      // recomputa (irá setar carrinho.freteGratis = true ou remover imediatamente se subtotal < MINIMO_FRETE_GRATIS)
+      const { subtotal, desconto, total, freteGratis } = await recomputarTotais(carrinho);
+
+      // Se recomputarTotais removeu o cupom (porque subtotal < MINIMO_FRETE_GRATIS), avisamos isso ao usuário
+      if (!freteGratis && carrinho.cupomCodigo !== CUPOM_FRETE_GRATIS) {
+        // o carrinho não manteve o cupom (subtotal < limite de permanência)
+        return res.json({
+          success: false,
+          code: "MINIMO_FRETE_NAO_ATINGIDO",
+          message: `Frete grátis a partir de R$200`,
+          subtotal,
+          minimo: 200
+        });
+      }
+
+      const cupomData = {
+        codigo: CUPOM_FRETE_GRATIS,
+        freteGratis: true
+      };
+
+      req.session.cupom = cupomData;
+
+      return res.json({
+        success: true,
+        cupom: cupomData,
+        subtotal,
+        desconto,
+        total,
+        message: "Cupom de frete grátis aplicado! A opção aparecerá no checkout."
+      });
+    } else {
       return res.json({
         success: false,
-        code: "MINIMO_NAO_ATINGIDO",
-        message: `Este cupom é válido para compras a partir de R$ ${MINIMO.toFixed(
-          2
-        ).replace(".", ",")}.`,
-        subtotal,
-        minimo: MINIMO,
-        faltam
+        code: "CUPOM_INVALIDO",
+        message: "Cupom inválido. Confira se digitou certinho 😉"
       });
     }
-
-    // aplica cupom no header
-    carrinho.cupomCodigo = CUPOM;
-    carrinho.desconto = DESCONTO;
-    const { desconto, total } = await recomputarTotais(carrinho);
-
-    const cupomData = {
-      codigo: CUPOM,
-      desconto,
-      minimo: MINIMO
-    };
-
-    // opcional: ainda salva em sessão se quiser reaproveitar em outros lugares
-    req.session.cupom = cupomData;
-
-    return res.json({
-      success: true,
-      cupom: cupomData,
-      subtotal: carrinho.subtotal,
-      desconto,
-      total,
-      message: `Cupom aplicado: - R$ ${DESCONTO.toFixed(2).replace(".", ",")}`
-    });
   } catch (err) {
     console.error("[Carrinho] Erro ao aplicar cupom:", err);
     return res.status(500).json({
@@ -442,6 +503,7 @@ exports.applyCoupon = async (req, res) => {
     });
   }
 };
+
 
 /* ================== POST /api/carrinho/remove-coupon ================== */
 exports.removeCoupon = async (req, res) => {
@@ -456,6 +518,7 @@ exports.removeCoupon = async (req, res) => {
     if (carrinho) {
       carrinho.cupomCodigo = null;
       carrinho.desconto = 0;
+      carrinho.freteGratis = false;
       await recomputarTotais(carrinho);
     }
 
@@ -468,4 +531,14 @@ exports.removeCoupon = async (req, res) => {
     console.error("[Carrinho] Erro ao remover cupom:", err);
     return res.status(500).json({ error: "Erro ao remover cupom" });
   }
+};
+
+module.exports = {
+  getCart: exports.getCart,
+  addToCart: exports.addToCart,
+  updateCart: exports.updateCart,
+  removeFromCart: exports.removeFromCart,
+  applyCoupon: exports.applyCoupon,
+  removeCoupon: exports.removeCoupon,
+  recomputarTotais 
 };

@@ -462,40 +462,40 @@ async function initCart() {
   }
 
   /* ================== Atualizar resumo ================== */
-  function updateResumo() {
-    const totalItems = cartItems.length;
-    const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
+function updateResumo() {
+  const totalItems = cartItems.length;
+  const totalQuantity = cartItems.reduce((acc, i) => acc + i.quantidade, 0);
 
-    const subtotalCalc = cartItems.reduce((acc, i) => {
-      const precoBase = i.preco ?? i.precoPromocional ?? 0;
-      return acc + precoBase * i.quantidade;
-    }, 0);
+  const subtotalCalc = cartItems.reduce((acc, i) => {
+    const precoBase = i.preco ?? i.precoPromocional ?? 0;
+    return acc + precoBase * i.quantidade;
+  }, 0);
 
-    let totalParaMostrar = subtotalCalc;
-    let descontoParaMostrar = 0;
+  let totalParaMostrar = subtotalCalc;
+  let descontoParaMostrar = 0;
 
-    if (isLoggedIn && resumoServidor) {
-      totalParaMostrar = resumoServidor.total ?? subtotalCalc;
-      descontoParaMostrar = resumoServidor.desconto ?? 0;
-    }
-
-    if (cartCount) cartCount.textContent = totalQuantity;
-    if (summaryItems) summaryItems.textContent = totalItems;
-    if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
-    if (summaryTotal) summaryTotal.textContent = formatBRL(totalParaMostrar);
-
-    if (summaryDiscountLine && summaryDiscount) {
-      if (descontoParaMostrar > 0) {
-        summaryDiscountLine.style.display = "block";
-        summaryDiscount.textContent = formatBRL(descontoParaMostrar);
-      } else {
-        summaryDiscountLine.style.display = "none";
-        summaryDiscount.textContent = formatBRL(0);
-      }
-    }
-
-    if (!isLoggedIn) saveGuestCartToLocalStorage();
+  if (isLoggedIn && resumoServidor) {
+    totalParaMostrar = resumoServidor.total ?? subtotalCalc;
+    descontoParaMostrar = resumoServidor.desconto ?? 0;
   }
+
+  if (cartCount) cartCount.textContent = totalQuantity;
+  if (summaryItems) summaryItems.textContent = totalItems;
+  if (summaryQuantity) summaryQuantity.textContent = totalQuantity;
+  if (summaryTotal) summaryTotal.textContent = formatBRL(totalParaMostrar);
+
+  if (summaryDiscountLine && summaryDiscount) {
+    if (descontoParaMostrar > 0) {
+      summaryDiscountLine.style.display = "block";
+      summaryDiscount.textContent = formatBRL(descontoParaMostrar);
+    } else {
+      summaryDiscountLine.style.display = "none";
+      summaryDiscount.textContent = formatBRL(0);
+    }
+  }
+
+  if (!isLoggedIn) saveGuestCartToLocalStorage();
+}
 
   /* ================== Aplicar cupom ================== */
   if (applyCouponBtn && couponInput && couponMessage) {

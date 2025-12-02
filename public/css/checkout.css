@@ -423,8 +423,8 @@ button:hover,
 }
 
 .frete-card.selecionado {
-  border: 2px solid #2b2b2b;
-  background-color: #f0f0f0;
+  border: 2px solid #F9B000;
+  /* background-color: #f0f0f0; */
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
@@ -465,6 +465,65 @@ button:hover,
   min-width: 100px;
   text-align: right;
 }
+
+/* ===== FRETE GRÁTIS: aparência igual aos outros cartões, com badge ===== */
+.frete-card.frete-gratis {
+  /* mantém a mesma estrutura base de .frete-card */
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  background-color: #fff;
+  transition: all 0.25s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.frete-card.frete-gratis:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  border-color: #2b2b2b;
+  background-color: #f8f8f8;
+}
+
+/* Badge "Grátis" no canto esquerdo da info (pequeno e não intrusivo) */
+.frete-card.frete-gratis .frete-info {
+  position: relative;
+  padding-right: 8px;
+}
+
+.frete-card.frete-gratis .frete-info::after {
+  content: "GRÁTIS";
+  position: absolute;
+  right: -6px;
+  top: -10px;
+  background: linear-gradient(90deg, #4CAF50, #43a047);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(67,160,71,0.15);
+  letter-spacing: 0.6px;
+}
+
+/* Quando selecionado, mantém o mesmo estilo .frete-card.selecionado */
+.frete-card.frete-gratis.selecionado {
+  border: 2px solid #F9B000;
+  /* background-color: #f0f0f0; */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Garante legibilidade dos textos */
+.frete-card.frete-gratis .frete-info h4,
+.frete-card.frete-gratis .frete-info p,
+.frete-card.frete-gratis .frete-preco {
+  color: #2b2b2b;
+}
+
+
 
 /* ==== MODAL PIX ==== */
 .pix-modal-overlay {
@@ -773,6 +832,14 @@ button:hover,
 
   .card-input-inline {
     flex-direction: column;
+  }
+   .frete-card.frete-gratis {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .frete-card.frete-gratis .frete-info::after {
+    right: 8px;
+    top: -8px;
   }
 }
 
