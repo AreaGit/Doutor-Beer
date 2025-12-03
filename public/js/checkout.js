@@ -310,7 +310,7 @@ async function carregarResumo() {
         if (valor === 0 && card.classList.contains("frete-gratis")) {
           window.freteSelecionado = 0;
           window.freteGratisSelected = true;
-          freteSelecionado = 0;
+          freteSelecionado = "Grátis";
         } else {
           window.freteSelecionado = valor;
           freteSelecionado = valor;
@@ -422,7 +422,13 @@ async function carregarResumo() {
           const err = await res.json().catch(()=>({}));
           throw new Error(err.error || "Erro ao salvar endereço e frete");
         }
-        window.location.href = "/pagamento";
+
+        if(freteSelecionado == 0) {
+          mostrarToast("Selecione uma opção de frete antes de continuar.");
+          return;
+        }else {
+          window.location.href = "/pagamento";
+        }
       } catch (err) {
         console.error("[Checkout] Erro ao enviar dados:", err);
         mostrarToast(err.message || "Não foi possível continuar. Tente novamente.");
