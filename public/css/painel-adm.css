@@ -795,8 +795,8 @@ body {
 }
 
 .modal-content {
-  max-width: 1200px;
-  margin: 150px auto;
+  max-width: 520px;
+  margin: 0 auto;
   background: #101018;
   border-radius: 20px;
   padding: 16px 16px 12px;
