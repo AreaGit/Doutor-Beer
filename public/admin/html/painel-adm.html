@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo - Doutor Beer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Ícone e fontes -->
+  <link rel="icon" href="https://cdn.awsli.com.br/1677/1677883/favicon/23fa2d97b4.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- CSS do painel -->
+  <link rel="stylesheet" href="./admin/css/painel-adm.css">
+</head>
+
+<body>
+
+  <div class="admin-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <a href="/"><img src="https://i.imgur.com/JP5Jmrg.jpeg" alt="Logo Doutor Beer"></a>
+        </div>
+        <div class="sidebar-title">
+          <span class="brand">Doutor Beer</span>
+          <span class="subtitle">Painel Administrativo</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="produtos">
+          <i class="fa-solid fa-box"></i>
+          <span>Produtos</span>
+        </button>
+        <button class="nav-item" data-tab="pedidos">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span>Pedidos</span>
+        </button>
+        <button class="nav-item" data-tab="clientes">
+          <i class="fa-solid fa-users"></i>
+          <span>Clientes</span>
+        </button>
+        <!--<button class="nav-item" data-tab="config">
+          <i class="fa-solid fa-gear"></i>
+          <span>Configurações</span>
+        </button>-->
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="sidebar-logout" id="btnLogout">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <div class="main-area">
+
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Dashboard</h1>
+          <p>Resumo geral da operação da loja.</p>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-date">
+            <i class="fa-regular fa-calendar"></i>
+            <span id="topbarDate"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTEÚDO -->
+      <main class="content">
+
+        <!-- TAB: DASHBOARD -->
+        <section class="tab active" id="dashboard">
+          <!-- Cards de métricas -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Faturamento (mês)</span>
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <div class="metric-value">R$ 42.870,00</div>
+              <div class="metric-sub">
+                <span class="up">+18% vs mês passado</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Pedidos hoje</span>
+                <i class="fa-solid fa-cart-plus"></i>
+              </div>
+              <div class="metric-value">37</div>
+              <div class="metric-sub">
+                <span class="neutral">Fluxo dentro do esperado</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Produtos ativos</span>
+                <i class="fa-solid fa-boxes-stacked"></i>
+              </div>
+              <div class="metric-value">124</div>
+              <div class="metric-sub">
+                <span class="up">+6 novos esta semana</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span>Clientes cadastrados</span>
+                <i class="fa-solid fa-user-group"></i>
+              </div>
+              <div class="metric-value">892</div>
+              <div class="metric-sub">
+                <span class="up">+22 nos últimos 7 dias</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid inferior: tabela + atividades -->
+          <div class="lower-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Faturamento (últimos 7 dias)</h2>
+              </div>
+
+              <div class="chart-wrapper">
+                <canvas id="chartFaturamento"></canvas>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Últimos pedidos</h2>
+                <button class="panel-link" data-tab-jump="pedidos">Ver todos</button>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>#ID</th>
+                      <th>Cliente</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                      <th>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>#1023</td>
+                      <td>João Silva</td>
+                      <td><span class="badge badge-success">Entregue</span></td>
+                      <td>R$ 289,90</td>
+                      <td>10/11/2025</td>
+                    </tr>
+                    <tr>
+                      <td>#1024</td>
+                      <td>Maria Oliveira</td>
+                      <td><span class="badge badge-warning">Processando</span></td>
+                      <td>R$ 159,00</td>
+                      <td>10/11/2025</td>
+                    </tr>
+                    <tr>
+                      <td>#1025</td>
+                      <td>Carlos Lima</td>
+                      <td><span class="badge badge-info">Enviado</span></td>
+                      <td>R$ 412,50</td>
+                      <td>10/11/2025</td>
+                    </tr>
+                    <tr>
+                      <td>#1026</td>
+                      <td>Ana Paula</td>
+                      <td><span class="badge badge-danger">Cancelado</span></td>
+                      <td>R$ 89,90</td>
+                      <td>09/11/2025</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Atividades recentes</h2>
+              </div>
+              <ul class="activity-list">
+                <li>
+                  <span class="dot dot-primary"></span>
+                  <div>
+                    <p>Produto <strong>Chopeira Premium 20L</strong> atualizado.</p>
+                    <span class="time">Há 12 minutos</span>
+                  </div>
+                </li>
+                <li>
+                  <span class="dot dot-success"></span>
+                  <div>
+                    <p>Pedido <strong>#1025</strong> marcado como <strong>Enviado</strong>.</p>
+                    <span class="time">Há 30 minutos</span>
+                  </div>
+                </li>
+                <li>
+                  <span class="dot dot-warning"></span>
+                  <div>
+                    <p>Estoque baixo em <strong>Growler 2L</strong>.</p>
+                    <span class="time">Há 1 hora</span>
+                  </div>
+                </li>
+                <li>
+                  <span class="dot dot-info"></span>
+                  <div>
+                    <p>Novo cliente <strong>Bruna Costa</strong> cadastrado.</p>
+                    <span class="time">Há 2 horas</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: PRODUTOS -->
+        <section class="tab" id="produtos">
+          <div class="tab-header">
+            <button class="btn-primary" id="btnNovoProduto">
+              <i class="fa-solid fa-plus"></i>
+              Novo produto
+            </button>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-input">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="searchProdutoInput" placeholder="Buscar produto por nome, categoria...">
+            </div>
+            <button class="btn-outline" id="searchProdutoBtn">
+              <i class="fa-solid fa-filter"></i>
+              Buscar
+            </button>
+          </div>
+
+          <div id="listaProdutos" class="cards-grid">
+            <!-- preenchido via JS -->
+          </div>
+        </section>
+
+        <!-- TAB: PEDIDOS -->
+        <section class="tab" id="pedidos">
+          <div class="tab-header">
+            <div class="toolbar">
+              <select class="select-input">
+                <option>Todos os status</option>
+                <option>Pendente</option>
+                <option>Processando</option>
+                <option>Enviado</option>
+                <option>Entregue</option>
+                <option>Cancelado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table data-table-clickable">
+              <thead>
+                <tr>
+                  <th>#ID</th>
+                  <th>Cliente</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody id="listaPedidos">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB: CLIENTES -->
+        <section class="tab" id="clientes">
+          <div class="tab-header">
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table data-table-clickable">
+              <thead>
+                <tr>
+                  <th>#ID</th>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>CPF</th>
+                  <th>Celular</th>
+                  <th>Cidade/UF</th>
+                  <th>Cadastrado em</th>
+                </tr>
+              </thead>
+              <tbody id="listaClientes">
+                <!-- preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB: CONFIGURAÇÕES -->
+        <section class="tab" id="config">
+          <div class="tab-header">
+            <div>
+              <h2>Configurações</h2>
+              <p>Preferências gerais do painel e da loja.</p>
+            </div>
+          </div>
+
+          <div class="config-grid">
+            <div class="panel">
+              <div class="panel-header">
+                <h3>Preferências do painel</h3>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" checked>
+                  Exibir métricas na página inicial
+                </label>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" checked>
+                  Notificar novos pedidos em tempo real
+                </label>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox">
+                  Enviar cópia dos pedidos por e-mail
+                </label>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3>Informações da loja</h3>
+              </div>
+              <div class="form-field">
+                <label>Nome da loja</label>
+                <input type="text" value="Doutor Beer">
+              </div>
+              <div class="form-field">
+                <label>E-mail de contato</label>
+                <input type="email" value="contato@doutorbeer.com">
+              </div>
+              <div class="form-field">
+                <label>Telefone</label>
+                <input type="text" value="(11) 4002-8922">
+              </div>
+              <button class="btn-primary small">Salvar alterações</button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast de feedback -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modal Editar Produto -->
+  <div class="modal" id="modalEditarProduto">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloEditarProduto">
+      <button class="modal-close close" data-modal-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h2 id="tituloEditarProduto">Editar Produto</h2>
+      <p>Ajuste as informações do produto e salve as alterações.</p>
+
+      <form id="formEditarProduto" class="modal-form">
+        <!-- Nome -->
+        <div class="form-row">
+          <label for="editarNome">Nome</label>
+          <input type="text" id="editarNome" name="nome" required>
+        </div>
+
+        <!-- Descrição -->
+        <div class="form-row full">
+          <label for="editarDescricao">Descrição</label>
+          <textarea id="editarDescricao" name="descricao" rows="3" required></textarea>
+        </div>
+
+        <!-- Preço / Preço Promocional -->
+        <div class="form-row">
+          <label for="editarPreco">Preço (R$)</label>
+          <input type="number" step="0.01" id="editarPreco" name="preco" required>
+        </div>
+
+        <div class="form-row">
+          <label for="editarPrecoPromocional">Preço Promocional (R$)</label>
+          <input type="number" step="0.01" id="editarPrecoPromocional" name="precoPromocional">
+        </div>
+
+        <!-- Categorias (mesma estrutura do cadastro) -->
+        <div class="form-row">
+          <label for="editarCategoriaProduto">Categoria 1</label>
+          <select id="editarCategoriaProduto" name="categoria" class="categoria-select">
+            <option value="">Selecione...</option>
+
+
+
+            <!-- Torres -->
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <!-- Combos -->
+            <option value="combos">Combos</option>
+
+            <!-- Chopeiras -->
+            <option value="chopeiras">Chopeiras</option>
+
+            <!-- Acessórios -->
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <!-- Marcas -->
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="editarCategoria2Produto">Categoria 2 (opcional)</label>
+          <select id="editarCategoria2Produto" name="categoria2" class="categoria-select">
+            <option value="">Nenhuma</option>
+
+
+
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <option value="combos">Combos</option>
+
+            <option value="chopeiras">Chopeiras</option>
+
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="editarCategoria3Produto">Categoria 3 (opcional)</label>
+          <select id="editarCategoria3Produto" name="categoria3" class="categoria-select">
+            <option value="">Nenhuma</option>
+
+
+
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <option value="combos">Combos</option>
+
+            <option value="chopeiras">Chopeiras</option>
+
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <!-- Seção (chips, igual cadastro) -->
+        <div class="form-row full">
+          <label>Seções em que o produto aparece</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="editarSecaoProduto" value="lancamentos">
+              <span>Lançamentos</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarSecaoProduto" value="mais-vendidos">
+              <span>Mais Vendidos</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarSecaoProduto" value="acessorios">
+              <span>Acessórios</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Altura / Largura / Comprimento / Peso -->
+        <div class="form-row">
+          <label for="editarAltura">Altura (cm)</label>
+          <input type="number" step="0.01" id="editarAltura" name="altura">
+        </div>
+
+        <div class="form-row">
+          <label for="editarLargura">Largura (cm)</label>
+          <input type="number" step="0.01" id="editarLargura" name="largura">
+        </div>
+
+        <div class="form-row">
+          <label for="editarComprimento">Comprimento (cm)</label>
+          <input type="number" step="0.01" id="editarComprimento" name="comprimento">
+        </div>
+
+        <div class="form-row">
+          <label for="editarPeso">Peso (gr)</label>
+          <input type="number" step="0.01" id="editarPeso" name="peso">
+        </div>
+
+        <!-- Imagens + preview -->
+        <div class="form-row full">
+          <label for="editarImagemProduto">Imagens (URLs separadas por vírgula)</label>
+          <textarea id="editarImagemProduto" name="imagem" rows="2" placeholder="https://..., https://..."></textarea>
+        </div>
+
+        <div class="form-row full">
+          <label>Pré-visualização das imagens</label>
+          <div id="previewImagensEditar" class="imagem-preview-grid">
+            <!-- thumbs aparecem aqui via JS -->
+          </div>
+        </div>
+
+        <!-- Cores -->
+        <div class="form-row full">
+          <label>Cores disponíveis</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="black">
+              <span>Preto</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="blue">
+              <span>Azul</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="red">
+              <span>Vermelho</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="green">
+              <span>Verde</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="silver">
+              <span>Prata</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="white">
+              <span>Branco</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarCoresProduto" value="yellow">
+              <span>Amarelo</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="orange">
+              <span>Laranja</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Torneiras -->
+        <div class="form-row full">
+          <label>Torneiras disponíveis</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="editarTorneiraProduto" value="Cromada">
+              <span>Cromada</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarTorneiraProduto" value="Alavanca">
+              <span>Alavanca</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarTorneiraProduto" value="Tap Handle Prata">
+              <span>Tap Handle Prata</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="editarTorneiraProduto" value="Tap Handle Preta">
+              <span>Tap Handle Preta</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Refil / Capacidade -->
+        <div class="form-row">
+          <label for="editarRefil">Refil (quantidade)</label>
+          <input type="number" id="editarRefil" name="refil" min="0" placeholder="Ex: 0, 1, 2...">
+        </div>
+
+        <div class="form-row">
+          <label for="editarCapacidadeProduto">Capacidade (separada por vírgula)</label>
+          <textarea id="editarCapacidadeProduto" name="capacidade" rows="1" placeholder="2.5 , 3.5"></textarea>
+        </div>
+
+        <!-- Ações -->
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar alterações</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Modal Detalhes do Pedido -->
+  <div class="modal" id="modalPedido">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloModalPedido">
+      <button class="modal-close close" data-modal-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h2 id="tituloModalPedido">Detalhes do Pedido <span id="modalPedidoId"></span></h2>
+
+      <div class="pedido-info">
+        <p><strong>Cliente:</strong> <span id="modalClientePed"></span></p>
+        <p class="pedido-info-row">
+          <strong>Status:</strong>
+          <select id="modalStatus"></select>
+        </p>
+        <p class="pedido-info-row">
+          <strong>Endereço de Entrega:</strong> <span id="modalEndereco"></span>
+        </p>
+        <p class="pedido-info-row">
+          <strong>Método de Pagamento:</strong> <span id="modalPagamento"></span>
+        </p>
+      </div>
+
+      <h3 class="pedido-itens-titulo">Itens do Pedido</h3>
+      <div id="modalItens" class="itens-container">
+        <!-- cards dos itens via JS -->
+      </div>
+
+      <div class="pedido-totais">
+        <p><strong>Subtotal:</strong> R$ <span id="modalSubtotal"></span></p>
+        <p><strong>Frete:</strong> R$ <span id="modalFrete"></span></p>
+        <p><strong>Total:</strong> R$ <span id="modalTotal"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Novo Produto -->
+  <div class="modal" id="modalNovoProduto">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloNovoProduto">
+      <button class="modal-close" data-modal-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h2 id="tituloNovoProduto">Cadastrar novo produto</h2>
+      <p class="modal-subtitle">
+        Preencha as informações abaixo para adicionar um novo item ao catálogo.
+      </p>
+
+      <form id="formCadastrarProduto" class="modal-form">
+
+        <!-- Nome (igual editarNome) -->
+        <div class="form-row">
+          <label for="nomeProduto">Nome</label>
+          <input type="text" id="nomeProduto" name="nome" required>
+        </div>
+
+        <!-- Descrição logo em seguida, igual ao editar -->
+        <div class="form-row full">
+          <label for="descricaoProduto">Descrição</label>
+          <textarea id="descricaoProduto" name="descricao" rows="3" required></textarea>
+        </div>
+
+        <!-- Preço / Preço Promocional -->
+        <div class="form-row">
+          <label for="precoProduto">Preço (R$)</label>
+          <input type="number" step="0.01" id="precoProduto" name="preco" required>
+        </div>
+
+        <div class="form-row">
+          <label for="precoPromocionalProduto">Preço Promocional (R$)</label>
+          <input type="number" step="0.01" id="precoPromocionalProduto" name="precoPromocional">
+        </div>
+
+
+        <!-- Categorias -->
+        <div class="form-row">
+          <label for="categoriaProduto">Categoria 1</label>
+          <select id="categoriaProduto" name="categoria" class="categoria-select">
+            <option value="">Selecione...</option>
+
+
+
+            <!-- Torres (clicável) -->
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <!-- Combos -->
+            <option value="combos">Combos</option>
+
+            <!-- Chopeiras -->
+            <option value="chopeiras">Chopeiras</option>
+
+            <!-- Acessórios (clicável) -->
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <!-- Marcas -->
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="categoria2Produto">Categoria 2 (opcional)</label>
+          <select id="categoria2Produto" name="categoria2" class="categoria-select">
+            <option value="">Nenhuma</option>
+
+
+
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <option value="combos">Combos</option>
+
+            <option value="chopeiras">Chopeiras</option>
+
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="categoria3Produto">Categoria 3 (opcional)</label>
+          <select id="categoria3Produto" name="categoria3" class="categoria-select">
+            <option value="">Nenhuma</option>
+
+
+
+            <option value="torres">Torres</option>
+            <option value="torres_de_terere">• Torres de Tereré</option>
+            <option value="torres_de_chopp">• Torres de Chopp</option>
+            <option value="torres_de_chopp_360">• Torres de Chopp 360</option>
+            <option value="torres_de_chopp_icechopp">• Torres de Chopp IceChopp</option>
+            <option value="torres_de_terere_360">• Torres de Tereré 360</option>
+            <option value="torres_de_terere_icechopp">• Torres de Tereré IceChopp</option>
+            <option value="torres_de_drinks">• Torres de Drinks</option>
+
+            <option value="combos">Combos</option>
+
+            <option value="chopeiras">Chopeiras</option>
+
+            <option value="acessorios">Acessórios</option>
+            <option value="acessorios_para_torre_icechopp">• Acessórios para Torre IceChopp</option>
+            <option value="acessorios_para_torre_doutor_beer">• Acessórios para Torre Doutor Beer</option>
+            <option value="baldes_de_gelo">• Baldes de Gelo</option>
+            <option value="canudos_inox">• Canudos Inox</option>
+            <option value="torneiras">• Torneiras</option>
+
+            <option value="doutor_beer">Marca: Doutor Beer</option>
+            <option value="icechopp">Marca: IceChopp</option>
+          </select>
+        </div>
+
+        <!-- Seção -->
+        <div class="form-row full">
+          <label>Seções em que o produto aparece</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="secaoProduto" value="lancamentos">
+              <span>Lançamentos</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="secaoProduto" value="mais-vendidos">
+              <span>Mais Vendidos</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="secaoProduto" value="acessorios">
+              <span>Acessórios</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Altura / Largura / Comprimento / Peso -->
+        <div class="form-row">
+          <label for="alturaProduto">Altura (cm)</label>
+          <input type="number" step="0.01" id="alturaProduto" name="altura">
+        </div>
+
+        <div class="form-row">
+          <label for="larguraProduto">Largura (cm)</label>
+          <input type="number" step="0.01" id="larguraProduto" name="largura">
+        </div>
+
+        <div class="form-row">
+          <label for="comprimentoProduto">Comprimento (cm)</label>
+          <input type="number" step="0.01" id="comprimentoProduto" name="comprimento">
+        </div>
+
+        <div class="form-row">
+          <label for="pesoProduto">Peso (gr)</label>
+          <input type="number" step="0.01" id="pesoProduto" name="peso">
+        </div>
+
+        <!-- Imagens + preview (full width) -->
+        <div class="form-row full">
+          <label for="imagemProduto">Imagens (URLs separadas por vírgula)</label>
+          <textarea id="imagemProduto" name="imagem" rows="2" placeholder="https://..., https://..."></textarea>
+        </div>
+
+        <div class="form-row full">
+          <label>Pré-visualização das imagens</label>
+          <div id="previewImagensNovo" class="imagem-preview-grid">
+            <!-- thumbs aparecem aqui via JS -->
+          </div>
+        </div>
+
+        <!-- Cores / Torneira -->
+        <div class="form-row full">
+          <label>Cores disponíveis</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="black">
+              <span>Preto</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="blue">
+              <span>Azul</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="red">
+              <span>Vermelho</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="green">
+              <span>Verde</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="silver">
+              <span>Prata</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="white">
+              <span>Branco</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="yellow">
+              <span>Amarelo</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="coresProduto" value="orange">
+              <span>Laranja</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Torneiras -->
+        <div class="form-row full">
+          <label>Torneiras disponíveis</label>
+          <div class="option-chips">
+            <label class="chip">
+              <input type="checkbox" name="torneiraProduto" value="Cromada">
+              <span>Cromada</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="torneiraProduto" value="Alavanca">
+              <span>Alavanca</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="torneiraProduto" value="Tap Handle Prata">
+              <span>Tap Handle Prata</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" name="torneiraProduto" value="Tap Handle Preta">
+              <span>Tap Handle Preta</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Refil / Capacidade (igual sequência do editar: refil antes de capacidade) -->
+        <div class="form-row">
+          <label for="refilProduto">Refil (quantidade)</label>
+          <input type="number" id="refilProduto" name="refil" min="0" placeholder="Ex: 0, 1, 2...">
+        </div>
+
+        <div class="form-row">
+          <label for="capacidadeProduto">Capacidade (separada por vírgula)</label>
+          <textarea id="capacidadeProduto" name="capacidade" rows="1" placeholder="2.5 , 3.5"></textarea>
+        </div>
+
+        <!-- Ações -->
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" data-modal-close>Cancelar</button>
+          <button type="button" id="btnCadastrarProduto" class="btn-primary">Salvar produto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar Cliente -->
+  <div class="modal" id="modalCliente">
+    <div class="modal-content modal-cliente-content modal-cliente-edit" role="dialog" aria-modal="true"
+      aria-labelledby="tituloModalCliente">
+
+      <button class="modal-close close-cliente" data-modal-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="modal-cliente-header">
+        <div>
+          <h2 id="tituloModalCliente">Editar Cliente</h2>
+          <p class="modal-subtitle">Atualize as informações do cliente e mantenha o cadastro sempre em dia.</p>
+        </div>
+
+        <div class="cliente-header-meta">
+          <span class="cliente-id-pill">
+            <span class="pill-label">ID</span>
+            <span class="pill-value" id="clienteIdDisplay">#—</span>
+          </span>
+
+          <label class="cliente-admin-toggle" for="clienteIsAdmin">
+            <span class="toggle-text">Administrador</span>
+            <span class="toggle-switch">
+              <input type="checkbox" id="clienteIsAdmin" name="isAdmin">
+              <span class="toggle-slider"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <form id="formEditarCliente" class="modal-form">
+
+        <input type="hidden" id="clienteId" name="id">
+
+        <!-- DADOS BÁSICOS -->
+        <div class="form-row full form-section-divider">
+          <span class="form-section-title">Dados básicos</span>
+        </div>
+
+        <div class="form-row full">
+          <label for="clienteNome">Nome completo</label>
+          <input type="text" id="clienteNome" name="nome" required>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteEmail">E-mail</label>
+          <input type="email" id="clienteEmail" name="email" required>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteSexo">Sexo</label>
+          <select id="clienteSexo" name="sexo" class="categoria-select">
+            <option value="">Selecione...</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteNascimento">Data de Nascimento</label>
+          <input type="date" id="clienteNascimento" name="data_de_nascimento">
+        </div>
+
+        <!-- CONTATO -->
+        <div class="form-row full form-section-divider">
+          <span class="form-section-title">Contato</span>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteCelular">Celular</label>
+          <input type="text" id="clienteCelular" name="celular" required>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteTelefone">Telefone</label>
+          <input type="text" id="clienteTelefone" name="telefone">
+        </div>
+
+        <!-- ENDEREÇO -->
+        <div class="form-row full form-section-divider">
+          <span class="form-section-title">Endereço</span>
+        </div>
+
+        <div class="form-row">
+          <label for="clienteCep">CEP</label>
+          <input type="text" id="clienteCep" name="cep">
+        </div>
+
+        <div class="form-row full">
+          <label for="clienteEndereco">Endereço</label>
+          <input type="text" id="clienteEndereco" name="endereco">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteNumero">Número</label>
+          <input type="text" id="clienteNumero" name="numero">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteComplemento">Complemento</label>
+          <input type="text" id="clienteComplemento" name="complemento">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteReferencia">Referência</label>
+          <input type="text" id="clienteReferencia" name="referencia">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteBairro">Bairro</label>
+          <input type="text" id="clienteBairro" name="bairro">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteCidade">Cidade</label>
+          <input type="text" id="clienteCidade" name="cidade">
+        </div>
+
+        <div class="form-row">
+          <label for="clienteEstado">Estado</label>
+          <input type="text" id="clienteEstado" name="estado">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./admin/js/painel-adm.js"></script>
+  <script src="./admin/js/tabs.js"></script>
+  <script src="./admin/js/produtos.js"></script>
+  <script src="./admin/js/pedidos.js"></script>
+  <script src="./admin/js/clientes.js"></script>
+</body>
+
+</html>

@@ -11,6 +11,10 @@ const renderPage = (res, page) => {
     res.sendFile(path.join(__dirname, `../../public/html/${page}.html`));
 };
 
+const renderPageAdmin = (res, page) => {
+    res.sendFile(path.join(__dirname, `../../public/admin/html/${page}.html`));
+};
+
 // Rotas
 app.get("/", (req, res) => renderPage(res, "inicial"));
 
@@ -44,9 +48,8 @@ app.get("/autenticacao", (req, res) => renderPage(res, "autenticacao"));
 
 app.get("/pedido/:id", (req, res) => renderPage(res, "pedido"));
 
-app.get("/painel-adm", isAdmin, (req, res) => renderPage(res, "painel-adm"));
+app.get("/painel-adm", isAdmin, (req, res) => renderPageAdmin(res, "painel-adm"));
 
 app.get("/beneficio", (req, res) => renderPage(res, "beneficio"));
 
 module.exports = app;
-
