@@ -238,6 +238,8 @@ async function cobrancaCartaoAsaas(dadosCliente) {
       description: "Pedido pago com Cartão - DOUTOR BEER",
       remoteIp: "10.0.0.118",
       customer: dadosCliente.customer,
+      installmentCount: dadosCliente.installmentCount,
+      installmentValue: dadosCliente.installmentValue,
       creditCard: {
         holderName: dadosCliente.holderName,
         number: dadosCliente.number,

@@ -390,17 +390,21 @@ exports.gerarCartao = async (req, res) => {
   try {
     const { usuarioId, total, endereco, frete, cartao } = req.body;
 
-    if (!usuarioId || !total || !endereco || !frete || !cartao)
+    if (!usuarioId || !total || !endereco || !frete || !cartao) {
       return res.status(400).json({ error: "Dados incompletos" });
+    }
 
     const cliente = await Usuario.findByPk(usuarioId);
-    if (!cliente || !cliente.customer_asaas_id)
+    if (!cliente || !cliente.customer_asaas_id) {
       return res.status(404).json({ error: "Cliente não encontrado no Asaas" });
+    }
 
     const cobranca = await cobrancaCartaoAsaas({
       customer: cliente.customer_asaas_id,
       value: total,
       holderName: cartao.holderName,
+      installmentCount: cartao.installmentCount,
+      installmentValue: cartao.installmentValue,
       number: cartao.number,
       expiryMonth: cartao.expiryMonth,
       expiryYear: cartao.expiryYear,
