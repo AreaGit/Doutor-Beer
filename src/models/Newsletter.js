@@ -10,7 +10,7 @@ const Newsletter = sequelize.define("Newsletter", {
   email: {
     type: DataTypes.STRING(150),
     allowNull: false,
-    unique: true, // não deixa duplicar
+    // unique: true, // não deixa duplicar
     validate: {
       isEmail: true,
     },

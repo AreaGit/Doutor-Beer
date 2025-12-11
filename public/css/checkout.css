@@ -1,5 +1,5 @@
 :root {
-  --primary: #F9B000;
+  --primary: #f9b000;
   --dark: #4d1818;
   --light: #fff;
   --gray: #f5f5f5;
@@ -24,7 +24,7 @@ body {
   display: flex;
   justify-content: center;
   background: var(--light);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -51,7 +51,7 @@ body {
   background-color: var(--light);
   padding: 40px 30px;
   border-radius: 16px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
 }
 
 .checkout-form h2 {
@@ -77,7 +77,7 @@ body {
 
 .form-group input:focus {
   border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(249,176,0,0.25);
+  box-shadow: 0 4px 12px rgba(249, 176, 0, 0.25);
 }
 
 .form-group label {
@@ -119,7 +119,7 @@ button,
 button:hover,
 .confirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(249,176,0,0.5);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
 }
 
 /* ==== MÉTODOS DE PAGAMENTO ==== */
@@ -218,7 +218,7 @@ button:hover,
   border-radius: 16px;
   background: #fff;
   border: 1.5px solid #eee;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
   display: none;
 }
 
@@ -228,8 +228,14 @@ button:hover,
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card-input-group {
@@ -269,6 +275,171 @@ button:hover,
 
 .card-input-inline div {
   flex: 1;
+}
+
+/* Card brand (bandeira / feedback) */
+.card-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(249, 176, 0, 0.06),
+    rgba(0, 0, 0, 0.02)
+  );
+  border: 1px solid rgba(249, 176, 0, 0.12);
+  color: var(--dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* Small chip for brand text (optional icon spot) */
+.card-brand::before {
+  content: "";
+  width: 34px;
+  height: 20px;
+  border-radius: 4px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* leave blank — JS may set a background-image inline if desired */
+}
+
+/* Installments container */
+.installments-container {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #fbfbfb);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+/* Title */
+.installments-container .installments-title {
+  display: block;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+/* Options wrapper */
+.installments-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+/* Loading / helper text */
+.installments-options .installments-loading {
+  color: #7a7a7a;
+  font-size: 0.92rem;
+  padding: 8px 6px;
+}
+
+/* Each option (label) */
+.installment-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  border: 1px solid transparent;
+}
+
+/* radio input style (hidden native, custom visual via pseudo) */
+.installment-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  display: inline-block;
+  position: relative;
+  margin: 0;
+  flex: 0 0 18px;
+  transition: all 0.18s ease;
+  background-clip: content-box;
+  padding: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* checked state */
+.installment-option input[type="radio"]:checked {
+  border-color: var(--primary);
+  background: radial-gradient(
+    circle at center,
+    var(--primary) 0 50%,
+    transparent 50%
+  );
+  box-shadow: 0 4px 12px rgba(249, 176, 0, 0.18);
+}
+
+/* Hover on option */
+.installment-option:hover {
+  transform: translateY(-2px);
+  background: rgba(249, 176, 0, 0.03);
+  border-color: rgba(249, 176, 0, 0.08);
+}
+
+/* Text inside option */
+.installment-option span {
+  font-size: 0.95rem;
+  color: #333;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+/* Small note (e.g. juros) */
+.installment-option small {
+  display: block;
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+/* Selected summary under container */
+.installment-summary {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #2b2b2b;
+  font-weight: 600;
+  background: linear-gradient(180deg, rgba(249, 176, 0, 0.03), transparent);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px dashed rgba(249, 176, 0, 0.12);
+}
+
+/* Invalid/valid visual helpers (JS can add classes .valid / .invalid on .card-input-group) */
+.card-input-group.valid input {
+  border-color: #4caf50;
+  box-shadow: 0 6px 18px rgba(76, 175, 80, 0.08);
+}
+
+.card-input-group.invalid input {
+  border-color: #e53935;
+  box-shadow: 0 6px 18px rgba(229, 57, 53, 0.06);
+}
+
+/* Inline small hint under inputs */
+.card-input-group .input-hint {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: #777;
+}
+
+/* Focus style when user is filling card fields */
+.card-form-container input:focus {
+  transform: translateY(-1px);
 }
 
 /* ===== BOTÃO DE CONFIRMAÇÃO ===== */
@@ -335,12 +506,12 @@ button:hover,
   align-items: center;
   justify-content: space-between;
   padding: 14px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .produtos-summary li:hover {
-  background: rgba(249,176,0,0.05);
+  background: rgba(249, 176, 0, 0.05);
   border-radius: 10px;
   padding-left: 10px;
 }
@@ -359,7 +530,7 @@ button:hover,
   border-radius: 12px;
   border: 1.5px solid #eee;
   background-color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .produto-item .nome-produto {
@@ -384,12 +555,10 @@ button:hover,
   margin: 10px 0;
 }
 
-
-
 .total {
   margin-top: 20px;
   padding-top: 14px;
-  border-top: 2px dashed rgba(249,176,0,0.3);
+  border-top: 2px dashed rgba(249, 176, 0, 0.3);
   color: var(--dark);
   font-size: 1.2rem;
   letter-spacing: 0.5px;
@@ -417,15 +586,15 @@ button:hover,
 
 .frete-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   border-color: #2b2b2b;
   background-color: #f8f8f8;
 }
 
 .frete-card.selecionado {
-  border: 2px solid #F9B000;
+  border: 2px solid #f9b000;
   /* background-color: #f0f0f0; */
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .frete-logo {
@@ -483,7 +652,7 @@ button:hover,
 
 .frete-card.frete-gratis:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   border-color: #2b2b2b;
   background-color: #f8f8f8;
 }
@@ -499,21 +668,21 @@ button:hover,
   position: absolute;
   right: -6px;
   top: -10px;
-  background: linear-gradient(90deg, #4CAF50, #43a047);
+  background: linear-gradient(90deg, #4caf50, #43a047);
   color: #fff;
   font-weight: 700;
   font-size: 0.7rem;
   padding: 4px 8px;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(67,160,71,0.15);
+  box-shadow: 0 4px 10px rgba(67, 160, 71, 0.15);
   letter-spacing: 0.6px;
 }
 
 /* Quando selecionado, mantém o mesmo estilo .frete-card.selecionado */
 .frete-card.frete-gratis.selecionado {
-  border: 2px solid #F9B000;
+  border: 2px solid #f9b000;
   /* background-color: #f0f0f0; */
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Garante legibilidade dos textos */
@@ -523,8 +692,6 @@ button:hover,
   color: #2b2b2b;
 }
 
-
-
 /* ==== MODAL PIX ==== */
 .pix-modal-overlay {
   position: fixed;
@@ -532,7 +699,7 @@ button:hover,
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -548,14 +715,20 @@ button:hover,
   max-width: 420px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   position: relative;
   animation: scaleIn 0.35s ease forwards;
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .pix-modal h3 {
@@ -577,7 +750,7 @@ button:hover,
   margin: 20px auto;
   border-radius: 12px;
   border: 3px solid var(--primary);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .pix-instrucao {
@@ -603,11 +776,12 @@ button:hover,
 
 #pixCodeText:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(249,176,0,0.25);
+  box-shadow: 0 0 0 3px rgba(249, 176, 0, 0.25);
 }
 
 /* Botões do PIX */
-.pix-btn, .pix-close {
+.pix-btn,
+.pix-close {
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -624,7 +798,7 @@ button:hover,
 }
 
 .pix-btn:hover {
-  box-shadow: 0 8px 20px rgba(249,176,0,0.5);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
   transform: translateY(-2px);
 }
 
@@ -667,7 +841,7 @@ button:hover,
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -683,7 +857,7 @@ button:hover,
   max-width: 450px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   position: relative;
   animation: scaleIn 0.35s ease forwards;
 }
@@ -717,7 +891,7 @@ button:hover,
 
 .boleto-modal textarea#linhaDigitavel:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(249,176,0,0.25);
+  box-shadow: 0 0 0 3px rgba(249, 176, 0, 0.25);
 }
 
 .boleto-btn {
@@ -737,7 +911,7 @@ button:hover,
 
 .boleto-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(249,176,0,0.5);
+  box-shadow: 0 8px 20px rgba(249, 176, 0, 0.5);
 }
 
 /* Botão para abrir boleto */
@@ -781,7 +955,6 @@ button:hover,
   color: var(--primary);
 }
 
-
 /* ==== TOAST/ALERT ==== */
 .toast {
   position: fixed;
@@ -791,7 +964,7 @@ button:hover,
   color: #fff;
   padding: 15px 25px;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
   font-weight: 600;
   font-size: 0.95rem;
   opacity: 0;
@@ -805,6 +978,88 @@ button:hover,
   transform: translateY(0);
 }
 
+/* Modal fundo escuro */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.65);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn .3s ease forwards;
+  z-index: 999;
+}
+
+/* Card do modal */
+.modal-card {
+  background: #fff;
+  width: 90%;
+  max-width: 680px;
+  border-radius: 20px;
+  padding: 45px;
+  position: relative;
+  animation: scaleIn .25s ease forwards;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Fechar modal */
+.close-modal {
+  position: absolute;
+  right: 18px;
+  top: 10px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #444;
+}
+
+/* Inputs */
+.card-form { margin-top: 20px; }
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.input-group label {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.input-group input,
+.input-group select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d1d1;
+  font-size: 16px;
+}
+
+/* Inline inputs */
+.input-row {
+  display: flex;
+  gap: 12px;
+}
+
+.input-row > .input-group {
+  width: 100%;
+}
+
+.input-group.small input {
+  text-align: center;
+}
 
 /* ==== RESPONSIVIDADE ==== */
 @media (max-width: 768px) {
@@ -815,6 +1070,10 @@ button:hover,
 
   .checkout-summary {
     order: -1;
+  }
+
+  .input-row {
+    flex-direction: column;
   }
 }
 
@@ -833,13 +1092,29 @@ button:hover,
   .card-input-inline {
     flex-direction: column;
   }
-   .frete-card.frete-gratis {
+  .frete-card.frete-gratis {
     flex-direction: column;
     align-items: flex-start;
   }
   .frete-card.frete-gratis .frete-info::after {
     right: 8px;
     top: -8px;
+  }
+
+  .installments-container {
+    padding: 10px;
+  }
+  .installment-option span {
+    font-size: 0.92rem;
+  }
+  .card-brand {
+    font-size: 0.86rem;
+    padding: 6px 10px;
+  }
+  .card-form-container .installments-container {
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
+    margin-top: 14px;
+    padding-top: 12px;
   }
 }
 
@@ -861,7 +1136,7 @@ button:hover,
     height: 70px;
   }
 
-    .boleto-modal {
+  .boleto-modal {
     padding: 25px 20px;
   }
 
@@ -871,5 +1146,13 @@ button:hover,
 
   .boleto-modal textarea#linhaDigitavel {
     height: 70px;
+  }
+
+  .installment-option {
+    padding: 10px;
+  }
+  .installment-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
   }
 }

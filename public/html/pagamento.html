@@ -46,34 +46,6 @@
         <div class="payment-card" data-method="cartao">
           <img src="../images/Credit Card.png" alt="Cartão de Crédito">
           <h3>Cartão de Crédito</h3>
-
-          <!-- Formulário do cartão (inicialmente escondido) -->
-          <div class="card-form-container" style="display:none;">
-            <div class="card-input-group">
-              <label for="cardNome">Nome no cartão</label>
-              <input type="text" id="cardNome" placeholder="Nome completo">
-            </div>
-
-            <div class="card-input-group card-input-inline">
-              <div>
-                <label for="cardNumero">Número do cartão</label>
-                <input type="text" id="cardNumero" placeholder="1234 5678 9012 3456">
-              </div>
-              <div>
-                <label for="cardValidade">Validade - Mês</label>
-                <input type="text" id="cardValidadeMes" placeholder="MM">
-              </div>
-              <div>
-                <label for="cardValidade">Validade - Ano</label>
-                <input type="text" id="cardValidadeAno" placeholder="AA">
-              </div>
-            </div>
-
-            <div class="card-input-group card-cvv">
-              <label for="cardCVV">CVV</label>
-              <input type="text" id="cardCVV" placeholder="123">
-            </div>
-          </div>
         </div>
 
       </div>
@@ -92,6 +64,55 @@
       <p class="total">Total: R$ <span id="total">0,00</span></p>
     </div>
 
+  </div>
+
+  <!-- Modal Cartão -->
+  <div id="modal-cartao" class="modal-overlay">
+    <div class="modal-card">
+      <span class="close-modal" id="closeCartao">&times;</span>
+
+      <h2>Pagamento com Cartão</h2>
+
+      <div class="card-form">
+        <div class="input-group">
+          <label>Nome no cartão</label>
+          <input type="text" id="cardNome" placeholder="Nome completo">
+        </div>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Número do cartão</label>
+            <input type="text" id="cardNumero" maxlength="19" placeholder="0000 0000 0000 0000">
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="input-group small">
+            <label>MM</label>
+            <input type="text" id="cardValidadeMes" maxlength="2" placeholder="12">
+          </div>
+
+          <div class="input-group small">
+            <label>AA</label>
+            <input type="text" id="cardValidadeAno" maxlength="2" placeholder="29">
+          </div>
+        </div>
+
+        <div class="input-group small">
+          <label>CVV</label>
+          <input type="text" id="cardCVV" maxlength="4" placeholder="123">
+        </div>
+
+        <div class="input-group">
+          <label>Parcelas</label>
+          <select id="parcelasSelect"></select>
+        </div>
+
+        <button id="btnConfirmarCartao" class="btn-pagamento">
+          Confirmar Pagamento
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="../js/checkout.js"></script>

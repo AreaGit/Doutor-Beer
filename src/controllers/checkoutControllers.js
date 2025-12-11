@@ -390,6 +390,8 @@ exports.gerarCartao = async (req, res) => {
   try {
     const { usuarioId, total, endereco, frete, cartao } = req.body;
 
+    console.log(req.body.parcelamento.parcelas, req.body.parcelamento.valorParcela);
+
     if (!usuarioId || !total || !endereco || !frete || !cartao) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
@@ -403,8 +405,8 @@ exports.gerarCartao = async (req, res) => {
       customer: cliente.customer_asaas_id,
       value: total,
       holderName: cartao.holderName,
-      installmentCount: cartao.installmentCount,
-      installmentValue: cartao.installmentValue,
+      installmentCount: req.body.parcelamento.parcelas,
+      installmentValue: Number( req.body.parcelamento.valorParcela ),
       number: cartao.number,
       expiryMonth: cartao.expiryMonth,
       expiryYear: cartao.expiryYear,

@@ -1,6 +1,6 @@
 const axios = require('axios');
 require('dotenv').config({ path: "../../.env" });
-const asaas_key = ("");
+const asaas_key = ("$aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjBiOTAxZTk2LWY1NTktNGIwOC1iMzlmLWYxZDM5NmQyNWIxNTo6JGFhY2hfMTYxMDQwNWUtZDhkZi00Mzc0LTg3OTAtN2E3NjM2ZjVjMDZl");
 
 /*
 
@@ -46,7 +46,7 @@ CLIENTE CRIADO EM AMBIENTE SANDBOX DO ASAAS
 async function criarClienteAsaas(dadosCliente) {
     const options = {
     method: 'POST',
-    url: 'https://api.asaas.com/v3/customers',
+    url: 'https://api-sandbox.asaas.com/v3/customers',
     headers: {
         accept: 'application/json',
         'content-type': 'application/json',
@@ -225,7 +225,7 @@ async function obterCodPix(id) {
 async function cobrancaCartaoAsaas(dadosCliente) {
   const options = {
     method: "POST",
-    url: "https://api.asaas.com/v3/payments",
+    url: "https://api-sandbox.asaas.com/v3/payments",
     headers: {
       accept: "application/json",
       "content-type": "application/json",
@@ -274,7 +274,7 @@ async function cobrancaCartaoAsaas(dadosCliente) {
 async function consultarCobranca(payment_id) {
     const options = {
     method: 'GET',
-    url: `https://api.asaas.com/v3/payments/${payment_id}/status`,
+    url: `https://api-sandbox.asaas.com/v3/payments/${payment_id}/status`,
     headers: {
         accept: 'application/json',
         access_token: asaas_key
