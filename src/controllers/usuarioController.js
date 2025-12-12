@@ -71,131 +71,276 @@ exports.criarUsuario = async (req, res) => {
 
 // ==================== LOGIN PASSO 1 ====================
 exports.login = async (req, res) => {
-  const { email, senha, guestCart = [] } = req.body;
+  const { email, senha, guestCart = [] } = req.body
 
   try {
-    const usuario = await Usuario.findOne({ where: { email } });
-    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado" });
+    const usuario = await Usuario.findOne({ where: { email } })
+    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado" })
 
-    const senhaValida = await bcrypt.compare(senha, usuario.senha);
-    if (!senhaValida) return res.status(400).json({ message: "Senha incorreta" });
+    const senhaValida = await bcrypt.compare(senha, usuario.senha)
+    if (!senhaValida) return res.status(400).json({ message: "Senha incorreta" })
 
+    console.log("[v0] Login - Status atual do autenticado2FA:", usuario.autenticado2FA)
+
+    if (usuario.autenticado2FA) {
+      // Usuário já autenticado anteriormente, fazer login direto
+      req.session.user = {
+        id: usuario.id,
+        nome: usuario.nome,
+        email,
+        isAdmin: usuario.isAdmin,
+      }
+
+      // Processar mesclagem do carrinho se houver
+      let mergedItems = 0
+      if (guestCart.length > 0) {
+        console.log(`[Login Direto] Iniciando mesclagem de ${guestCart.length} itens do carrinho guest`)
+
+        for (const item of guestCart) {
+          try {
+            const produtoExistente = await require("../models/Produto").findByPk(item.id)
+            if (!produtoExistente) {
+              console.log(`[Login Direto] Produto ${item.id} não encontrado, ignorando`)
+              continue
+            }
+
+            const existente = await Cart.findOne({
+              where: { usuarioId: usuario.id, produtoId: item.id },
+            })
+
+            if (existente) {
+              existente.quantidade += item.quantidade || 1
+              await existente.save()
+              console.log(`[Login Direto] Item ${item.id} atualizado: quantidade ${existente.quantidade}`)
+            } else {
+              await Cart.create({
+                usuarioId: usuario.id,
+                produtoId: item.id,
+                quantidade: item.quantidade || 1,
+              })
+              console.log(`[Login Direto] Item ${item.id} adicionado ao carrinho do usuário`)
+            }
+            mergedItems++
+          } catch (itemError) {
+            console.error(`[Login Direto] Erro ao processar item ${item.id}:`, itemError)
+          }
+        }
+        console.log(`[Login Direto] Mesclagem concluída: ${mergedItems} itens processados`)
+      }
+
+      return res.json({
+        message: "Login realizado com sucesso!",
+        mergedItems,
+        loginDireto: true,
+        redirectTo: usuario.isAdmin ? "/painel-adm" : "/",
+      })
+    }
+
+    console.log("[v0] Login - Usuário precisa fazer 2FA (autenticado2FA = false)")
     // Gerar código 2FA e enviar para o e-mail (já salva no usuário)
-    await gerarCodigo2FA(usuario);
+    await gerarCodigo2FA(usuario)
 
     // Salvar guestCart temporário na sessão para mesclar após 2FA
-    req.session.tempLogin = { email, guestCart };
+    req.session.tempLogin = { email, guestCart }
 
-    res.json({ message: "Código enviado para seu e-mail" });
+    res.json({
+      message: "Código enviado para seu e-mail",
+      loginDireto: false,
+    })
   } catch (error) {
-    console.error("Erro no login:", error);
-    res.status(500).json({ message: "Erro no login", error });
+    console.error("Erro no login:", error)
+    res.status(500).json({ message: "Erro no login", error })
   }
-};
+}
 
 // ==================== LOGIN PASSO 2: VERIFICAR CÓDIGO 2FA ====================
 exports.verificar2FA = async (req, res) => {
-  const { email, codigo } = req.body;
+  const { email, codigo } = req.body
 
   try {
-    const usuario = await Usuario.findOne({ where: { email } });
-    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado" });
+    const usuario = await Usuario.findOne({ where: { email } })
+    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado" })
 
-    const agora = new Date();
-    const expira = usuario.expira2FA ? new Date(usuario.expira2FA) : null;
+    const agora = new Date()
+    const expira = usuario.expira2FA ? new Date(usuario.expira2FA) : null
 
     if (!usuario.codigo2FA || !expira || agora > expira) {
-      return res.status(400).json({ message: "Código expirado. Faça login novamente." });
+      return res.status(400).json({ message: "Código expirado. Faça login novamente." })
     }
 
     if (String(usuario.codigo2FA) !== String(codigo)) {
-      return res.status(400).json({ message: "Código inválido." });
+      return res.status(400).json({ message: "Código inválido." })
     }
 
     if (!req.session.tempLogin || req.session.tempLogin.email !== email) {
-      return res.status(400).json({ message: "Fluxo de login inválido." });
+      return res.status(400).json({ message: "Fluxo de login inválido." })
     }
 
+    console.log("[v0] Antes de atualizar - autenticado2FA:", usuario.autenticado2FA)
+
+    usuario.autenticado2FA = true
     // Limpar campos 2FA
-    usuario.codigo2FA = null;
-    usuario.expira2FA = null;
-    await usuario.save();
+    usuario.codigo2FA = null
+    usuario.expira2FA = null
+
+    await usuario.save()
+
+    console.log("[v0] Depois de salvar - autenticado2FA:", usuario.autenticado2FA)
+
+    // Verificar se realmente salvou no banco
+    const usuarioVerificacao = await Usuario.findOne({ where: { email } })
+    console.log("[v0] Verificação no banco - autenticado2FA:", usuarioVerificacao.autenticado2FA)
 
     // Criar sessão do usuário
-    req.session.user = { id: usuario.id, nome: usuario.nome, email, isAdmin: usuario.isAdmin };
+    req.session.user = { id: usuario.id, nome: usuario.nome, email, isAdmin: usuario.isAdmin }
 
     // ==================== MESCLAGEM MELHORADA ====================
-    const guestCart = req.session.tempLogin.guestCart || [];
-    let mergedItems = 0;
+    const guestCart = req.session.tempLogin.guestCart || []
+    let mergedItems = 0
 
     if (guestCart.length > 0) {
-      console.log(`[Login] Iniciando mesclagem de ${guestCart.length} itens do carrinho guest`);
+      console.log(`[Login] Iniciando mesclagem de ${guestCart.length} itens do carrinho guest`)
 
       for (const item of guestCart) {
         try {
           // Verificar se o produto existe
-          const produtoExistente = await require("../models/Produto").findByPk(item.id);
+          const produtoExistente = await require("../models/Produto").findByPk(item.id)
           if (!produtoExistente) {
-            console.log(`[Login] Produto ${item.id} não encontrado, ignorando`);
-            continue;
+            console.log(`[Login] Produto ${item.id} não encontrado, ignorando`)
+            continue
           }
 
           const existente = await Cart.findOne({
-            where: { usuarioId: usuario.id, produtoId: item.id }
-          });
+            where: { usuarioId: usuario.id, produtoId: item.id },
+          })
 
           if (existente) {
             // Somar quantidades se já existir
-            existente.quantidade += (item.quantidade || 1);
-            await existente.save();
-            console.log(`[Login] Item ${item.id} atualizado: quantidade ${existente.quantidade}`);
+            existente.quantidade += item.quantidade || 1
+            await existente.save()
+            console.log(`[Login] Item ${item.id} atualizado: quantidade ${existente.quantidade}`)
           } else {
             // Criar novo item para o usuário
             await Cart.create({
               usuarioId: usuario.id,
               produtoId: item.id,
-              quantidade: item.quantidade || 1
-            });
-            console.log(`[Login] Item ${item.id} adicionado ao carrinho do usuário`);
+              quantidade: item.quantidade || 1,
+            })
+            console.log(`[Login] Item ${item.id} adicionado ao carrinho do usuário`)
           }
-          mergedItems++;
+          mergedItems++
         } catch (itemError) {
-          console.error(`[Login] Erro ao processar item ${item.id}:`, itemError);
+          console.error(`[Login] Erro ao processar item ${item.id}:`, itemError)
         }
       }
-      console.log(`[Login] Mesclagem concluída: ${mergedItems} itens processados`);
+      console.log(`[Login] Mesclagem concluída: ${mergedItems} itens processados`)
     }
 
     // Limpar tempLogin
-    delete req.session.tempLogin;
+    delete req.session.tempLogin
 
     res.json({
       message: "Login realizado com sucesso!",
       mergedItems,
-      redirectTo: usuario.isAdmin ? "/painel-adm" : "/"
-    });
+      redirectTo: usuario.isAdmin ? "/painel-adm" : "/",
+    })
   } catch (error) {
-    console.error("Erro ao verificar 2FA:", error);
-    res.status(500).json({ message: "Erro ao verificar código", error });
+    console.error("Erro ao verificar 2FA:", error)
+    res.status(500).json({ message: "Erro ao verificar código", error })
   }
-};
+}
 
 // ==================== REENVIO DE CÓDIGO 2FA ====================
 exports.reenviarCodigo2FA = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body
 
   try {
-    const usuario = await Usuario.findOne({ where: { email } });
-    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado." });
+    const usuario = await Usuario.findOne({ where: { email } })
+    if (!usuario) return res.status(400).json({ message: "Usuário não encontrado." })
 
-    await gerarCodigo2FA(usuario);
+    await gerarCodigo2FA(usuario)
 
-    res.json({ message: "Código reenviado para seu e-mail." });
+    res.json({ message: "Código reenviado para seu e-mail." })
   } catch (err) {
-    console.error("Erro ao reenviar código 2FA:", err);
-    res.status(500).json({ message: "Erro ao reenviar código." });
+    console.error("Erro ao reenviar código 2FA:", err)
+    res.status(500).json({ message: "Erro ao reenviar código." })
   }
-};
+}
+
+// ==================== REDEFINIR SENHA ====================
+exports.resetarSenha = async (req, res) => {
+  console.log("[v0] ========== ENDPOINT resetarSenha CHAMADO ==========")
+  console.log("[v0] Dados recebidos:", { email: req.body.email, token: req.body.token })
+
+  const { email, token, novaSenha } = req.body
+
+  if (!email || !token || !novaSenha) {
+    return res.status(400).json({
+      message: "Dados incompletos. Envie e-mail, token e nova senha.",
+    })
+  }
+
+  try {
+    const usuario = await Usuario.findOne({ where: { email } })
+    if (!usuario) {
+      console.log("[v0] Usuário não encontrado com email:", email)
+      return res.status(400).json({ message: "Link inválido ou expirado." })
+    }
+
+    console.log("[v0] Usuário encontrado:", email)
+    console.log("[v0] Token do banco:", usuario.resetToken)
+    console.log("[v0] Token recebido:", token)
+    console.log("[v0] Token expira:", usuario.resetTokenExpira)
+
+    // Verifica token e validade
+    if (
+      !usuario.resetToken ||
+      !usuario.resetTokenExpira ||
+      usuario.resetToken !== token ||
+      new Date() > new Date(usuario.resetTokenExpira)
+    ) {
+      console.log("[v0] Validação de token falhou")
+      return res.status(400).json({ message: "Link inválido ou expirado." })
+    }
+
+    console.log("[v0] Token validado com sucesso!")
+
+    // Hash da nova senha
+    const senhaHash = await bcrypt.hash(novaSenha, 10)
+
+    console.log("[v0] Resetando senha - definindo autenticado2FA para false")
+    console.log("[v0] Antes de resetar - autenticado2FA:", usuario.autenticado2FA)
+
+    const resultado = await Usuario.update(
+      {
+        senha: senhaHash,
+        resetToken: null,
+        resetTokenExpira: null,
+        autenticado2FA: false,
+      },
+      {
+        where: { email },
+      },
+    )
+
+    console.log("[v0] Resultado do update:", resultado)
+    console.log("[v0] Update executado diretamente no banco")
+
+    // Verificação no banco após resetar
+    const usuarioVerificacao = await Usuario.findOne({ where: { email } })
+    console.log("[v0] Verificação no banco após resetar - autenticado2FA:", usuarioVerificacao.autenticado2FA)
+    console.log("[v0] ========== FIM DO ENDPOINT resetarSenha ==========")
+
+    return res.json({
+      message: "Senha redefinida com sucesso! Você já pode fazer login.",
+    })
+  } catch (error) {
+    console.error("[v0] ERRO no resetarSenha:", error)
+    return res.status(500).json({
+      message: "Erro ao redefinir senha. Tente novamente.",
+    })
+  }
+}
 
 // ==================== SABER QUEM ESTÁ LOGADO ====================
 exports.me = async (req, res) => {
@@ -436,39 +581,39 @@ exports.deletarUsuarioAdmin = async (req, res) => {
 
 // ==================== SOLICITAR RECUPERAÇÃO DE SENHA ====================
 exports.solicitarRecuperacaoSenha = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body
 
   if (!email) {
-    return res.status(400).json({ message: "Informe um e-mail válido." });
+    return res.status(400).json({ message: "Informe um e-mail válido." })
   }
 
   try {
-    const usuario = await Usuario.findOne({ where: { email } });
+    const usuario = await Usuario.findOne({ where: { email } })
 
-    // 🔒 Por segurança, SEMPRE retorna a mesma mensagem,
-    // mesmo se o usuário não existir.
     if (!usuario) {
       return res.json({
-        message:
-          "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."
-      });
+        message: "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.",
+      })
     }
 
-    // Gera token aleatório
-    const token = crypto.randomBytes(32).toString("hex");
-    const expira = new Date(Date.now() + 60 * 60 * 1000); // 1h
+    const token = require("crypto").randomBytes(32).toString("hex")
+    const expira = new Date(Date.now() + 60 * 60 * 1000)
 
-    usuario.resetToken = token;
-    usuario.resetTokenExpira = expira;
-    await usuario.save();
+    console.log("[v0] Recuperação solicitada - definindo autenticado2FA para false")
+    console.log("[v0] Antes:", usuario.autenticado2FA)
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
-    const linkReset = `${baseUrl}/redefinir-senha?token=${token}&email=${encodeURIComponent(
-      email
-    )}`;
+    usuario.resetToken = token
+    usuario.resetTokenExpira = expira
+    usuario.autenticado2FA = false
 
-    // E-mail de recuperação
-    const assunto = "Recuperação de senha - Doutor Beer";
+    await usuario.save()
+
+    console.log("[v0] Depois de salvar:", usuario.autenticado2FA)
+
+    const baseUrl = process.env.APP_URL || "http://localhost:3000"
+    const linkReset = `${baseUrl}/redefinir-senha?token=${token}&email=${encodeURIComponent(email)}`
+
+    const assunto = "Recuperação de senha - Doutor Beer"
 
     const corpoTexto = `
 Olá, ${usuario.nome}!
@@ -480,7 +625,7 @@ ${linkReset}
 
 Se você não fez essa solicitação, pode ignorar este e-mail.
 Este link é válido por 1 hora.
-    `.trim();
+    `.trim()
 
     const corpoHtml = `
 <!DOCTYPE html>
@@ -495,7 +640,6 @@ Este link é válido por 1 hora.
       <td align="center" style="padding:30px 15px;">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,0.08);">
           
-          <!-- Cabeçalho -->
           <tr>
             <td align="center" style="background:#F9B000;padding:18px 20px;">
               <h1 style="margin:0;font-size:20px;color:#4d1818;font-weight:700;font-family:Arial,Helvetica,sans-serif;">
@@ -507,7 +651,6 @@ Este link é válido por 1 hora.
             </td>
           </tr>
 
-          <!-- Conteúdo -->
           <tr>
             <td style="padding:24px 24px 10px 24px;">
               <p style="margin:0 0 10px 0;font-size:15px;color:#333333;">
@@ -548,13 +691,12 @@ Este link é válido por 1 hora.
               <p style="margin:0 0 4px 0;font-size:12px;color:#777777;">
                 ⏱ Este link é válido por <strong>1 hora</strong>.
               </p>
-              <p style="margin:0 0 16px 0;font-size:12px;color:#777777;">
+              <p style="margin:0;font-size:12px;color:#777777;">
                 Se você não fez essa solicitação, nenhuma ação é necessária.
               </p>
             </td>
           </tr>
 
-          <!-- Rodapé -->
           <tr>
             <td style="padding:14px 24px 20px 24px;border-top:1px solid #eeeeee;">
               <p style="margin:0 0 4px 0;font-size:12px;color:#999999;">
@@ -572,21 +714,20 @@ Este link é válido por 1 hora.
   </table>
 </body>
 </html>
-    `.trim();
+    `.trim()
 
-    await enviarEmail(email, assunto, corpoTexto, corpoHtml);
+    await enviarEmail(email, assunto, corpoTexto, corpoHtml)
 
     return res.json({
-      message:
-        "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."
-    });
+      message: "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.",
+    })
   } catch (error) {
-    console.error("Erro ao solicitar recuperação de senha:", error);
+    console.error("Erro ao solicitar recuperação de senha:", error)
     return res.status(500).json({
-      message: "Erro ao solicitar recuperação de senha. Tente novamente."
-    });
+      message: "Erro ao solicitar recuperação de senha. Tente novamente.",
+    })
   }
-};
+}
 
 // ==================== RESETAR SENHA COM TOKEN ====================
 exports.resetarSenha = async (req, res) => {
