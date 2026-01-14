@@ -25,12 +25,28 @@ exports.listarProdutos = async (req, res) => {
   }
 };
 
+/* ================== Listar Produtos Ativos (Site Público) ================== */
+exports.listarProdutosAtivos = async (req, res) => {
+  try {
+    const produtos = await Produto.findAll({
+      where: { ativo: true },
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(produtos);
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao listar produtos ativos:", err);
+    res.status(500).json({ erro: "Erro ao listar produtos ativos." });
+  }
+};
+
 /* ================== Buscar Produto por ID ================== */
 exports.buscarProduto = async (req, res) => {
   try {
     const { id } = req.params;
     const produto = await Produto.findByPk(id);
-    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
     res.json(produto);
   } catch (err) {
     console.error("[ProdutoController] Erro ao buscar produto:", err);
@@ -43,7 +59,8 @@ exports.atualizarProduto = async (req, res) => {
   try {
     const { id } = req.params;
     const produto = await Produto.findByPk(id);
-    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
 
     await produto.update(req.body);
     res.json(produto);
@@ -58,7 +75,8 @@ exports.deletarProduto = async (req, res) => {
   try {
     const { id } = req.params;
     const produto = await Produto.findByPk(id);
-    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
 
     await produto.destroy();
     res.json({ mensagem: "Produto deletado com sucesso" });
@@ -75,7 +93,9 @@ exports.buscarPorSecao = async (req, res) => {
     const secaoAlvo = String(secao).toLowerCase().trim();
 
     // Busca todos e filtra na mão (independente se secao é JSON ou string)
-    const produtos = await Produto.findAll();
+    const produtos = await Produto.findAll({
+      where: { ativo: true },
+    });
 
     const produtosFiltrados = produtos.filter((prod) => {
       if (!prod.secao) return false;
@@ -98,9 +118,7 @@ exports.buscarPorSecao = async (req, res) => {
 
       // Se for array (JSON)
       if (Array.isArray(secoes)) {
-        return secoes.some((s) =>
-          String(s).toLowerCase().trim() === secaoAlvo
-        );
+        return secoes.some((s) => String(s).toLowerCase().trim() === secaoAlvo);
       }
 
       // Qualquer outro tipo, compara string bruta
@@ -108,12 +126,17 @@ exports.buscarPorSecao = async (req, res) => {
     });
 
     if (!produtosFiltrados.length) {
-      return res.status(404).json({ erro: "Nenhum produto encontrado para esta seção." });
+      return res
+        .status(404)
+        .json({ erro: "Nenhum produto encontrado para esta seção." });
     }
 
     res.json(produtosFiltrados);
   } catch (err) {
-    console.error("[ProdutoController] Erro ao buscar produtos por seção:", err);
+    console.error(
+      "[ProdutoController] Erro ao buscar produtos por seção:",
+      err
+    );
     res.status(500).json({ erro: "Erro ao buscar produtos por seção." });
   }
 };
@@ -124,21 +147,28 @@ exports.buscarPorCategoria = async (req, res) => {
     const { categoria } = req.params;
     const produtos = await Produto.findAll({
       where: {
+        ativo: true,
         [Op.or]: [
           { categoria },
           { categoria2: categoria },
-          { categoria3: categoria }
-        ]
+          { categoria3: categoria },
+          { marca: categoria },
+        ],
       },
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
     });
 
     if (!produtos || produtos.length === 0)
-      return res.status(404).json({ erro: "Nenhum produto encontrado para esta categoria." });
+      return res
+        .status(404)
+        .json({ erro: "Nenhum produto encontrado para esta categoria." });
 
     res.json(produtos);
   } catch (err) {
-    console.error("[ProdutoController] Erro ao buscar produtos por categoria:", err);
+    console.error(
+      "[ProdutoController] Erro ao buscar produtos por categoria:",
+      err
+    );
     res.status(500).json({ erro: "Erro ao buscar produtos por categoria." });
   }
 };
@@ -147,16 +177,18 @@ exports.buscarPorCategoria = async (req, res) => {
 exports.buscarProdutos = async (req, res) => {
   try {
     const { query } = req.query;
-    if (!query || !query.trim()) return res.status(400).json({ erro: "Informe um termo de busca." });
+    if (!query || !query.trim())
+      return res.status(400).json({ erro: "Informe um termo de busca." });
 
     const produtos = await Produto.findAll({
       where: {
+        ativo: true,
         [Op.or]: [
           { nome: { [Op.like]: `%${query}%` } },
-          { descricao: { [Op.like]: `%${query}%` } }
-        ]
+          { descricao: { [Op.like]: `%${query}%` } },
+        ],
       },
-      limit: 20
+      limit: 20,
     });
 
     if (!produtos || produtos.length === 0)
@@ -164,10 +196,37 @@ exports.buscarProdutos = async (req, res) => {
 
     res.json(produtos);
   } catch (err) {
-    console.error("[ProdutoController] Erro ao buscar produtos globalmente:", err);
+    console.error(
+      "[ProdutoController] Erro ao buscar produtos globalmente:",
+      err
+    );
     res.status(500).json({ erro: "Erro ao buscar produtos." });
   }
 };
+
+// Buscar produto público
+
+exports.buscarProdutoPublico = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const produto = await Produto.findOne({
+      where: {
+        id,
+        ativo: true,
+      },
+    });
+
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
+
+    res.json(produto);
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao buscar produto público:", err);
+    res.status(500).json({ erro: "Erro ao buscar produto." });
+  }
+};
+
 
 /* ================== Preparar Dados do Produto para Frete ================== */
 exports.getProdutoParaFrete = async (req, res) => {
@@ -175,7 +234,8 @@ exports.getProdutoParaFrete = async (req, res) => {
     const { id } = req.params;
     const produto = await Produto.findByPk(id);
 
-    if (!produto) return res.status(404).json({ erro: "Produto não encontrado" });
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
 
     // Campos obrigatórios para cálculo de frete
     const dadosFrete = {
@@ -184,12 +244,37 @@ exports.getProdutoParaFrete = async (req, res) => {
       height: produto.altura || 20,
       length: produto.comprimento || 20,
       weight: produto.peso || 1,
-      insurance_value: produto.precoPromocional || produto.preco || 50
+      insurance_value: produto.precoPromocional || produto.preco || 50,
     };
 
     res.json(dadosFrete);
   } catch (err) {
-    console.error("[ProdutoController] Erro ao preparar produto para frete:", err);
+    console.error(
+      "[ProdutoController] Erro ao preparar produto para frete:",
+      err
+    );
     res.status(500).json({ erro: "Erro ao obter dados para frete." });
+  }
+};
+
+/* ================== Ativar / Desativar Produto ================== */
+exports.toggleStatusProduto = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const produto = await Produto.findByPk(id);
+    if (!produto)
+      return res.status(404).json({ erro: "Produto não encontrado" });
+
+    produto.ativo = !produto.ativo;
+    await produto.save();
+
+    res.json({
+      id: produto.id,
+      ativo: produto.ativo,
+    });
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao alterar status:", err);
+    res.status(500).json({ erro: "Erro ao alterar status do produto." });
   }
 };

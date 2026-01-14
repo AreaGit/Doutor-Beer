@@ -80,8 +80,6 @@ exports.login = async (req, res) => {
     const senhaValida = await bcrypt.compare(senha, usuario.senha)
     if (!senhaValida) return res.status(400).json({ message: "Senha incorreta" })
 
-    console.log("[v0] Login - Status atual do autenticado2FA:", usuario.autenticado2FA)
-
     if (usuario.autenticado2FA) {
       // Usuário já autenticado anteriormente, fazer login direto
       req.session.user = {
@@ -100,7 +98,6 @@ exports.login = async (req, res) => {
           try {
             const produtoExistente = await require("../models/Produto").findByPk(item.id)
             if (!produtoExistente) {
-              console.log(`[Login Direto] Produto ${item.id} não encontrado, ignorando`)
               continue
             }
 
@@ -118,14 +115,13 @@ exports.login = async (req, res) => {
                 produtoId: item.id,
                 quantidade: item.quantidade || 1,
               })
-              console.log(`[Login Direto] Item ${item.id} adicionado ao carrinho do usuário`)
             }
             mergedItems++
           } catch (itemError) {
             console.error(`[Login Direto] Erro ao processar item ${item.id}:`, itemError)
           }
         }
-        console.log(`[Login Direto] Mesclagem concluída: ${mergedItems} itens processados`)
+        
       }
 
       return res.json({
@@ -136,7 +132,6 @@ exports.login = async (req, res) => {
       })
     }
 
-    console.log("[v0] Login - Usuário precisa fazer 2FA (autenticado2FA = false)")
     // Gerar código 2FA e enviar para o e-mail (já salva no usuário)
     await gerarCodigo2FA(usuario)
 

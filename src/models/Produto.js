@@ -34,6 +34,10 @@ const Produto = sequelize.define("Produto", {
     type: DataTypes.STRING,
     allowNull: true
   },
+  marca: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   cores: {
     type: DataTypes.JSON,
     allowNull: true
@@ -70,6 +74,12 @@ const Produto = sequelize.define("Produto", {
   peso: {
     type: DataTypes.DECIMAL,
     allowNull: true
+  },
+
+  ativo: {
+    type: DataTypes.BOOLEAN,
+    allowNul: false,
+    defaultValue: true
   }
 });
 

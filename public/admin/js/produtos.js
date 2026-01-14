@@ -26,15 +26,19 @@ function initProdutoCadastro() {
       return;
     }
 
-    previewContainer.innerHTML = imagensArray.map((url, index) => `
+    previewContainer.innerHTML = imagensArray
+      .map(
+        (url, index) => `
       <div class="imagem-preview-item" draggable="true" data-index="${index}">
         <button type="button" class="imagem-remove-btn" data-index="${index}">&times;</button>
         <img src="${url}" alt="Pré-visualização">
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     // Eventos de remover
-    previewContainer.querySelectorAll(".imagem-remove-btn").forEach(btn => {
+    previewContainer.querySelectorAll(".imagem-remove-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const idx = Number(btn.dataset.index);
@@ -44,36 +48,38 @@ function initProdutoCadastro() {
     });
 
     // Eventos de drag & drop
-    previewContainer.querySelectorAll(".imagem-preview-item").forEach(item => {
-      item.addEventListener("dragstart", (e) => {
-        dragSrcIndex = Number(item.dataset.index);
-        e.dataTransfer.effectAllowed = "move";
-        item.classList.add("dragging");
+    previewContainer
+      .querySelectorAll(".imagem-preview-item")
+      .forEach((item) => {
+        item.addEventListener("dragstart", (e) => {
+          dragSrcIndex = Number(item.dataset.index);
+          e.dataTransfer.effectAllowed = "move";
+          item.classList.add("dragging");
+        });
+
+        item.addEventListener("dragend", () => {
+          item.classList.remove("dragging");
+        });
+
+        item.addEventListener("dragover", (e) => {
+          e.preventDefault(); // necessário pra permitir drop
+          e.dataTransfer.dropEffect = "move";
+        });
+
+        item.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const targetIndex = Number(item.dataset.index);
+          if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+
+          // Reordena o array
+          const moved = imagensArray.splice(dragSrcIndex, 1)[0];
+          imagensArray.splice(targetIndex, 0, moved);
+          dragSrcIndex = null;
+
+          // Re-renderiza tudo
+          renderPreviewImagensNovo();
+        });
       });
-
-      item.addEventListener("dragend", () => {
-        item.classList.remove("dragging");
-      });
-
-      item.addEventListener("dragover", (e) => {
-        e.preventDefault(); // necessário pra permitir drop
-        e.dataTransfer.dropEffect = "move";
-      });
-
-      item.addEventListener("drop", (e) => {
-        e.preventDefault();
-        const targetIndex = Number(item.dataset.index);
-        if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
-
-        // Reordena o array
-        const moved = imagensArray.splice(dragSrcIndex, 1)[0];
-        imagensArray.splice(targetIndex, 0, moved);
-        dragSrcIndex = null;
-
-        // Re-renderiza tudo
-        renderPreviewImagensNovo();
-      });
-    });
   }
 
   // Adiciona URLs ao array a partir de um texto bruto
@@ -81,7 +87,7 @@ function initProdutoCadastro() {
     if (!raw) return;
 
     const urls = raw
-      .split(/[\n,; ]+/)              // quebra por vírgula, enter, espaço, ponto e vírgula
+      .split(/[\n,; ]+/) // quebra por vírgula, enter, espaço, ponto e vírgula
       .map((u) => u.trim())
       .filter((u) => u && /^https?:\/\//i.test(u)); // só http/https
 
@@ -125,33 +131,50 @@ function initProdutoCadastro() {
 
     try {
       const nome = document.getElementById("nomeProduto").value.trim();
-      const descricao = document.getElementById("descricaoProduto").value.trim();
+      const descricao = document
+        .getElementById("descricaoProduto")
+        .value.trim();
       const preco = parseFloat(document.getElementById("precoProduto").value);
-      const precoPromocional = parseFloat(document.getElementById("precoPromocionalProduto").value) || null;
-      const categoria = document.getElementById("categoriaProduto").value.trim() || null;
-      const categoria2 = document.getElementById("categoria2Produto").value.trim() || null;
-      const categoria3 = document.getElementById("categoria3Produto").value.trim() || null;
+      const precoPromocional =
+        parseFloat(document.getElementById("precoPromocionalProduto").value) ||
+        null;
+      const categoria =
+        document.getElementById("categoriaProduto").value.trim() || null;
+      const categoria2 =
+        document.getElementById("categoria2Produto").value.trim() || null;
+      const categoria3 =
+        document.getElementById("categoria3Produto").value.trim() || null;
+      const marca =
+        document.getElementById("marcaProduto").value.trim() || null;
+
       const secoesSelecionadas = Array.from(
         document.querySelectorAll("input[name='secaoProduto']:checked")
-      ).map(el => el.value);
+      ).map((el) => el.value);
 
       // Agora `secao` é um array mesmo (JSON), não mais string
       const secao = secoesSelecionadas.length ? secoesSelecionadas : [];
-      const altura = parseFloat(document.getElementById("alturaProduto").value) || null;
-      const largura = parseFloat(document.getElementById("larguraProduto").value) || null;
-      const comprimento = parseFloat(document.getElementById("comprimentoProduto").value) || null;
-      const peso = parseFloat(document.getElementById("pesoProduto").value) || null;
+      const altura =
+        parseFloat(document.getElementById("alturaProduto").value) || null;
+      const largura =
+        parseFloat(document.getElementById("larguraProduto").value) || null;
+      const comprimento =
+        parseFloat(document.getElementById("comprimentoProduto").value) || null;
+      const peso =
+        parseFloat(document.getElementById("pesoProduto").value) || null;
 
       const cores = Array.from(
         document.querySelectorAll("input[name='coresProduto']:checked")
-      ).map(el => el.value);
+      ).map((el) => el.value);
 
       const torneira = Array.from(
         document.querySelectorAll("input[name='torneiraProduto']:checked")
-      ).map(el => el.value);
+      ).map((el) => el.value);
 
-      const capacidade = document.getElementById("capacidadeProduto").value
-        .split(",").map(i => i.trim()).filter(i => i);
+      const capacidade = document
+        .getElementById("capacidadeProduto")
+        .value.split(",")
+        .map((i) => i.trim())
+        .filter((i) => i);
 
       const refilValue = document.getElementById("refilProduto").value;
       const refil = refilValue === "" ? null : parseInt(refilValue, 10);
@@ -167,6 +190,7 @@ function initProdutoCadastro() {
         categoria,
         categoria2,
         categoria3,
+        marca,
         secao,
         altura,
         largura,
@@ -182,7 +206,7 @@ function initProdutoCadastro() {
       const res = await fetch("/api/produtos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(produtoData)
+        body: JSON.stringify(produtoData),
       });
 
       const result = await res.json();
@@ -227,15 +251,19 @@ function initProdutoEdicao() {
       return;
     }
 
-    previewEditar.innerHTML = imagensEditarArray.map((url, index) => `
+    previewEditar.innerHTML = imagensEditarArray
+      .map(
+        (url, index) => `
       <div class="imagem-preview-item" draggable="true" data-index="${index}">
         <button type="button" class="imagem-remove-btn" data-index="${index}">&times;</button>
         <img src="${url}" alt="Pré-visualização">
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     // remover
-    previewEditar.querySelectorAll(".imagem-remove-btn").forEach(btn => {
+    previewEditar.querySelectorAll(".imagem-remove-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const idx = Number(btn.dataset.index);
@@ -245,7 +273,7 @@ function initProdutoEdicao() {
     });
 
     // drag & drop
-    previewEditar.querySelectorAll(".imagem-preview-item").forEach(item => {
+    previewEditar.querySelectorAll(".imagem-preview-item").forEach((item) => {
       item.addEventListener("dragstart", (e) => {
         dragEditarSrcIndex = Number(item.dataset.index);
         e.dataTransfer.effectAllowed = "move";
@@ -264,7 +292,8 @@ function initProdutoEdicao() {
       item.addEventListener("drop", (e) => {
         e.preventDefault();
         const targetIndex = Number(item.dataset.index);
-        if (dragEditarSrcIndex === null || dragEditarSrcIndex === targetIndex) return;
+        if (dragEditarSrcIndex === null || dragEditarSrcIndex === targetIndex)
+          return;
 
         const moved = imagensEditarArray.splice(dragEditarSrcIndex, 1)[0];
         imagensEditarArray.splice(targetIndex, 0, moved);
@@ -313,8 +342,6 @@ function initProdutoEdicao() {
   });
 }
 
-
-
 /* =====================
  * PRODUTOS - LISTAGEM / EDIÇÃO / REMOÇÃO
  * ===================== */
@@ -333,36 +360,60 @@ async function carregarProdutos() {
 
     const produtos = await response.json();
     if (!produtos.length) {
-      container.innerHTML = "<p class='text-muted'>Nenhum produto cadastrado.</p>";
+      container.innerHTML =
+        "<p class='text-muted'>Nenhum produto cadastrado.</p>";
       return;
     }
 
     renderListaProdutos(produtos);
   } catch (err) {
     console.error(err);
-    container.innerHTML = "<p class='text-error'>Erro ao carregar produtos.</p>";
+    container.innerHTML =
+      "<p class='text-error'>Erro ao carregar produtos.</p>";
   }
 }
 
 function renderProdutoCard(p) {
-  const imagem = (p.imagem && p.imagem[0]) ? p.imagem[0] : "/images/no-image.png";
+  const imagem = p.imagem && p.imagem[0] ? p.imagem[0] : "/images/no-image.png";
 
   const precoNormal = formatCurrency(p.preco);
-  const precoPromo = p.precoPromocional ? formatCurrency(p.precoPromocional) : null;
+  const precoPromo = p.precoPromocional
+    ? formatCurrency(p.precoPromocional)
+    : null;
+
+  const ativo = p.ativo !== false; // default true
+  const badgeClass = ativo ? "badge-success" : "badge-danger";
+  const badgeText = ativo ? "Ativo" : "Inativo";
+  const checked = ativo ? "checked" : "";
 
   return `
-    <article class="product-card" data-id="${p.id}">
+    <article class="product-card ${ativo ? "" : "produto-inativo"}" data-id="${
+    p.id
+  }">
       <div class="product-thumb">
         <img src="${imagem}" alt="${p.nome}">
       </div>
+
       <div class="product-body">
         <div class="product-top">
           <h3>${p.nome}</h3>
-          <span class="badge badge-success">Ativo</span>
+
+          <div class="status-toggle">
+            <span class="badge ${badgeClass}">${badgeText}</span>
+            <label class="switch">
+              <input type="checkbox" class="toggle-status" data-id="${
+                p.id
+              }" ${checked}>
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
+
         <p class="product-meta">
-          ${p.categoria || "Sem categoria"} • Estoque: ${p.estoque ?? "-"} 
+          ${p.categoria || "Sem categoria"}
+          ${p.marca ? ` • <strong>${p.marca}</strong>` : ""}
         </p>
+
         <div class="product-price">
           ${
             precoPromo
@@ -370,6 +421,7 @@ function renderProdutoCard(p) {
               : `<span class="new">${precoNormal}</span>`
           }
         </div>
+
         <div class="product-actions">
           <button class="btn-outline editar-btn">
             <i class="fa-regular fa-pen-to-square"></i>
@@ -385,7 +437,6 @@ function renderProdutoCard(p) {
   `;
 }
 
-
 function renderListaProdutos(produtos) {
   const container = document.getElementById("listaProdutos");
   if (!container) return;
@@ -393,7 +444,7 @@ function renderListaProdutos(produtos) {
   container.innerHTML = produtos.map(renderProdutoCard).join("");
 
   // Eventos de edição / remoção
-  container.querySelectorAll(".editar-btn").forEach(btn => {
+  container.querySelectorAll(".editar-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const produtoId = btn.closest(".product-card").dataset.id;
@@ -401,7 +452,7 @@ function renderListaProdutos(produtos) {
     });
   });
 
-  container.querySelectorAll(".deletar-btn").forEach(btn => {
+  container.querySelectorAll(".deletar-btn").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const produtoId = btn.closest(".product-card").dataset.id;
@@ -412,15 +463,61 @@ function renderListaProdutos(produtos) {
   });
 
   // ✅ Clique no card redireciona para a página pública (seguindo a lógica do site)
-  container.querySelectorAll(".product-card").forEach(card => {
+  container.querySelectorAll(".product-card").forEach((card) => {
     card.addEventListener("click", (e) => {
       // Evita que o clique nos botões dispare o redirecionamento
-      if (e.target.closest(".editar-btn") || e.target.closest(".deletar-btn")) return;
+      if (
+        e.target.closest(".editar-btn") ||
+        e.target.closest(".deletar-btn") ||
+        e.target.closest(".switch")
+      )
+        return;
 
       const produtoId = card.dataset.id;
       if (produtoId) {
         // igual ao front público: /detalhes-produto?id={id}
         window.open(`/detalhes-produto?id=${produtoId}`, "_blank");
+      }
+    });
+  });
+
+  // Toggle ativo / inativo
+  container.querySelectorAll(".toggle-status").forEach((toggle) => {
+    toggle.addEventListener("click", async (e) => {
+      e.stopPropagation();
+
+      const produtoId = toggle.dataset.id;
+
+      try {
+        const res = await fetch(`/api/produtos/${produtoId}/status`, {
+          method: "PATCH",
+        });
+
+        if (!res.ok) throw new Error("Erro ao alterar status");
+
+        const result = await res.json();
+
+        // Atualiza visual sem recarregar tudo
+        const card = toggle.closest(".product-card");
+        const badge = card.querySelector(".badge");
+
+        if (result.ativo) {
+          badge.textContent = "Ativo";
+          badge.classList.remove("badge-danger");
+          badge.classList.add("badge-success");
+          card.classList.remove("produto-inativo");
+        } else {
+          badge.textContent = "Inativo";
+          badge.classList.remove("badge-success");
+          badge.classList.add("badge-danger");
+          card.classList.add("produto-inativo");
+        }
+
+        showToast("Status do produto atualizado", "success");
+      } catch (err) {
+        console.error(err);
+        toggle.checked = !toggle.checked; // desfaz
+        showToast("Erro ao alterar status", "error");
       }
     });
   });
@@ -445,24 +542,35 @@ function abrirModalEditarProduto(id) {
   modal.style.display = "block";
 
   fetch(`/api/produtos/${id}`)
-    .then(res => res.json())
-    .then(p => {
+    .then((res) => res.json())
+    .then((p) => {
       // básicos
       document.getElementById("editarNome").value = p.nome || "";
       document.getElementById("editarDescricao").value = p.descricao || "";
       document.getElementById("editarPreco").value = p.preco || "";
-      document.getElementById("editarPrecoPromocional").value = p.precoPromocional || "";
+      document.getElementById("editarPrecoPromocional").value =
+        p.precoPromocional || "";
 
       // categorias (selects)
-      document.getElementById("editarCategoriaProduto").value = p.categoria || "";
-      document.getElementById("editarCategoria2Produto").value = p.categoria2 || "";
-      document.getElementById("editarCategoria3Produto").value = p.categoria3 || "";
+      document.getElementById("editarCategoriaProduto").value =
+        p.categoria || "";
+      document.getElementById("editarCategoria2Produto").value =
+        p.categoria2 || "";
+      document.getElementById("editarCategoria3Produto").value =
+        p.categoria3 || "";
+      document.getElementById("editarMarcaProduto").value = p.marca || "";
 
       // seções (chips)
-      const secoes = Array.isArray(p.secao) ? p.secao : (p.secao ? [p.secao] : []);
-      document.querySelectorAll("input[name='editarSecaoProduto']").forEach(chk => {
-        chk.checked = secoes.includes(chk.value);
-      });
+      const secoes = Array.isArray(p.secao)
+        ? p.secao
+        : p.secao
+        ? [p.secao]
+        : [];
+      document
+        .querySelectorAll("input[name='editarSecaoProduto']")
+        .forEach((chk) => {
+          chk.checked = secoes.includes(chk.value);
+        });
 
       // dimensões / peso
       document.getElementById("editarAltura").value = p.altura || "";
@@ -480,15 +588,19 @@ function abrirModalEditarProduto(id) {
 
       // cores (check)
       const cores = Array.isArray(p.cores) ? p.cores : [];
-      document.querySelectorAll("input[name='editarCoresProduto']").forEach(chk => {
-        chk.checked = cores.includes(chk.value);
-      });
+      document
+        .querySelectorAll("input[name='editarCoresProduto']")
+        .forEach((chk) => {
+          chk.checked = cores.includes(chk.value);
+        });
 
       // torneira (check)
       const torneiras = Array.isArray(p.torneira) ? p.torneira : [];
-      document.querySelectorAll("input[name='editarTorneiraProduto']").forEach(chk => {
-        chk.checked = torneiras.includes(chk.value);
-      });
+      document
+        .querySelectorAll("input[name='editarTorneiraProduto']")
+        .forEach((chk) => {
+          chk.checked = torneiras.includes(chk.value);
+        });
 
       // imagens (array -> preview)
       imagensEditarArray = Array.isArray(p.imagem) ? [...p.imagem] : [];
@@ -497,10 +609,12 @@ function abrirModalEditarProduto(id) {
       }
 
       // limpa textarea de imagens (o usuário só adiciona/edita links novos)
-      const textareaImagensEditar = document.getElementById("editarImagemProduto");
+      const textareaImagensEditar = document.getElementById(
+        "editarImagemProduto"
+      );
       if (textareaImagensEditar) textareaImagensEditar.value = "";
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
       showToast("Erro ao carregar produto.", "error");
       modal.style.display = "none";
@@ -508,7 +622,6 @@ function abrirModalEditarProduto(id) {
 
   initEditarProdutoSubmit();
 }
-
 
 function initEditarProdutoSubmit() {
   const formEditarProduto = document.getElementById("formEditarProduto");
@@ -527,21 +640,22 @@ function initEditarProdutoSubmit() {
 
     const secoesSelecionadas = Array.from(
       document.querySelectorAll("input[name='editarSecaoProduto']:checked")
-    ).map(el => el.value);
+    ).map((el) => el.value);
     const secao = secoesSelecionadas.length ? secoesSelecionadas : [];
 
     const cores = Array.from(
       document.querySelectorAll("input[name='editarCoresProduto']:checked")
-    ).map(el => el.value);
+    ).map((el) => el.value);
 
     const torneira = Array.from(
       document.querySelectorAll("input[name='editarTorneiraProduto']:checked")
-    ).map(el => el.value);
+    ).map((el) => el.value);
 
-    const capacidade = document.getElementById("editarCapacidadeProduto").value
-      .split(",")
-      .map(i => i.trim())
-      .filter(i => i);
+    const capacidade = document
+      .getElementById("editarCapacidadeProduto")
+      .value.split(",")
+      .map((i) => i.trim())
+      .filter((i) => i);
 
     // usa o array de imagens da edição
     const imagem = imagensEditarArray;
@@ -550,14 +664,22 @@ function initEditarProdutoSubmit() {
       nome: document.getElementById("editarNome").value,
       descricao: document.getElementById("editarDescricao").value,
       preco: parseFloat(document.getElementById("editarPreco").value),
-      precoPromocional: parseFloat(document.getElementById("editarPrecoPromocional").value) || null,
-      categoria: document.getElementById("editarCategoriaProduto").value || null,
-      categoria2: document.getElementById("editarCategoria2Produto").value || null,
-      categoria3: document.getElementById("editarCategoria3Produto").value || null,
+      precoPromocional:
+        parseFloat(document.getElementById("editarPrecoPromocional").value) ||
+        null,
+      categoria:
+        document.getElementById("editarCategoriaProduto").value || null,
+      categoria2:
+        document.getElementById("editarCategoria2Produto").value || null,
+      categoria3:
+        document.getElementById("editarCategoria3Produto").value || null,
+      marca: document.getElementById("editarMarcaProduto").value || null,
       secao,
       altura: parseFloat(document.getElementById("editarAltura").value) || null,
-      largura: parseFloat(document.getElementById("editarLargura").value) || null,
-      comprimento: parseFloat(document.getElementById("editarComprimento").value) || null,
+      largura:
+        parseFloat(document.getElementById("editarLargura").value) || null,
+      comprimento:
+        parseFloat(document.getElementById("editarComprimento").value) || null,
       peso: parseFloat(document.getElementById("editarPeso").value) || null,
       imagem,
       cores,
@@ -570,7 +692,7 @@ function initEditarProdutoSubmit() {
       const res = await fetch(`/api/produtos/${produtoAtualId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
 
       const result = await res.json();
@@ -586,7 +708,6 @@ function initEditarProdutoSubmit() {
   });
 }
 
-
 /* =====================
  * BUSCA DE PRODUTOS
  * ===================== */
@@ -597,7 +718,9 @@ function initBuscaProdutos() {
 
   if (!searchBtn || !searchInput) return;
 
-  searchBtn.addEventListener("click", () => buscarProdutos(searchInput.value.trim()));
+  searchBtn.addEventListener("click", () =>
+    buscarProdutos(searchInput.value.trim())
+  );
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -617,12 +740,15 @@ async function buscarProdutos(query) {
   container.innerHTML = "<p class='text-muted'>Buscando produtos...</p>";
 
   try {
-    const res = await fetch(`/api/produtos/busca?query=${encodeURIComponent(query)}`);
+    const res = await fetch(
+      `/api/produtos/busca?query=${encodeURIComponent(query)}`
+    );
     if (!res.ok) throw new Error("Erro na busca de produtos");
     const produtos = await res.json();
 
     if (!produtos.length) {
-      container.innerHTML = "<p class='text-muted'>Nenhum produto encontrado.</p>";
+      container.innerHTML =
+        "<p class='text-muted'>Nenhum produto encontrado.</p>";
       return;
     }
 
