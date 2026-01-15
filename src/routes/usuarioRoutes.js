@@ -17,6 +17,7 @@ router.put("/admin/:id", usuarioController.atualizarUsuarioAdmin);
 router.delete("/admin/:id", usuarioController.deletarUsuarioAdmin);
 router.post("/recuperar-senha", usuarioController.solicitarRecuperacaoSenha);
 router.post("/resetar-senha", usuarioController.resetarSenha);
+router.get("/stats/clientes", usuarioController.contarClientes);
 
 module.exports = router;
 

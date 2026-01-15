@@ -9,4 +9,7 @@ router.post("/", newsletterController.cadastrar);
 // GET /api/newsletter   -> (opcional) listar inscritos (pode travar por admin)
 router.get("/", newsletterController.listar);
 
+// POST /api/newsletter/enviar -> enviar email em massa (admin)
+router.post("/enviar", newsletterController.enviarEmailMassa);
+
 module.exports = router;

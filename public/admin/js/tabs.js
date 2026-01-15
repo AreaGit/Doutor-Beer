@@ -25,6 +25,10 @@ function initTabs() {
       title: "Clientes",
       subtitle: "Visualize seus clientes e histórico de compras."
     },
+    newsletter: {
+      title: "Newsletter",
+      subtitle: "Envie emails com novidades para os inscritos."
+    },
     config: {
       title: "Configurações",
       subtitle: "Preferências gerais do painel e da loja."

@@ -278,3 +278,17 @@ exports.toggleStatusProduto = async (req, res) => {
     res.status(500).json({ erro: "Erro ao alterar status do produto." });
   }
 };
+
+/* ================== Contar Produtos Ativos (Dashboard) ================== */
+exports.contarProdutosAtivos = async (req, res) => {
+  try {
+    const count = await Produto.count({
+      where: { ativo: true }
+    });
+
+    res.json({ produtosAtivos: count });
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao contar produtos ativos:", err);
+    res.status(500).json({ erro: "Erro ao contar produtos ativos." });
+  }
+};

@@ -222,6 +222,9 @@ function abrirModalCliente(cliente) {
       showToast("Cliente atualizado com sucesso!", "success");
       modal.style.display = "none";
       carregarClientes();
+      
+      // Reload automático após ação impactante
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error(err);
       showToast("Erro ao salvar alterações: " + err.message, "error");
@@ -249,6 +252,9 @@ function abrirModalCliente(cliente) {
         showToast("Cliente excluído com sucesso!", "success");
         modal.style.display = "none";
         carregarClientes();
+        
+        // Reload automático após ação impactante
+        setTimeout(() => window.location.reload(), 1000);
       } catch (err) {
         console.error(err);
         showToast("Erro ao excluir cliente: " + err.message, "error");

@@ -1251,23 +1251,27 @@ async function carregarProduto() {
         if (precoPromoFinal !== null) precoPromoFinal += extra;
       }
 
-      // 🔹 Atualiza DOM
-      precoAntigoEl.textContent = base
-        ? precoFinal.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })
-        : "";
-
-      precoNovoEl.textContent = precoPromoFinal
-        ? precoPromoFinal.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })
-        : precoFinal.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          });
+      // 🔹 Atualiza DOM - só mostra preço antigo riscado se houver promoção
+      if (precoPromoFinal !== null) {
+        // Tem promoção: mostra preço normal riscado e preço promocional
+        precoAntigoEl.textContent = base
+          ? precoFinal.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })
+          : "";
+        precoNovoEl.textContent = precoPromoFinal.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+      } else {
+        // Não tem promoção: mostra apenas o preço normal (sem riscar)
+        precoAntigoEl.textContent = "";
+        precoNovoEl.textContent = precoFinal.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+      }
 
       // 🔹 Atualiza produtoAtual globalmente
       produtoAtual.precoAjustado = precoPromoFinal || precoFinal;
@@ -1281,20 +1285,33 @@ async function carregarProduto() {
     initMiniaturas(produto);
 
     document.querySelector(".produto-detalhes h1").textContent = produto.nome;
-    document.querySelector(".produto-detalhes .preco .antigo").textContent =
-      produto.preco
+    
+    // Lógica correta: só mostra preço antigo riscado se houver preço promocional
+    const precoAntigoEl = document.querySelector(".produto-detalhes .preco .antigo");
+    const precoNovoEl = document.querySelector(".produto-detalhes .preco .novo");
+    
+    if (produto.precoPromocional) {
+      // Tem promoção: mostra preço normal riscado e preço promocional
+      precoAntigoEl.textContent = produto.preco
         ? produto.preco.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })
         : "";
-    document.querySelector(".produto-detalhes .preco .novo").textContent =
-      produto.precoPromocional
-        ? produto.precoPromocional.toLocaleString("pt-BR", {
+      precoNovoEl.textContent = produto.precoPromocional.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    } else {
+      // Não tem promoção: mostra apenas o preço normal (sem riscar)
+      precoAntigoEl.textContent = "";
+      precoNovoEl.textContent = produto.preco
+        ? produto.preco.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
           })
         : "";
+    }
 
     document.querySelector(".produto-detalhes .descricao").innerHTML = `
       <h3>Descrição</h3>
@@ -1436,7 +1453,7 @@ async function carregarProduto() {
         <h3>${p.nome}</h3>
         <p class="preco">
           <span class="antigo">${
-            p.preco
+            p.precoPromocional && p.preco
               ? p.preco.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
@@ -1446,6 +1463,11 @@ async function carregarProduto() {
           <span class="novo">${
             p.precoPromocional
               ? p.precoPromocional.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })
+              : p.preco
+              ? p.preco.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 })

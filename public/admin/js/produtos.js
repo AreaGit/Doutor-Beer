@@ -222,6 +222,9 @@ function initProdutoCadastro() {
 
       document.getElementById("modalNovoProduto").style.display = "none";
       carregarProdutos();
+      
+      // Reload automático após ação impactante
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error(err);
       showToast("Erro ao cadastrar produto: " + err.message, "error");
@@ -441,7 +444,20 @@ function renderListaProdutos(produtos) {
   const container = document.getElementById("listaProdutos");
   if (!container) return;
 
-  container.innerHTML = produtos.map(renderProdutoCard).join("");
+  // Ordena produtos: ativos primeiro, inativos no final
+  // Dentro de cada grupo, mantém a ordem original (mais recentes primeiro)
+  const produtosOrdenados = [...produtos].sort((a, b) => {
+    const aAtivo = a.ativo !== false; // default true
+    const bAtivo = b.ativo !== false; // default true
+    
+    // Se ambos têm o mesmo status, mantém ordem original
+    if (aAtivo === bAtivo) return 0;
+    
+    // Ativos (true) vêm antes de inativos (false)
+    return aAtivo ? -1 : 1;
+  });
+
+  container.innerHTML = produtosOrdenados.map(renderProdutoCard).join("");
 
   // Eventos de edição / remoção
   container.querySelectorAll(".editar-btn").forEach((btn) => {
@@ -506,11 +522,28 @@ function renderListaProdutos(produtos) {
           badge.classList.remove("badge-danger");
           badge.classList.add("badge-success");
           card.classList.remove("produto-inativo");
+          
+          // Se foi ativado, move para o início da lista (antes do primeiro inativo ou no início)
+          const container = document.getElementById("listaProdutos");
+          const cards = Array.from(container.querySelectorAll(".product-card"));
+          const primeiroInativo = cards.findIndex(c => c.classList.contains("produto-inativo"));
+          
+          if (primeiroInativo !== -1) {
+            // Insere antes do primeiro inativo (no final da seção de ativos)
+            container.insertBefore(card, cards[primeiroInativo]);
+          } else {
+            // Se não há inativos, move para o início
+            container.insertBefore(card, container.firstChild);
+          }
         } else {
           badge.textContent = "Inativo";
           badge.classList.remove("badge-success");
           badge.classList.add("badge-danger");
           card.classList.add("produto-inativo");
+          
+          // Se foi inativado, move para o final da lista (depois de todos os outros produtos)
+          const container = document.getElementById("listaProdutos");
+          container.appendChild(card);
         }
 
         showToast("Status do produto atualizado", "success");
@@ -529,6 +562,9 @@ async function deletarProduto(id) {
     if (!response.ok) throw new Error("Erro ao deletar produto");
     showToast("Produto deletado com sucesso!", "success");
     carregarProdutos();
+    
+    // Reload automático após ação impactante
+    setTimeout(() => window.location.reload(), 1000);
   } catch (err) {
     console.error(err);
     showToast("Erro ao deletar produto.", "error");
@@ -701,6 +737,9 @@ function initEditarProdutoSubmit() {
       showToast("Produto atualizado com sucesso!", "success");
       document.getElementById("modalEditarProduto").style.display = "none";
       carregarProdutos();
+      
+      // Reload automático após ação impactante
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
       console.error(err);
       showToast("Erro ao atualizar produto.", "error");
@@ -752,7 +791,15 @@ async function buscarProdutos(query) {
       return;
     }
 
-    renderListaProdutos(produtos);
+    // Ordena produtos: ativos primeiro, inativos no final
+    const produtosOrdenados = [...produtos].sort((a, b) => {
+      const aAtivo = a.ativo !== false;
+      const bAtivo = b.ativo !== false;
+      if (aAtivo === bAtivo) return 0;
+      return aAtivo ? -1 : 1;
+    });
+
+    renderListaProdutos(produtosOrdenados);
   } catch (err) {
     console.error(err);
     showToast("Erro na busca de produtos.", "error");

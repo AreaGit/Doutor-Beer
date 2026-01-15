@@ -778,3 +778,14 @@ exports.logout = async (req, res) => {
     res.json({ message: "Logout realizado com sucesso!" });
   });
 };
+
+// ==================== CONTAR CLIENTES CADASTRADOS (Dashboard) ====================
+exports.contarClientes = async (req, res) => {
+  try {
+    const count = await Usuario.count();
+    res.json({ clientesCadastrados: count });
+  } catch (err) {
+    console.error("[UsuarioController] Erro ao contar clientes:", err);
+    res.status(500).json({ erro: "Erro ao contar clientes cadastrados." });
+  }
+};

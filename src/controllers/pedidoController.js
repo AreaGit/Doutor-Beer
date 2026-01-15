@@ -242,3 +242,179 @@ exports.atualizarStatusPedido = async (req, res) => {
     res.status(500).json({ error: "Erro ao atualizar status do pedido" });
   }
 };
+
+// ==========================
+// 🔹 Retornar últimos N pedidos (Dashboard)
+// ==========================
+exports.getUltimosPedidos = async (req, res) => {
+  try {
+    const limite = parseInt(req.query.limite) || 5; // padrão: 5 pedidos
+    const pedidos = await Pedido.findAll({
+      include: [
+        {
+          model: PedidoItem,
+          as: "Itens",
+          include: [{ model: Produto, as: "Produto" }]
+        },
+        {
+          association: "Usuario",
+          attributes: ["id", "nome", "email"]
+        }
+      ],
+      order: [["createdAt", "DESC"]],
+      limit: limite
+    });
+
+    const pedidosFormatados = pedidos.map(pedido => {
+      let subtotal = 0;
+      const itensFormatados = pedido.Itens.map(i => {
+        const precoUnit = i.precoUnitario ?? 0;
+        const qtd = i.quantidade ?? 1;
+        subtotal += precoUnit * qtd;
+
+        const imagemProduto = Array.isArray(i.Produto?.imagem)
+          ? i.Produto.imagem[0]
+          : i.Produto?.imagem || "/images/no-image.png";
+
+        return {
+          nome: i.Produto?.nome ?? "Produto",
+          quantidade: qtd,
+          precoUnitario: precoUnit,
+          imagem: imagemProduto,
+          cor: i.cor || null,
+          torneira: i.torneira || null,
+          refil: i.refil || null
+        };
+      });
+
+      return {
+        id: pedido.id,
+        usuario: pedido.Usuario
+          ? { id: pedido.Usuario.id, nome: pedido.Usuario.nome, email: pedido.Usuario.email }
+          : null,
+        status: pedido.status,
+        subtotal,
+        total: pedido.total,
+        frete: pedido.frete,
+        Itens: itensFormatados,
+        criadoEm: pedido.createdAt
+      };
+    });
+
+    res.json(pedidosFormatados);
+  } catch (err) {
+    console.error("[PedidoController] Erro ao carregar últimos pedidos:", err);
+    res.status(500).json({ error: "Erro ao carregar últimos pedidos" });
+  }
+};
+
+// ==========================
+// 🔹 Faturamento dos últimos 7 dias (Dashboard)
+// ==========================
+exports.getFaturamentoSemana = async (req, res) => {
+  try {
+    const { Op } = require("sequelize");
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // 7 dias incluindo hoje (hoje + 6 dias anteriores)
+    const seteDiasAtras = new Date(hoje);
+    seteDiasAtras.setDate(hoje.getDate() - 6);
+
+    // Busca pedidos dos últimos 7 dias
+    const pedidos = await Pedido.findAll({
+      where: {
+        createdAt: {
+          [Op.gte]: seteDiasAtras
+        }
+      },
+      attributes: ["createdAt", "total"],
+      raw: true
+    });
+
+    // Agrupa faturamento por dia (chave yyyy-mm-dd)
+    const faturamentoPorDia = {};
+
+    pedidos.forEach(p => {
+      const d = new Date(p.createdAt);
+      d.setHours(0, 0, 0, 0);
+      const chave = d.toISOString().split("T")[0];
+
+      const total = Number(p.total) || 0;
+      faturamentoPorDia[chave] = (faturamentoPorDia[chave] || 0) + total;
+    });
+
+    // Monta os 7 dias (sempre 7 pontos, mesmo sem pedidos)
+    const nomesDias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const labels = [];
+    const valores = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(hoje);
+      d.setDate(hoje.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+
+      const chave = d.toISOString().split("T")[0];
+      labels.push(nomesDias[d.getDay()]);
+      valores.push(faturamentoPorDia[chave] || 0);
+    }
+
+    return res.json({ labels, valores });
+  } catch (err) {
+    console.error("[PedidoController] Erro ao carregar faturamento da semana:", err);
+    return res.status(500).json({ error: "Erro ao carregar faturamento da semana" });
+  }
+};
+
+// ==========================
+// 🔹 Resumo (faturamento mês / pedidos hoje) - Dashboard
+// ==========================
+exports.getResumoDashboardAdmin = async (req, res) => {
+  try {
+    const { Op } = require("sequelize");
+
+    const agora = new Date();
+
+    // Início e fim do dia de hoje
+    const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0);
+    const inicioAmanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1, 0, 0, 0, 0);
+
+    // Início do mês atual e início do próximo mês
+    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1, 0, 0, 0, 0);
+    const inicioProximoMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 1, 0, 0, 0, 0);
+
+    // Quantidade de pedidos hoje (todos os status)
+    const pedidosHoje = await Pedido.count({
+      where: {
+        createdAt: {
+          [Op.gte]: inicioHoje,
+          [Op.lt]: inicioAmanha
+        }
+      }
+    });
+
+    // Faturamento do mês (soma do total do pedido)
+    const somaMes = await Pedido.sum("total", {
+      where: {
+        createdAt: {
+          [Op.gte]: inicioMes,
+          [Op.lt]: inicioProximoMes
+        }
+      }
+    });
+
+    const faturamentoMes = Number(somaMes) || 0;
+
+    return res.json({
+      faturamentoMes,
+      pedidosHoje
+    });
+  } catch (err) {
+    console.error("[PedidoController] Erro ao carregar resumo do dashboard (admin):", err);
+    return res.status(500).json({ error: "Erro ao carregar resumo do dashboard" });
+  }
+};
+
+
+

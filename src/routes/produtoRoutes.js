@@ -19,6 +19,9 @@ router.get("/categoria/:categoria", produtoController.buscarPorCategoria);
 // Busca global (somente ativos)
 router.get("/busca", produtoController.buscarProdutos);
 
+// Contar produtos ativos (Dashboard)
+router.get("/stats/ativos", produtoController.contarProdutosAtivos);
+
 // ================= ADMIN =================
 
 // Criar produto

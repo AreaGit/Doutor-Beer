@@ -47,6 +47,10 @@
           <i class="fa-solid fa-users"></i>
           <span>Clientes</span>
         </button>
+        <button class="nav-item" data-tab="newsletter">
+          <i class="fa-solid fa-envelope"></i>
+          <span>Newsletter</span>
+        </button>
         <!--<button class="nav-item" data-tab="config">
           <i class="fa-solid fa-gear"></i>
           <span>Configurações</span>
@@ -71,6 +75,9 @@
           <p>Resumo geral da operação da loja.</p>
         </div>
         <div class="topbar-right">
+          <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+            <i class="fa-solid fa-moon" id="themeIcon"></i>
+          </button>
           <div class="topbar-date">
             <i class="fa-regular fa-calendar"></i>
             <span id="topbarDate"></span>
@@ -90,9 +97,11 @@
                 <span>Faturamento (mês)</span>
                 <i class="fa-solid fa-coins"></i>
               </div>
-              <div class="metric-value">R$ 42.870,00</div>
+              <div class="metric-value" id="metric-faturamento"></div>
+
               <div class="metric-sub">
-                <span class="up">+18% vs mês passado</span>
+                <span class="up" id="metric-faturamento-delta"></span>
+
               </div>
             </div>
 
@@ -101,7 +110,8 @@
                 <span>Pedidos hoje</span>
                 <i class="fa-solid fa-cart-plus"></i>
               </div>
-              <div class="metric-value">37</div>
+              <div class="metric-value" id="metric-pedidos-hoje">—</div>
+
               <div class="metric-sub">
                 <span class="neutral">Fluxo dentro do esperado</span>
               </div>
@@ -112,9 +122,10 @@
                 <span>Produtos ativos</span>
                 <i class="fa-solid fa-boxes-stacked"></i>
               </div>
-              <div class="metric-value">124</div>
+              <div class="metric-value" id="metric-produtos-ativos">—</div>
+
               <div class="metric-sub">
-                <span class="up">+6 novos esta semana</span>
+                <span class="up"></span>
               </div>
             </div>
 
@@ -123,9 +134,10 @@
                 <span>Clientes cadastrados</span>
                 <i class="fa-solid fa-user-group"></i>
               </div>
-              <div class="metric-value">892</div>
+              <div class="metric-value" id="metric-clientes">—</div>
+
               <div class="metric-sub">
-                <span class="up">+22 nos últimos 7 dias</span>
+                <span class="up"></span>
               </div>
             </div>
           </div>
@@ -157,36 +169,10 @@
                       <th>Data</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td>#1023</td>
-                      <td>João Silva</td>
-                      <td><span class="badge badge-success">Entregue</span></td>
-                      <td>R$ 289,90</td>
-                      <td>10/11/2025</td>
-                    </tr>
-                    <tr>
-                      <td>#1024</td>
-                      <td>Maria Oliveira</td>
-                      <td><span class="badge badge-warning">Processando</span></td>
-                      <td>R$ 159,00</td>
-                      <td>10/11/2025</td>
-                    </tr>
-                    <tr>
-                      <td>#1025</td>
-                      <td>Carlos Lima</td>
-                      <td><span class="badge badge-info">Enviado</span></td>
-                      <td>R$ 412,50</td>
-                      <td>10/11/2025</td>
-                    </tr>
-                    <tr>
-                      <td>#1026</td>
-                      <td>Ana Paula</td>
-                      <td><span class="badge badge-danger">Cancelado</span></td>
-                      <td>R$ 89,90</td>
-                      <td>09/11/2025</td>
-                    </tr>
+                  <tbody id="dashboard-ultimos-pedidos">
+                    <!-- JS injeta linhas aqui -->
                   </tbody>
+
                 </table>
               </div>
             </div>
@@ -195,36 +181,10 @@
               <div class="panel-header">
                 <h2>Atividades recentes</h2>
               </div>
-              <ul class="activity-list">
-                <li>
-                  <span class="dot dot-primary"></span>
-                  <div>
-                    <p>Produto <strong>Chopeira Premium 20L</strong> atualizado.</p>
-                    <span class="time">Há 12 minutos</span>
-                  </div>
-                </li>
-                <li>
-                  <span class="dot dot-success"></span>
-                  <div>
-                    <p>Pedido <strong>#1025</strong> marcado como <strong>Enviado</strong>.</p>
-                    <span class="time">Há 30 minutos</span>
-                  </div>
-                </li>
-                <li>
-                  <span class="dot dot-warning"></span>
-                  <div>
-                    <p>Estoque baixo em <strong>Growler 2L</strong>.</p>
-                    <span class="time">Há 1 hora</span>
-                  </div>
-                </li>
-                <li>
-                  <span class="dot dot-info"></span>
-                  <div>
-                    <p>Novo cliente <strong>Bruna Costa</strong> cadastrado.</p>
-                    <span class="time">Há 2 horas</span>
-                  </div>
-                </li>
+              <ul class="activity-list" id="dashboard-atividades">
+                <!-- JS injeta atividades aqui -->
               </ul>
+
             </div>
           </div>
         </section>
@@ -257,15 +217,23 @@
         <!-- TAB: PEDIDOS -->
         <section class="tab" id="pedidos">
           <div class="tab-header">
-            <div class="toolbar">
-              <select class="select-input">
-                <option>Todos os status</option>
-                <option>Pendente</option>
-                <option>Processando</option>
-                <option>Enviado</option>
-                <option>Entregue</option>
-                <option>Cancelado</option>
+            <div class="toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <div class="search-input" style="flex: 1; min-width: 200px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="buscarPedidoInput" placeholder="Buscar por ID do pedido...">
+              </div>
+              <select class="select-input" id="filtroStatusPedido" style="min-width: 180px;">
+                <option value="">Todos os status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Processando">Processando</option>
+                <option value="Enviado">Enviado</option>
+                <option value="Entregue">Entregue</option>
+                <option value="Cancelado">Cancelado</option>
               </select>
+              <button class="btn-outline" id="btnLimparFiltrosPedido">
+                <i class="fa-solid fa-xmark"></i>
+                Limpar
+              </button>
             </div>
           </div>
 
@@ -309,6 +277,94 @@
                 <!-- preenchido via JS -->
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <!-- TAB: NEWSLETTER -->
+        <section class="tab" id="newsletter">
+          <div class="tab-header">
+            <h2>Enviar Newsletter</h2>
+            <p>Envie emails com novidades para todos os inscritos na newsletter.</p>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Nova Campanha</h3>
+            </div>
+
+            <form id="formNewsletter" class="modal-form">
+              <div class="form-row full">
+                <label for="newsletterAssunto">Assunto do Email *</label>
+                <input type="text" id="newsletterAssunto" name="assunto" required placeholder="Ex: Novidades da Doutor Beer! 🍺">
+              </div>
+
+              <div class="form-row full">
+                <label for="newsletterConteudo">Conteúdo HTML *</label>
+                <textarea id="newsletterConteudo" name="conteudoHtml" rows="15" required placeholder="Digite o conteúdo HTML do email aqui..."></textarea>
+                <small style="color: #9b9bb0; font-size: 0.85rem; margin-top: 4px; display: block;">
+                  Use HTML para formatar o email. Você pode incluir imagens, links, estilos, etc.
+                </small>
+              </div>
+
+              <div class="form-row full">
+                <label for="newsletterConteudoTexto">Conteúdo Texto (opcional)</label>
+                <textarea id="newsletterConteudoTexto" name="conteudoTexto" rows="5" placeholder="Versão em texto puro do email (para clientes que não suportam HTML)"></textarea>
+              </div>
+
+              <div class="form-row full" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                  <i class="fa-solid fa-info-circle" style="color: #F9B000;"></i>
+                  <span style="color: #b2b2d0; font-size: 0.9rem;">
+                    O email será enviado para todos os inscritos confirmados na newsletter.
+                  </span>
+                </div>
+                <div id="newsletterStats" style="color: #9b9bb0; font-size: 0.85rem;">
+                  Carregando estatísticas...
+                </div>
+              </div>
+
+              <div class="modal-actions" style="margin-top: 24px;">
+                <button type="button" class="btn-outline" id="btnPreviewNewsletter">
+                  <i class="fa-solid fa-eye"></i>
+                  Pré-visualizar
+                </button>
+                <button type="submit" class="btn-primary" id="btnEnviarNewsletter">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  Enviar Newsletter
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel" style="margin-top: 24px;">
+            <div class="panel-header">
+              <h3>Inscritos na Newsletter</h3>
+              <button class="btn-outline small" id="btnAtualizarListaNewsletter">
+                <i class="fa-solid fa-rotate"></i>
+                Atualizar
+              </button>
+            </div>
+
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#ID</th>
+                    <th>E-mail</th>
+                    <th>Origem</th>
+                    <th>Status</th>
+                    <th>Cadastrado em</th>
+                  </tr>
+                </thead>
+                <tbody id="listaNewsletter">
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #9b9bb0;">
+                      Carregando inscritos...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -818,13 +874,15 @@
         </div>
 
         <div class="form-row">
-          <label for="editarMarcaProduto">Marca</label>
-          <select id="editarMarcaProduto" name="marca" class="categoria-select">
-            <option value="">Selecione...</option>
-            <option value="">Nenhuma</option>
-            <option value="doutor_beer">Doutor Beer</option>
-            <option value="icechopp">IceChopp</option>
-          </select>
+          <label for="marcaProduto">Marca</label>
+          <select id="marcaProduto" name="marca" class="categoria-select">
+
+            <select id="marcaProduto" name="marca" class="categoria-select">
+              <option value="">Selecione...</option>
+              <option value="">Nenhuma</option>
+              <option value="doutor_beer">Doutor Beer</option>
+              <option value="icechopp">IceChopp</option>
+            </select>
         </div>
 
         <!-- Seção -->
@@ -1103,6 +1161,7 @@
   <script src="./admin/js/produtos.js"></script>
   <script src="./admin/js/pedidos.js"></script>
   <script src="./admin/js/clientes.js"></script>
+  <script src="./admin/js/newsletter.js"></script>
 </body>
 
 </html>
