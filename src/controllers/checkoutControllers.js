@@ -164,8 +164,16 @@ exports.confirmarPagamentoHandler = async (req, res) => {
     total += frete || 0;
 
     // 3️⃣ Cria o pedido
+    // Buscar dados do usuário para snapshot
+    const usuario = await Usuario.findByPk(usuarioId);
+
     const pedido = await Pedido.create({
       usuarioId,
+      clienteNome: usuario?.nome,
+      clienteEmail: usuario?.email,
+      clienteCpf: usuario?.cpf,
+      clienteCelular: usuario?.celular,
+      clienteDataNascimento: usuario?.data_de_nascimento,
       status: "Pago", // ou "Pendente"
       total,
       frete: frete || 0, // <-- aqui salvamos o frete
@@ -320,6 +328,11 @@ exports.gerarBoleto = async (req, res) => {
     // === Cria o pedido ===
     const pedido = await Pedido.create({
       usuarioId: usuarioIdSessao || usuarioIdFront,
+      clienteNome: cliente?.nome,
+      clienteEmail: cliente?.email,
+      clienteCpf: cliente?.cpf,
+      clienteCelular: cliente?.celular,
+      clienteDataNascimento: cliente?.data_de_nascimento,
       status: "AGUARDANDO PAGAMENTO",
       frete: Number(frete || 0),
       total: Number(total || subtotalCalc + Number(frete || 0)),

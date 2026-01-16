@@ -58,6 +58,11 @@ exports.getPedidoById = async (req, res) => {
       cupom: pedido.cupom || null,
       metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento || "Não informado",
       enderecoEntrega: pedido.enderecoEntrega ?? {},
+      clienteNome: pedido.clienteNome,
+      clienteEmail: pedido.clienteEmail,
+      clienteCpf: pedido.clienteCpf,
+      clienteCelular: pedido.clienteCelular,
+      clienteDataNascimento: pedido.clienteDataNascimento,
       Itens: itensFormatados
     });
 
@@ -175,10 +180,10 @@ exports.getTodosPedidos = async (req, res) => {
         id: pedido.id,
         usuario: pedido.Usuario
           ? {
-              id: pedido.Usuario.id,
-              nome: pedido.Usuario.nome,
-              email: pedido.Usuario.email
-            }
+            id: pedido.Usuario.id,
+            nome: pedido.Usuario.nome,
+            email: pedido.Usuario.email
+          }
           : null,
         status: pedido.status,
         subtotal,
@@ -186,6 +191,11 @@ exports.getTodosPedidos = async (req, res) => {
         frete: pedido.frete,
         metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento,
         enderecoEntrega: pedido.enderecoEntrega,
+        clienteNome: pedido.clienteNome,
+        clienteEmail: pedido.clienteEmail,
+        clienteCpf: pedido.clienteCpf,
+        clienteCelular: pedido.clienteCelular,
+        clienteDataNascimento: pedido.clienteDataNascimento,
         Itens: itensFormatados,
         criadoEm: pedido.createdAt
       };

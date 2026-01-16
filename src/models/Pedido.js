@@ -2,7 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const Usuario = require("./Usuario");
-const PedidoItem = require("./PedidoItem"); 
+const PedidoItem = require("./PedidoItem");
 
 const Pedido = sequelize.define("Pedido", {
   id: {
@@ -41,11 +41,19 @@ const Pedido = sequelize.define("Pedido", {
     allowNull: true
   },
 
-    descontoCupom: {
+  descontoCupom: {
     type: DataTypes.FLOAT,
     allowNull: false,
     defaultValue: 0
   },
+
+  // Snapshot dos dados do cliente (para histórico imutável)
+  clienteNome: { type: DataTypes.STRING, allowNull: true },
+  clienteEmail: { type: DataTypes.STRING, allowNull: true },
+  clienteCpf: { type: DataTypes.STRING, allowNull: true },
+  clienteCelular: { type: DataTypes.STRING, allowNull: true },
+  clienteDataNascimento: { type: DataTypes.DATEONLY, allowNull: true },
+
   // Campos adicionados para integração ASAAS
   paymentId: { type: DataTypes.STRING, allowNull: true }, // ID da cobrança no ASAAS
   paymentStatus: { type: DataTypes.STRING, allowNull: true }, // Ex: RECEIVED, PENDING, OVERDUE, etc
@@ -61,7 +69,7 @@ const Pedido = sequelize.define("Pedido", {
 
 // Relacionamentos  
 Pedido.belongsTo(Usuario, { foreignKey: "usuarioId", as: "Usuario" });
-Pedido.hasMany(PedidoItem, { foreignKey: "pedidoId", as: "Itens" }); 
+Pedido.hasMany(PedidoItem, { foreignKey: "pedidoId", as: "Itens" });
 
 // Sincroniza tabela
 Pedido.sync({ alter: true });
