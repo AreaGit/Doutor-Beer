@@ -102,7 +102,8 @@ exports.calcularFreteHandler = async (req, res) => {
             return acc + unit * (Number(it.quantidade) || 0);
           }, 0);
 
-          const freteGratisAplicavel = !!carrinho.freteGratis;
+          const atingiuMinimoAutomatico = subtotal >= 1000;
+          const freteGratisAplicavel = !!carrinho.freteGratis || atingiuMinimoAutomatico;
 
           if (freteGratisAplicavel) {
             // cria uma opção minimalista de frete grátis compatível com o shape do MelhorEnvio

@@ -126,7 +126,11 @@ router.post("/salvar-endereco-frete", async (req, res) => {
     }
 
     // Se o carrinho não tem a flag de frete grátis (vinda do cupom ou regra dinâmica), bloqueia
-    if (!carrinho.freteGratis) {
+    // Regra adicional: se subtotal >= 1000
+    const subtotalCarrinho = Number(carrinho.subtotal || 0);
+    const atingiuMinimo = subtotalCarrinho >= 1000;
+
+    if (!carrinho.freteGratis && !atingiuMinimo) {
       return res.status(400).json({ error: "Frete grátis não disponível para este pedido." });
     }
   }
@@ -180,7 +184,8 @@ router.get("/resumo", async (req, res) => {
     );
 
     // disponibilidade do frete grátis (para o front renderizar a opção)
-    const freteGratisAvailable = !!carrinho.freteGratis;
+    const atingiuMinimo = subtotal >= 1000;
+    const freteGratisAvailable = !!carrinho.freteGratis || atingiuMinimo;
 
     // se o usuário já escolheu frete grátis anteriormente (persistido na sessão)
     const freteGratisSelected = !!checkoutSession.freteGratis && freteGratisAvailable;
@@ -304,7 +309,10 @@ router.post("/finalizar", async (req, res) => {
     // 🔹 Revalidação: se o usuário escolheu frete grátis, garante que a condição ainda é válida
     // Busca novamente o carrinho para garantir a flag freteGratis atualizada
     const carrinhoDB = await Carrinho.findOne({ where: { usuarioId: usuarioIdSessao, status: "ABERTO" } });
-    const freteGratisReal = carrinhoDB ? !!carrinhoDB.freteGratis : false;
+    const freteGratisCupom = carrinhoDB ? !!carrinhoDB.freteGratis : false;
+    const atingiuMinimoTotal = subtotal >= 1000;
+
+    const freteGratisReal = freteGratisCupom || atingiuMinimoTotal;
 
     if (freteGratisSelected && !freteGratisReal) {
       return res.status(400).json({

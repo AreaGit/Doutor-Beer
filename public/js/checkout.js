@@ -119,12 +119,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.freteSelecionado = freteSelecionado;
 
       // flags de frete grátis: backend autoritativo
-      // resumo.cupom?.freteGratis ou resumo.freteGratis (ambos aceitos)
+      // resumo.cupom?.freteGratis ou resumo.freteGratisAvailable (ambos aceitos)
       const cupomDoResumo = resumo.cupom || null;
       window.freteGratisAvailable =
         !!(cupomDoResumo && cupomDoResumo.freteGratis === true) ||
-        !!resumo.freteGratis;
-      window.freteGratisSelected = !!resumo.freteGratis; // true se backend já marcou frete grátis como escolhido
+        !!resumo.freteGratisAvailable;
+      window.freteGratisSelected = !!resumo.freteGratisSelected; // true se backend já marcou frete grátis como escolhido
 
       // Monta lista de produtos do resumo
       ulResumo.innerHTML = "";
@@ -147,19 +147,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         const li = document.createElement("li");
         li.innerHTML = `
 <div class="produto-item">
-  <img src="${p.imagem || "/images/no-image.png"}" alt="${
-          p.nome
-        }" class="img-produto">
+  <img src="${p.imagem || "/images/no-image.png"}" alt="${p.nome
+          }" class="img-produto">
   <div class="produto-info">
     <span class="nome-produto">
       ${p.quantidade || 1}x ${p.nome}
     </span>
     ${p.cor && p.cor !== "padrao" ? `<p>Cor: ${p.cor}</p>` : ""}
-    ${
-      p.torneira && p.torneira !== "padrao"
-        ? `<p>Torneira: ${p.torneira}</p>`
-        : ""
-    }
+    ${p.torneira && p.torneira !== "padrao"
+            ? `<p>Torneira: ${p.torneira}</p>`
+            : ""
+          }
     ${p.refil && Number(p.refil) > 1 ? `<p>Refis: ${p.refil}</p>` : ""}
     <strong class="preco-produto">
       R$ ${formatMoney(precoTotal)}
@@ -187,9 +185,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         typeof resumo.total === "number"
           ? Number(resumo.total)
           : subtotalComDesconto +
-            (window.freteGratisSelected
-              ? 0
-              : Number(resumo.frete ?? window.freteOriginal ?? 0));
+          (window.freteGratisSelected
+            ? 0
+            : Number(resumo.frete ?? window.freteOriginal ?? 0));
 
       totalEl.textContent = formatMoney(totalBackend);
 
@@ -250,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       let opcoes = await resp.json();
 
       opcoes = opcoes.filter(
-        (o) => o.company?.name !== "Jadlog" && o.company?.name !== "Azul"
+        (o) => o.company?.name !== "Jadlog" && o.company?.name !== "Azul" && o.service_code !== "FRETE_GRATIS"
       );
 
       if (!opcoes.length) {
@@ -273,9 +271,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="frete-info">
             <h4>${empresa} - ${nomeServico}</h4>
             <p>Valor: <strong>${preco.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })}</strong></p>
+            style: "currency",
+            currency: "BRL",
+          })}</strong></p>
             <p>Prazo: <strong>${prazo} dias úteis</strong></p>
           </div>
         </div>
@@ -539,11 +537,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           ${p.quantidade || 1}x ${p.nome}
         </span>
         ${p.cor && p.cor !== "padrao" ? `<p>Cor: ${p.cor}</p>` : ""}
-        ${
-          p.torneira && p.torneira !== "padrao"
-            ? `<p>Torneira: ${p.torneira}</p>`
-            : ""
-        }
+        ${p.torneira && p.torneira !== "padrao"
+              ? `<p>Torneira: ${p.torneira}</p>`
+              : ""
+            }
         ${p.refil && Number(p.refil) > 1 ? `<p>Refis: ${p.refil}</p>` : ""}
         <strong class="preco-produto">
           R$ ${formatMoney(precoTotal)}
@@ -675,9 +672,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         .map(
           (opt, idx) => `
     <label class="installment-option" style="display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer;">
-      <input type="radio" name="${name}" value="${opt.count}" data-count="${
-            opt.count
-          }" ${opt.count === Number(selectedCount) ? "checked" : ""}>
+      <input type="radio" name="${name}" value="${opt.count}" data-count="${opt.count
+            }" ${opt.count === Number(selectedCount) ? "checked" : ""}>
       <span>${opt.label}</span>
     </label>
   `
@@ -1235,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             expiryMonth: validadeMes,
             expiryYear: validadeAno,
             cvv: cvv,
-          }; 
+          };
 
           const response = await fetch("/checkout/gerar-cartao", {
             method: "POST",
@@ -1309,8 +1305,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             <h3>Pagamento via Boleto</h3>
             <p><strong>Valor:</strong> R$ ${formatMoney(valor)}</p>
             <p><strong>Vencimento:</strong> ${new Date(
-              vencimento
-            ).toLocaleDateString()}</p>
+        vencimento
+      ).toLocaleDateString()}</p>
             <textarea id="linhaDigitavel" readonly>${linhaDigitavel}</textarea>
             <button id="copiarLinhaDigitavel" class="boleto-btn">Copiar Código</button>
             <a href="${boletoUrl}" target="_blank" class="boleto-btn boleto-view">Abrir Boleto</a>
@@ -1585,12 +1581,12 @@ function atualizarParcelas() {
   for (let i = 1; i <= 12; i++) {
     // const valorParcela = (total / i).toFixed(2).replace(".", ",");
 
-    if(i == 1) {
-      valorParcela = (total / i + 2.99% + 0.49).toFixed(2).replace(".", ",");
-    } else if(i >= 2 || i <= 6) {
-      valorParcela = (total / i + 3.49% + 0.49).toFixed(2).replace(".", ",");
-    } else if(i >= 7 || i <= 12) {
-      valorParcela = (total / i + 4.29% + 0.49).toFixed(2).replace(".", ",");
+    if (i == 1) {
+      valorParcela = (total / i + 2.99 % + 0.49).toFixed(2).replace(".", ",");
+    } else if (i >= 2 || i <= 6) {
+      valorParcela = (total / i + 3.49 % + 0.49).toFixed(2).replace(".", ",");
+    } else if (i >= 7 || i <= 12) {
+      valorParcela = (total / i + 4.29 % + 0.49).toFixed(2).replace(".", ",");
     }
 
     const opt = document.createElement("option");
@@ -1639,7 +1635,7 @@ function validarCartao() {
   }
 
   const ano = parseInt(cardValidadeAno.value);
-  if (isNaN(ano) || ano < 24) {  
+  if (isNaN(ano) || ano < 24) {
     alert("Ano de validade inválido.");
     cardValidadeAno.focus();
     return false;
