@@ -116,24 +116,18 @@ router.post("/salvar-endereco-frete", async (req, res) => {
   }
 
   // Se usuário quer escolher frete grátis, valida que o carrinho atende ao requisito
-  const LIMITE_FRETE_GRATIS = 200;
   if (freteObj.freteGratis) {
-    // pega subtotalComDesconto do carrinho
     const carrinho = await Carrinho.findOne({
-      where: { usuarioId, status: "ABERTO" },
-      include: [{ model: CarrinhoItem, as: "itens", include: [{ model: Produto, as: "Produto" }] }]
+      where: { usuarioId, status: "ABERTO" }
     });
 
-    if (!carrinho || !carrinho.itens || !carrinho.itens.length) {
-      return res.status(400).json({ error: "Carrinho vazio ao validar frete grátis." });
+    if (!carrinho) {
+      return res.status(400).json({ error: "Carrinho não encontrado." });
     }
 
-    const subtotal = Number(carrinho.subtotal || 0);
-    const desconto = Number(carrinho.desconto || 0);
-    const subtotalComDesconto = Math.max(subtotal - desconto, 0);
-
-    if (subtotalComDesconto < LIMITE_FRETE_GRATIS) {
-      return res.status(400).json({ error: `Frete grátis disponível apenas para pedidos a partir de R$ ${LIMITE_FRETE_GRATIS}.` });
+    // Se o carrinho não tem a flag de frete grátis (vinda do cupom ou regra dinâmica), bloqueia
+    if (!carrinho.freteGratis) {
+      return res.status(400).json({ error: "Frete grátis não disponível para este pedido." });
     }
   }
 
@@ -185,13 +179,11 @@ router.get("/resumo", async (req, res) => {
       0
     );
 
-    const LIMITE_FRETE_GRATIS = 200;
-
     // disponibilidade do frete grátis (para o front renderizar a opção)
-    const freteGratisAvailable = subtotalComDesconto >= LIMITE_FRETE_GRATIS;
+    const freteGratisAvailable = !!carrinho.freteGratis;
 
     // se o usuário já escolheu frete grátis anteriormente (persistido na sessão)
-    const freteGratisSelected = !!checkoutSession.freteGratis;
+    const freteGratisSelected = !!checkoutSession.freteGratis && freteGratisAvailable;
 
     // valor de frete que será mostrado ao cliente (0 se ele escolheu frete grátis)
     const frete = freteGratisSelected ? 0 : freteOriginal;
@@ -310,9 +302,13 @@ router.post("/finalizar", async (req, res) => {
     const LIMITE_FRETE_GRATIS = 200;
 
     // 🔹 Revalidação: se o usuário escolheu frete grátis, garante que a condição ainda é válida
-    if (freteGratisSelected && totalProdutos < LIMITE_FRETE_GRATIS) {
+    // Busca novamente o carrinho para garantir a flag freteGratis atualizada
+    const carrinhoDB = await Carrinho.findOne({ where: { usuarioId: usuarioIdSessao, status: "ABERTO" } });
+    const freteGratisReal = carrinhoDB ? !!carrinhoDB.freteGratis : false;
+
+    if (freteGratisSelected && !freteGratisReal) {
       return res.status(400).json({
-        error: `A condição para frete grátis não é mais válida (pedido menor que R$ ${LIMITE_FRETE_GRATIS}). Atualize o frete e tente novamente.`
+        error: `A condição para frete grátis não é mais válida. Por favor, revise seu pedido.`
       });
     }
 

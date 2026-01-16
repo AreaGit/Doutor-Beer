@@ -9,6 +9,7 @@ const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const { cobrancaPixAsaas, obterCodPix, cobrancaBoletoAsaas, obterLinhaBoleto, cobrancaCartaoAsaas } = require("../services/asaas.services");
 const Usuario = require("../models/Usuario");
+const Cupom = require("../models/Cupom"); // Import Cupom model
 const { enviarEmail } = require("../utils/email");
 
 // ================== Função auxiliar para pegar itens do carrinho ==================
@@ -101,12 +102,7 @@ exports.calcularFreteHandler = async (req, res) => {
             return acc + unit * (Number(it.quantidade) || 0);
           }, 0);
 
-          const CUPOM_FRETE = "DBFRETEGRATIS";
-          const MINIMO_FRETE = 200;
-
-          const freteGratisAplicavel =
-            String(carrinho.cupomCodigo || "").toUpperCase() === CUPOM_FRETE &&
-            subtotal >= MINIMO_FRETE;
+          const freteGratisAplicavel = !!carrinho.freteGratis;
 
           if (freteGratisAplicavel) {
             // cria uma opção minimalista de frete grátis compatível com o shape do MelhorEnvio
@@ -177,38 +173,46 @@ exports.confirmarPagamentoHandler = async (req, res) => {
       cupom
     });
 
-const itensPedido = itensCarrinho.map(item => {
-  const produto = item.Produto || {};
-  
-  // 🔹 Base do preço (promocional ou normal)
-  let precoFinal = produto.precoPromocional ?? produto.preco ?? 0;
+    const itensPedido = itensCarrinho.map(item => {
+      const produto = item.Produto || {};
 
-  // 🔹 Adiciona valor extra da torneira
-  if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") {
-    precoFinal += 15;
-  }
+      // 🔹 Base do preço (promocional ou normal)
+      let precoFinal = produto.precoPromocional ?? produto.preco ?? 0;
 
-  // 🔹 Adiciona refil extra
-  const refilQtd = Number(item.refil) || 1;
-  if (refilQtd > 1) {
-    precoFinal += (refilQtd - 1) * 40;
-  }
+      // 🔹 Adiciona valor extra da torneira
+      if (item.torneira === "Tap Handle Prata" || item.torneira === "Tap Handle Preta") {
+        precoFinal += 15;
+      }
 
-  return {
-    pedidoId: pedido.id,
-    produtoId: item.produtoId,
-    quantidade: item.quantidade,
-    precoUnitario: precoFinal, // ✅ já vem com tudo incluído
-    cor: item.cor || null,
-    torneira: item.torneira || null,
-    refil: item.refil || null
-  };
-});
+      // 🔹 Adiciona refil extra
+      const refilQtd = Number(item.refil) || 1;
+      if (refilQtd > 1) {
+        precoFinal += (refilQtd - 1) * 40;
+      }
 
-await PedidoItem.bulkCreate(itensPedido);
+      return {
+        pedidoId: pedido.id,
+        produtoId: item.produtoId,
+        quantidade: item.quantidade,
+        precoUnitario: precoFinal, // ✅ já vem com tudo incluído
+        cor: item.cor || null,
+        torneira: item.torneira || null,
+        refil: item.refil || null
+      };
+    });
+
+    await PedidoItem.bulkCreate(itensPedido);
 
     // 5️⃣ Limpa carrinho
     await Cart.destroy({ where: { usuarioId } });
+
+    // 🆕 Incrementa uso do cupom se houver
+    if (cupom) {
+      const cupomDb = await Cupom.findOne({ where: { codigo: cupom } });
+      if (cupomDb) {
+        await cupomDb.increment("usos");
+      }
+    }
 
     // 6️⃣ Retorna sucesso
     return res.json({
@@ -347,8 +351,36 @@ exports.gerarBoleto = async (req, res) => {
 
     await PedidoItem.bulkCreate(pedidoItems);
 
+    // === Busca cupom do carrinho antes de destruir ===
+    const carrinhoUsuario = await Carrinho.findOne({ where: { usuarioId: usuarioIdSessao } });
+    const cupomCodigo = carrinhoUsuario ? carrinhoUsuario.cupomCodigo : null;
+
+    if (cupomCodigo) {
+      await Pedido.update({ cupom: cupomCodigo }, { where: { id: pedido.id } });
+
+      const cupomDb = await Cupom.findOne({ where: { codigo: cupomCodigo } });
+      if (cupomDb) {
+        await cupomDb.increment("usos");
+      }
+    }
+
     // Limpa carrinho do usuário
     await Carrinho.destroy({ where: { usuarioId: usuarioIdSessao } });
+
+    // 🆕 Incrementa uso do cupom se houver (o carrinho tinha cupom?)
+    // Como 'gerarBoleto' não recebe o código do cupom explicitamente no body (apenas no calculate),
+    // precisamos checar se o Pedido foi criado com cupom ou se precisamos pegar do carrinho antes de destruir.
+    // O endpoint não recebe 'cupom' no body, mas o pedido criado também não estava recebendo cupom no código original.
+    // Vamos corrigir isso: pegar o cupom do carrinho ANTES de destruir.
+
+    // *Nota*: O código original do gerarBoleto não salvava o cupom no Pedido.
+    // Se quisermos suportar cupons no boleto, precisamos garantir que o cupom seja salvo.
+    // Mas para não quebrar a lógica existente, vamos tentar pegar do carrinho antes.
+    /*
+      Na verdade, o carrinho é destruído na linha 346.
+      O pedido é criado na linha 311.
+      Vamos assumir que o fluxo de boleto deve seguir a mesma lógica.
+    */
 
     // Envia e-mail
     try {
@@ -406,7 +438,7 @@ exports.gerarCartao = async (req, res) => {
       value: total,
       holderName: cartao.holderName,
       installmentCount: req.body.parcelamento.parcelas,
-      installmentValue: Number( req.body.parcelamento.valorParcela ),
+      installmentValue: Number(req.body.parcelamento.valorParcela),
       number: cartao.number,
       expiryMonth: cartao.expiryMonth,
       expiryYear: cartao.expiryYear,

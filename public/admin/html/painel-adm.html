@@ -51,6 +51,10 @@
           <i class="fa-solid fa-envelope"></i>
           <span>Newsletter</span>
         </button>
+        <button class="nav-item" data-tab="cupons">
+          <i class="fa-solid fa-ticket"></i>
+          <span>Cupons</span>
+        </button>
         <!--<button class="nav-item" data-tab="config">
           <i class="fa-solid fa-gear"></i>
           <span>Configurações</span>
@@ -295,12 +299,14 @@
             <form id="formNewsletter" class="modal-form">
               <div class="form-row full">
                 <label for="newsletterAssunto">Assunto do Email *</label>
-                <input type="text" id="newsletterAssunto" name="assunto" required placeholder="Ex: Novidades da Doutor Beer! 🍺">
+                <input type="text" id="newsletterAssunto" name="assunto" required
+                  placeholder="Ex: Novidades da Doutor Beer! 🍺">
               </div>
 
               <div class="form-row full">
                 <label for="newsletterConteudo">Conteúdo HTML *</label>
-                <textarea id="newsletterConteudo" name="conteudoHtml" rows="15" required placeholder="Digite o conteúdo HTML do email aqui..."></textarea>
+                <textarea id="newsletterConteudo" name="conteudoHtml" rows="15" required
+                  placeholder="Digite o conteúdo HTML do email aqui..."></textarea>
                 <small style="color: #9b9bb0; font-size: 0.85rem; margin-top: 4px; display: block;">
                   Use HTML para formatar o email. Você pode incluir imagens, links, estilos, etc.
                 </small>
@@ -308,10 +314,12 @@
 
               <div class="form-row full">
                 <label for="newsletterConteudoTexto">Conteúdo Texto (opcional)</label>
-                <textarea id="newsletterConteudoTexto" name="conteudoTexto" rows="5" placeholder="Versão em texto puro do email (para clientes que não suportam HTML)"></textarea>
+                <textarea id="newsletterConteudoTexto" name="conteudoTexto" rows="5"
+                  placeholder="Versão em texto puro do email (para clientes que não suportam HTML)"></textarea>
               </div>
 
-              <div class="form-row full" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+              <div class="form-row full"
+                style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                   <i class="fa-solid fa-info-circle" style="color: #F9B000;"></i>
                   <span style="color: #b2b2d0; font-size: 0.9rem;">
@@ -365,6 +373,37 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </section>
+
+        <!-- TAB: CUPONS -->
+        <section class="tab" id="cupons">
+          <div class="tab-header">
+            <button class="btn-primary" id="btnNovoCupom">
+              <i class="fa-solid fa-plus"></i>
+              Novo Cupom
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#ID</th>
+                  <th>Código</th>
+                  <th>Tipo</th>
+                  <th>Valor</th>
+                  <th>Base Mínima</th>
+                  <th>Validade</th>
+                  <th>Usos / Limite</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="listaCupons">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -1153,15 +1192,85 @@
     </div>
   </div>
 
+  <!-- Modal Novo/Editar Cupom -->
+  <div class="modal" id="modalCupom">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloModalCupom">
+      <button class="modal-close" data-modal-close>
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <h2 id="tituloModalCupom">Cadastrar Cupom</h2>
+      <p class="modal-subtitle">Configure as regras do seu cupom de desconto.</p>
+
+      <form id="formCupom" class="modal-form">
+        <input type="hidden" id="cupomId" name="id">
+
+        <div class="form-row">
+          <label for="cupomCodigo">Código (Ex: BEMVINDO10)</label>
+          <input type="text" id="cupomCodigo" name="codigo" required style="text-transform: uppercase;">
+        </div>
+
+        <div class="form-row">
+          <label for="cupomTipo">Tipo de Desconto</label>
+          <select id="cupomTipo" name="tipo" required>
+            <option value="fixo">Fixo (R$)</option>
+            <option value="percentual">Percentual (%)</option>
+            <option value="frete_gratis">Frete Grátis</option>
+          </select>
+        </div>
+
+        <div class="form-row" id="rowValor">
+          <label for="cupomValor">Valor do Desconto</label>
+          <input type="number" step="0.01" id="cupomValor" name="valor">
+        </div>
+
+        <div class="form-row">
+          <label for="cupomMinimo">Valor Mínimo da Compra (R$)</label>
+          <input type="number" step="0.01" id="cupomMinimo" name="minimo" value="0">
+        </div>
+
+        <div class="form-row">
+          <label for="cupomValidade">Data de Validade (Opcional)</label>
+          <input type="date" id="cupomValidade" name="validade">
+        </div>
+
+        <div class="form-row">
+          <label for="cupomLimite">Limite Total de Usos (Opcional)</label>
+          <input type="number" id="cupomLimite" name="limite" placeholder="Ex: 100">
+        </div>
+
+        <div class="form-row">
+          <label for="cupomLimiteUsuario">Limite por Cliente (Opcional)</label>
+          <input type="number" id="cupomLimiteUsuario" name="limite_usuario"
+            placeholder="Ex: 1 (deixe vazio para ilimitado)">
+        </div>
+
+        <div class="form-row full">
+          <label class="checkbox-container">
+            <input type="checkbox" id="cupomAtivo" name="ativo" checked>
+            <span>Cupom Ativo</span>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnSalvarCupom">Salvar Cupom</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="./admin/js/painel-adm.js"></script>
+
   <script src="./admin/js/tabs.js"></script>
   <script src="./admin/js/produtos.js"></script>
   <script src="./admin/js/pedidos.js"></script>
   <script src="./admin/js/clientes.js"></script>
   <script src="./admin/js/newsletter.js"></script>
+  <script src="./admin/js/cupons.js"></script>
 </body>
 
 </html>
