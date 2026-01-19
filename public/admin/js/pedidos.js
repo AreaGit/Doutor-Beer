@@ -246,19 +246,19 @@ function imprimirPedido(pedido) {
 
     return `
       <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+        <td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">
           <strong>${itemNumero}. ${nome}</strong>
-          <div style="color: #666; font-size: 0.9em; margin-top: 4px; padding-left: 14px;">
+          <div style="color: #666; font-size: 0.9em; margin-top: 2px; padding-left: 14px;">
             ${cor} ${torneira} ${refil}
           </div>
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center; vertical-align: top;">
+        <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; vertical-align: top;">
           ${i.quantidade}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top;">
+        <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top;">
           ${formatCurrency(i.precoUnitario || i.preco || 0)}
         </td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top;">
+        <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; vertical-align: top;">
           ${formatCurrency((i.precoUnitario || i.preco || 0) * i.quantidade)}
         </td>
       </tr>
@@ -286,37 +286,48 @@ function imprimirPedido(pedido) {
     <head>
       <title>Pedido #${pedido.id} - Doutor Beer</title>
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; max-width: 900px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px 40px; color: #333; max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        .header-left { flex: 0 0 auto; }
+        .header-right { text-align: right; flex: 1; }
+        .logo img { max-height: 150px; width: auto; }
+        h2 { margin: 0 0 5px 0; font-size: 1.8rem; }
         .meta { color: #666; font-size: 0.9rem; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-        .box h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; font-size: 1.1rem; color: #000; }
-        .box p { margin: 6px 0; line-height: 1.5; font-size: 0.95rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .box h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px; font-size: 1rem; color: #000; }
+        .box p { margin: 4px 0; line-height: 1.4; font-size: 0.9rem; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px 10px; border-bottom: 2px solid #333; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th { text-align: left; background: #f8f9fa; padding: 10px 8px; border-bottom: 2px solid #333; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        td { padding: 8px; font-size: 0.9rem; }
         
-        .totais-container { margin-top: 30px; border-top: 2px solid #333; padding-top: 20px; display: flex; justify-content: flex-end; }
+        .totais-container { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; display: flex; justify-content: flex-end; }
         .totais-table { width: 300px; }
-        .totais-table td { padding: 5px 0; text-align: right; }
+        .totais-table td { padding: 4px 0; text-align: right; }
         .totais-table .label { text-align: left; color: #666; }
-        .totais-table .final { font-size: 1.3rem; font-weight: bold; color: #000; padding-top: 10px; }
+        .totais-table .final { font-size: 1.2rem; font-weight: bold; color: #000; padding-top: 8px; }
         
         @media print {
             body { padding: 0; -webkit-print-color-adjust: exact; }
             .box { break-inside: avoid; }
-            @page { margin: 2cm; }
+            @page { margin: 1.5cm; }
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <div class="logo">Doutor Beer</div>
-        <h2>Pedido #${pedido.id}</h2>
-        <div class="meta">
-          Data: ${dataPedido} | Status: <strong>${pedido.status}</strong>
+        <div class="header-left">
+          <div class="logo">
+            <img src="/images/Doutor Beer Logo.png" alt="Doutor Beer">
+          </div>
+        </div>
+        <div class="header-right">
+          <h2>Pedido #${pedido.id}</h2>
+          <div class="meta">
+            Data: ${dataPedido} <br>
+            Status: <strong>${pedido.status}</strong>
+          </div>
         </div>
       </div>
 
