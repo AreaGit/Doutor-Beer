@@ -242,7 +242,7 @@ exports.gerarPix = async (req, res) => {
   try {
     const { usuarioId, total, endereco, frete, itens } = req.body;
 
-    if (!usuarioId || !total || !endereco || !frete || !itens)
+    if (!usuarioId || total == null || !endereco || frete == null || !itens)
       return res.status(400).json({ error: "Dados incompletos" });
 
     const cliente = await Usuario.findOne({ where: { id: usuarioId } });
@@ -440,7 +440,7 @@ exports.gerarCartao = async (req, res) => {
 
     console.log(req.body.parcelamento.parcelas, req.body.parcelamento.valorParcela);
 
-    if (!usuarioId || !total || !endereco || !frete || !cartao) {
+    if (!usuarioId || total == null || !endereco || frete == null || !cartao) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
 
