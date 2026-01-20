@@ -286,11 +286,11 @@ function imprimirPedido(pedido) {
     <head>
       <title>Pedido #${pedido.id} - Doutor Beer</title>
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px 40px; color: #333; max-width: 900px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px 40px; color: #333; max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .header-left { flex: 0 0 auto; }
         .header-right { text-align: right; flex: 1; }
-        .logo img { max-height: 150px; width: auto; }
+        .logo img { max-height: 100px; width: auto; }
         h2 { margin: 0 0 5px 0; font-size: 1.8rem; }
         .meta { color: #666; font-size: 0.9rem; }
         
@@ -311,7 +311,7 @@ function imprimirPedido(pedido) {
         @media print {
             body { padding: 0; -webkit-print-color-adjust: exact; }
             .box { break-inside: avoid; }
-            @page { margin: 1.5cm; }
+            @page { margin: 0.8cm; }
         }
       </style>
     </head>
