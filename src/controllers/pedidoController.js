@@ -62,6 +62,7 @@ exports.getPedidoById = async (req, res) => {
       clienteEmail: pedido.clienteEmail,
       clienteCpf: pedido.clienteCpf,
       clienteCelular: pedido.clienteCelular,
+      clienteTelefone: pedido.clienteTelefone,
       clienteDataNascimento: pedido.clienteDataNascimento,
       Itens: itensFormatados
     });
@@ -148,7 +149,7 @@ exports.getTodosPedidos = async (req, res) => {
         },
         {
           association: "Usuario",
-          attributes: ["id", "nome", "email"]
+          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento"]
         }
       ],
       order: [["createdAt", "DESC"]]
@@ -195,6 +196,7 @@ exports.getTodosPedidos = async (req, res) => {
         clienteEmail: pedido.clienteEmail,
         clienteCpf: pedido.clienteCpf,
         clienteCelular: pedido.clienteCelular,
+        clienteTelefone: pedido.clienteTelefone,
         clienteDataNascimento: pedido.clienteDataNascimento,
         Itens: itensFormatados,
         criadoEm: pedido.createdAt
@@ -268,7 +270,7 @@ exports.getUltimosPedidos = async (req, res) => {
         },
         {
           association: "Usuario",
-          attributes: ["id", "nome", "email"]
+          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento"]
         }
       ],
       order: [["createdAt", "DESC"]],

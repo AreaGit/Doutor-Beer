@@ -173,6 +173,7 @@ exports.confirmarPagamentoHandler = async (req, res) => {
       clienteEmail: usuario?.email,
       clienteCpf: usuario?.cpf,
       clienteCelular: usuario?.celular,
+      clienteTelefone: usuario?.telefone,
       clienteDataNascimento: usuario?.data_de_nascimento,
       status: "Pago", // ou "Pendente"
       total,
@@ -332,6 +333,7 @@ exports.gerarBoleto = async (req, res) => {
       clienteEmail: cliente?.email,
       clienteCpf: cliente?.cpf,
       clienteCelular: cliente?.celular,
+      clienteTelefone: cliente?.telefone,
       clienteDataNascimento: cliente?.data_de_nascimento,
       status: "AGUARDANDO PAGAMENTO",
       frete: Number(frete || 0),

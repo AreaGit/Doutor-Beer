@@ -52,6 +52,7 @@ const Pedido = sequelize.define("Pedido", {
   clienteEmail: { type: DataTypes.STRING, allowNull: true },
   clienteCpf: { type: DataTypes.STRING, allowNull: true },
   clienteCelular: { type: DataTypes.STRING, allowNull: true },
+  clienteTelefone: { type: DataTypes.STRING, allowNull: true },
   clienteDataNascimento: { type: DataTypes.DATEONLY, allowNull: true },
 
   // Campos adicionados para integração ASAAS

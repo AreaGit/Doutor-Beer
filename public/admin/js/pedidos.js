@@ -334,11 +334,12 @@ function imprimirPedido(pedido) {
       <div class="grid">
         <div class="box">
           <h3>Dados do Cliente</h3>
-          <p><strong>Nome:</strong> ${pedido.clienteNome || pedido.usuario?.nome || "Não informado"}</p>
-          <p><strong>Email:</strong> ${pedido.clienteEmail || pedido.usuario?.email || "-"}</p>
-          <p><strong>CPF:</strong> ${pedido.clienteCpf || pedido.usuario?.cpf || "-"}</p>
-          <p><strong>Celular:</strong> ${pedido.clienteCelular || pedido.usuario?.celular || "-"}</p>
-          <p><strong>Data Nasc.:</strong> ${pedido.clienteDataNascimento ? new Date(pedido.clienteDataNascimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : (pedido.usuario?.data_de_nascimento ? new Date(pedido.usuario.data_de_nascimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-")}</p>
+          <p><strong>Nome:</strong> ${pedido.clienteNome || pedido.Usuario?.nome || pedido.usuario?.nome || "Não informado"}</p>
+          <p><strong>Email:</strong> ${pedido.clienteEmail || pedido.Usuario?.email || pedido.usuario?.email || "-"}</p>
+          <p><strong>CPF:</strong> ${pedido.clienteCpf || pedido.Usuario?.cpf || pedido.usuario?.cpf || "-"}</p>
+          <p><strong>Celular:</strong> ${pedido.clienteCelular || pedido.Usuario?.celular || pedido.usuario?.celular || "-"}</p>
+          <p><strong>Telefone:</strong> ${pedido.clienteTelefone || pedido.Usuario?.telefone || pedido.usuario?.telefone || "-"}</p>
+          <p><strong>Data Nasc.:</strong> ${pedido.clienteDataNascimento ? new Date(pedido.clienteDataNascimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : (pedido.Usuario?.data_de_nascimento || pedido.usuario?.data_de_nascimento ? new Date(pedido.Usuario?.data_de_nascimento || pedido.usuario?.data_de_nascimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-")}</p>
         </div>
         <div class="box">
           <h3>Entrega</h3>
