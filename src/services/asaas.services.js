@@ -1,6 +1,9 @@
 const axios = require('axios');
-require('dotenv').config({ path: "../../.env" });
-const asaas_key = ("");
+
+const isProduction = process.env.NODE_ENV === "production";
+const asaas_key = isProduction
+    ? process.env.ASAAS_SECRET_API_KEY_PROD
+    : process.env.ASAAS_SECRET_API_KEY_TEST;
 
 /*
 
@@ -45,29 +48,29 @@ CLIENTE CRIADO EM AMBIENTE SANDBOX DO ASAAS
 // Criação de Cliente
 async function criarClienteAsaas(dadosCliente) {
     const options = {
-    method: 'POST',
-    url: 'https://api.asaas.com/v3/customers',
-    headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        access_token: asaas_key
-    },
-    data: {
-        name: dadosCliente.name,
-        cpfCnpj: dadosCliente.cpfCnpj,
-        email: dadosCliente.email,
-        phone: dadosCliente.phone,
-        mobilePhone: dadosCliente.mobilePhone,
-        address: dadosCliente.address,
-        addressNumber: dadosCliente.addressNumber,
-        complement: dadosCliente.complement,
-        province: dadosCliente.province,
-        postalCode: dadosCliente.postalCode,
-        externalReference: Math.floor(Math.random() * 999) + 1,
-        notificationDisabled: true,
-        groupName: 'Grupo DOUTOR BEER',
-        company: 'DOUTOR BEER'
-    }
+        method: 'POST',
+        url: 'https://api.asaas.com/v3/customers',
+        headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            access_token: asaas_key
+        },
+        data: {
+            name: dadosCliente.name,
+            cpfCnpj: dadosCliente.cpfCnpj,
+            email: dadosCliente.email,
+            phone: dadosCliente.phone,
+            mobilePhone: dadosCliente.mobilePhone,
+            address: dadosCliente.address,
+            addressNumber: dadosCliente.addressNumber,
+            complement: dadosCliente.complement,
+            province: dadosCliente.province,
+            postalCode: dadosCliente.postalCode,
+            externalReference: Math.floor(Math.random() * 999) + 1,
+            notificationDisabled: true,
+            groupName: 'Grupo DOUTOR BEER',
+            company: 'DOUTOR BEER'
+        }
     };
 
     try {
@@ -92,11 +95,11 @@ async function consultarClienteAsaas() {
             access_token: asaas_key
         }
     };
-    
+
     axios
-    .request(options)
-    .then(res => console.log(res.data))
-    .catch(err => console.error(err));
+        .request(options)
+        .then(res => console.log(res.data))
+        .catch(err => console.error(err));
 };
 
 // consultarClienteAsaas();
@@ -105,13 +108,13 @@ async function removerClienteAsaas() {
     const options = {
         method: 'DELETE',
         url: 'https://api.asaas.com/v3/customers/cus_000123749298',
-        headers: {accept: 'application/json', access_token: asaas_key}
+        headers: { accept: 'application/json', access_token: asaas_key }
     };
 
     axios
-    .request(options)
-    .then(res => console.log(res.data))
-    .catch(err => console.error(err));
+        .request(options)
+        .then(res => console.log(res.data))
+        .catch(err => console.error(err));
 }
 
 // removerClienteAsaas();
@@ -135,7 +138,7 @@ async function cobrancaBoletoAsaas(dadosCliente) {
             daysAfterDueDateToRegistrationCancellation: 1
         }
     };
-    
+
     try {
         const res = await axios.request(options);
         console.log(res.data)
@@ -204,9 +207,9 @@ async function cobrancaPixAsaas(dadosCliente) {
 
 async function obterCodPix(id) {
     const options = {
-    method: 'GET',
-    url: `https://api.asaas.com/v3/payments/${id}/pixQrCode`,
-    headers: {accept: 'application/json', access_token: asaas_key}
+        method: 'GET',
+        url: `https://api.asaas.com/v3/payments/${id}/pixQrCode`,
+        headers: { accept: 'application/json', access_token: asaas_key }
     };
 
     try {
@@ -223,49 +226,49 @@ async function obterCodPix(id) {
 
 // Cobrança via Cartão de Crédito
 async function cobrancaCartaoAsaas(dadosCliente) {
-  const options = {
-    method: "POST",
-    url: "https://api.asaas.com/v3/payments",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      access_token: asaas_key
-    },
-    data: {
-      billingType: "CREDIT_CARD",
-      value: dadosCliente.value,
-      dueDate: new Date().toISOString().split("T")[0], // ✅ adiciona data de vencimento obrigatória
-      description: "Pedido pago com Cartão - DOUTOR BEER",
-      remoteIp: "10.0.0.118",
-      customer: dadosCliente.customer,
-      installmentCount: dadosCliente.installmentCount,
-      installmentValue: dadosCliente.installmentValue,
-      creditCard: {
-        holderName: dadosCliente.holderName,
-        number: dadosCliente.number,
-        expiryMonth: dadosCliente.expiryMonth,
-        expiryYear: dadosCliente.expiryYear,
-        ccv: dadosCliente.ccv
-      },
-      creditCardHolderInfo: {
-        name: dadosCliente.holderName,
-        email: dadosCliente.email,
-        cpfCnpj: dadosCliente.cpfCnpj,
-        postalCode: dadosCliente.postalCode,
-        addressNumber: dadosCliente.addressNumber,
-        addressComplement: dadosCliente.addressComplement || "",
-        phone: dadosCliente.phone
-      }
-    }
-  };
+    const options = {
+        method: "POST",
+        url: "https://api.asaas.com/v3/payments",
+        headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            access_token: asaas_key
+        },
+        data: {
+            billingType: "CREDIT_CARD",
+            value: dadosCliente.value,
+            dueDate: new Date().toISOString().split("T")[0], // ✅ adiciona data de vencimento obrigatória
+            description: "Pedido pago com Cartão - DOUTOR BEER",
+            remoteIp: "10.0.0.118",
+            customer: dadosCliente.customer,
+            installmentCount: dadosCliente.installmentCount,
+            installmentValue: dadosCliente.installmentValue,
+            creditCard: {
+                holderName: dadosCliente.holderName,
+                number: dadosCliente.number,
+                expiryMonth: dadosCliente.expiryMonth,
+                expiryYear: dadosCliente.expiryYear,
+                ccv: dadosCliente.ccv
+            },
+            creditCardHolderInfo: {
+                name: dadosCliente.holderName,
+                email: dadosCliente.email,
+                cpfCnpj: dadosCliente.cpfCnpj,
+                postalCode: dadosCliente.postalCode,
+                addressNumber: dadosCliente.addressNumber,
+                addressComplement: dadosCliente.addressComplement || "",
+                phone: dadosCliente.phone
+            }
+        }
+    };
 
-  try {
-    const res = await axios.request(options);
-    return res.data;
-  } catch (err) {
-    console.error("Erro ASAAS cartão:", err.response?.data || err.message);
-    throw err;
-  }
+    try {
+        const res = await axios.request(options);
+        return res.data;
+    } catch (err) {
+        console.error("Erro ASAAS cartão:", err.response?.data || err.message);
+        throw err;
+    }
 }
 
 // cobrancaCartaoAsaas();
@@ -273,12 +276,12 @@ async function cobrancaCartaoAsaas(dadosCliente) {
 // Consultar status da cobrança Asaas
 async function consultarCobranca(payment_id) {
     const options = {
-    method: 'GET',
-    url: `https://api.asaas.com/v3/payments/${payment_id}/status`,
-    headers: {
-        accept: 'application/json',
-        access_token: asaas_key
-    }
+        method: 'GET',
+        url: `https://api.asaas.com/v3/payments/${payment_id}/status`,
+        headers: {
+            accept: 'application/json',
+            access_token: asaas_key
+        }
     };
 
     try {
@@ -301,7 +304,7 @@ async function agendarNfsAsaas(dadosNfs) {
             access_token: asaas_key
         },
         data: {
-            taxes: {retainIss: false, cofins: 0, csll: 0, inss: 0, ir: 0, pis: 0, iss: 5},
+            taxes: { retainIss: false, cofins: 0, csll: 0, inss: 0, ir: 0, pis: 0, iss: 5 },
             payment: dadosNfs.payment,
             installment: null,
             customer: dadosNfs.customer,
@@ -317,10 +320,10 @@ async function agendarNfsAsaas(dadosNfs) {
             updatePayment: null
         }
     };
-    
+
     try {
         const res = await axios.request(options);
-        console.log(res.data);  
+        console.log(res.data);
         return res.data;
     } catch (err) {
         console.error(err);
@@ -331,18 +334,18 @@ async function agendarNfsAsaas(dadosNfs) {
 // Emitir NFS-e
 async function emitirNfs(invoice) {
     const options = {
-    method: 'POST',
-    url: `https://api.asaas.com/v3/invoices/${invoice}/authorize`,
-    headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        access_token: asaas_key
-    }
+        method: 'POST',
+        url: `https://api.asaas.com/v3/invoices/${invoice}/authorize`,
+        headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            access_token: asaas_key
+        }
     };
 
     try {
         const res = await axios.request(options);
-        console.log(res.data);  
+        console.log(res.data);
         return res.data;
     } catch (err) {
         console.error(err);
@@ -352,17 +355,17 @@ async function emitirNfs(invoice) {
 // Listar NFS-e
 async function listarNfs(externalReference) {
     const options = {
-    method: 'GET',
-    url: `https://api.asaas.com/v3/invoices?externalReference=${externalReference}`,
-    headers: {
-        accept: 'application/json',
-        access_token: asaas_key
-    }
+        method: 'GET',
+        url: `https://api.asaas.com/v3/invoices?externalReference=${externalReference}`,
+        headers: {
+            accept: 'application/json',
+            access_token: asaas_key
+        }
     };
 
     try {
         const res = await axios.request(options);
-        console.log(res.data);  
+        console.log(res.data);
         return res.data;
     } catch (err) {
         console.error(err);
@@ -371,16 +374,16 @@ async function listarNfs(externalReference) {
 }
 // Loop para consulta de NF
 async function consultarNf(externalReference) {
-  while (true) {
-    const response = await listarNfs(externalReference);
+    while (true) {
+        const response = await listarNfs(externalReference);
 
-    if (Array.isArray(response.data)) {
-      const nota = response.data.find(nf => nf.status === 'AUTHORIZED');
-      if (nota) return nota;
+        if (Array.isArray(response.data)) {
+            const nota = response.data.find(nf => nf.status === 'AUTHORIZED');
+            if (nota) return nota;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000)); // aguarda 1s antes de tentar novamente
     }
-
-    await new Promise(resolve => setTimeout(resolve, 1000)); // aguarda 1s antes de tentar novamente
-  }
 }
 // Transferências
 async function transferenciasAsaas() {
@@ -388,28 +391,28 @@ async function transferenciasAsaas() {
         method: 'POST',
         url: 'https://api.asaas.com/v3/transfers',
         headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        access_token: asaas_key
-    },
-    data: {
-        value: 1,
-        bankAccount: {
-            ownerName: 'Joao Silva',
-            cpfCnpj: '99991111140',
-            agency: '0001',
-            account: '1234567',
-            accountDigit: '8',
-            bankAccountType: 'CONTA_CORRENTE',
-            ispb: '99999004' // Identificador no Sistema de Pagamentos Brasileiro
+            accept: 'application/json',
+            'content-type': 'application/json',
+            access_token: asaas_key
+        },
+        data: {
+            value: 1,
+            bankAccount: {
+                ownerName: 'Joao Silva',
+                cpfCnpj: '99991111140',
+                agency: '0001',
+                account: '1234567',
+                accountDigit: '8',
+                bankAccountType: 'CONTA_CORRENTE',
+                ispb: '99999004' // Identificador no Sistema de Pagamentos Brasileiro
+            }
         }
-    }
     };
 
     axios
-    .request(options)
-    .then(res => console.log(res.data))
-    .catch(err => console.error(err));
+        .request(options)
+        .then(res => console.log(res.data))
+        .catch(err => console.error(err));
 }
 
 module.exports = { criarClienteAsaas, cobrancaPixAsaas, obterCodPix, cobrancaBoletoAsaas, obterLinhaBoleto, cobrancaCartaoAsaas, consultarCobranca, agendarNfsAsaas, emitirNfs, consultarNf };
