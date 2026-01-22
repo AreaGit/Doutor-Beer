@@ -121,7 +121,7 @@ exports.login = async (req, res) => {
             console.error(`[Login Direto] Erro ao processar item ${item.id}:`, itemError)
           }
         }
-        
+
       }
 
       return res.json({
@@ -605,7 +605,9 @@ exports.solicitarRecuperacaoSenha = async (req, res) => {
 
     console.log("[v0] Depois de salvar:", usuario.autenticado2FA)
 
-    const baseUrl = process.env.APP_URL || "http://localhost:3000"
+    const protocol = req.protocol
+    const host = req.get("host")
+    const baseUrl = process.env.APP_URL || `${protocol}://${host}`
     const linkReset = `${baseUrl}/redefinir-senha?token=${token}&email=${encodeURIComponent(email)}`
 
     const assunto = "Recuperação de senha - Doutor Beer"
