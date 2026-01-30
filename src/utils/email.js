@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: 'contato@doutorbeer.com.br',
-    pass: 'IOj%%K4o42B?'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   },
   logger: true,
   debug: true
@@ -43,13 +43,6 @@ async function enviarEmail(to, subject, text, html) {
     console.log("Rejected:", info.rejected);
     console.log("Response:", info.response);
     console.log("MessageId:", info.messageId);
-
-    const info2 = await transporter.sendMail(mailOptions);
-
-    console.log("Accepted:", info2.accepted);
-    console.log("Rejected:", info2.rejected);
-    console.log("Response:", info2.response);
-    console.log("MessageId:", info2.messageId);
 
   } catch (error) {
     console.error("Erro ao enviar e-mail:", error && (error.response || error.message || error));
