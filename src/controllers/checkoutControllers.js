@@ -207,7 +207,8 @@ exports.confirmarPagamentoHandler = async (req, res) => {
         precoUnitario: precoFinal, // ✅ já vem com tudo incluído
         cor: item.cor || null,
         torneira: item.torneira || null,
-        refil: item.refil || null
+        refil: item.refil || null,
+        arteUrl: item.arteUrl || null
       };
     });
 

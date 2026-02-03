@@ -1,5 +1,8 @@
 /* ================== Variáveis Globais ================== */
 let produtoAtual = null;
+let currentArteUrl = null;
+
+// Inicialização
 let quantidadeDeProdutosNoCarrinho = 0;
 
 /* ================== Promoções ================== */
@@ -13,6 +16,19 @@ if (promoMessages.length) {
     currentPromo = (currentPromo + 1) % promoMessages.length;
     promoMessages[currentPromo].classList.add("active");
   }, 4000);
+}
+
+function showToast(message, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 /* ================== Login do usuário ================== */
@@ -380,69 +396,64 @@ async function initCart() {
         <div class="cart-item-info">
           <h4>${item.nome}</h4>
 
-          ${
-            item.cor &&
-            item.cor !== "padrao" &&
-            item.cor !== "default" &&
-            item.cor !== ""
-              ? `
+          ${item.cor &&
+          item.cor !== "padrao" &&
+          item.cor !== "default" &&
+          item.cor !== ""
+          ? `
             <div class="cart-color">
               <span class="color-circle" 
-                style="background-color:${
-                  typeof item.cor === "object"
-                    ? item.cor.hex || "#ccc"
-                    : item.cor
-                };">
+                style="background-color:${typeof item.cor === "object"
+            ? item.cor.hex || "#ccc"
+            : item.cor
+          };">
               </span>
               <span class="color-name">
                 ${(() => {
-                  const corEn =
-                    typeof item.cor === "object"
-                      ? item.cor.nome || item.cor.hex || ""
-                      : item.cor;
-                  const corKey = corEn?.toLowerCase().trim();
-                  return colorTranslations[corKey] || corEn;
-                })()}
+            const corEn =
+              typeof item.cor === "object"
+                ? item.cor.nome || item.cor.hex || ""
+                : item.cor;
+            const corKey = corEn?.toLowerCase().trim();
+            return colorTranslations[corKey] || corEn;
+          })()}
               </span>
             </div>
           `
-              : ""
-          }
+          : ""
+        }
 
-          ${
-            item.torneira && item.torneira !== "padrao" && item.torneira !== ""
-              ? `
+          ${item.torneira && item.torneira !== "padrao" && item.torneira !== ""
+          ? `
             <div class="cart-torneira">
               <span class="torneira-label">Torneira:</span>
               <span class="torneira-name">${item.torneira}</span>
             </div>
           `
-              : ""
-          }
+          : ""
+        }
 
-          ${
-            item.refil
-              ? `
+          ${item.refil
+          ? `
             <div class="cart-refil">
               <span class="refil-label">Refis:</span>
               <span class="refil-count">${item.refil}</span>
             </div>
           `
-              : ""
-          }
+          : ""
+        }
 
           <p class="cart-price">
             ${preco.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })}
+          style: "currency",
+          currency: "BRL",
+        })}
           </p>
 
           <div class="cart-quantity">
             <button class="qty-btn minus" data-index="${index}">-</button>
-            <input type="number" min="1" value="${
-              item.quantidade
-            }" data-index="${index}" class="quantity-input">
+            <input type="number" min="1" value="${item.quantidade
+        }" data-index="${index}" class="quantity-input">
             <button class="qty-btn plus" data-index="${index}">+</button>
           </div>
 
@@ -560,7 +571,7 @@ async function initCart() {
           setCouponFeedback(
             "error",
             (data && data.message) ||
-              "Erro ao aplicar cupom. Tente novamente em instantes 🙏"
+            "Erro ao aplicar cupom. Tente novamente em instantes 🙏"
           );
           return;
         }
@@ -762,17 +773,33 @@ async function initCart() {
 
     // logado: controla pelo back
     try {
+      // Validação de Arte OBRIGATÓRIA
+      if (produtoAtual && produtoAtual.permiteArte && !currentArteUrl) {
+        showToast("Por favor, envie sua arte antes de continuar!", "warning");
+        // Focar no container de arte para chamar atenção
+        const container = document.getElementById("arteProdutoContainer");
+        if (container) {
+          container.style.border = "2px solid #ef4444";
+          setTimeout(() => container.style.border = "1px dashed #f87171", 2000);
+          container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      const payload = {
+        produtoId: produto.id,
+        quantidade: produto.quantidade || 1,
+        cor: corSelecionada,
+        torneira: torneiraSelecionada,
+        refil: produto.refil || null,
+        arteUrl: currentArteUrl
+      };
+
       await fetch("/api/carrinho/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          produtoId: produto.id,
-          quantidade: produto.quantidade || 1,
-          cor: corSelecionada,
-          torneira: torneiraSelecionada,
-          refil: produto.refil || null,
-        }),
+        body: JSON.stringify(payload),
       });
 
       // ✅ sempre puxa carrinho atualizado do servidor
@@ -933,9 +960,8 @@ async function animarEAdicionarAoCarrinho(produto, irParaCheckout = false) {
     imgFly.getBoundingClientRect();
 
     // animação: voa até o carrinho e encolhe
-    imgFly.style.transform = `translate(${cartRect.left - imgRect.left}px, ${
-      cartRect.top - imgRect.top
-    }px) scale(0.1)`;
+    imgFly.style.transform = `translate(${cartRect.left - imgRect.left}px, ${cartRect.top - imgRect.top
+      }px) scale(0.1)`;
     imgFly.style.opacity = 0.4;
 
     // pulso no botão do carrinho
@@ -971,6 +997,31 @@ document.querySelector(".btn-comprar").addEventListener("click", async () => {
       return;
     }
 
+    // 🔹 Validação de Cor
+    if (produtoAtual.cores && produtoAtual.cores.length > 0 && !produtoAtual.corSelecionada) {
+      showToast("Por favor, selecione uma cor!", "error");
+      const container = document.getElementById("coresContainer");
+      container.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    // 🔹 Validação de Torneira
+    if (produtoAtual.torneira && produtoAtual.torneira.length > 0 && !produtoAtual.torneiraSelecionada) {
+      showToast("Por favor, selecione uma torneira!", "error");
+      const sel = document.getElementById("torneiraSelect");
+      sel.focus();
+      sel.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    // 🔹 Validação de Personalização (Arte)
+    if (produtoAtual.permiteArte && !currentArteUrl) {
+      showToast("Por favor, envie sua arte antes de continuar!", "error");
+      const container = document.getElementById("arteProdutoContainer");
+      container.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const produto = {
       ...produtoAtual,
       quantidade: parseInt(document.getElementById("quantidade").value),
@@ -997,6 +1048,31 @@ document.querySelector(".btn-comprar").addEventListener("click", async () => {
 
 document.querySelector(".btn-carrinho").addEventListener("click", () => {
   if (!produtoAtual) return alert("Produto não carregado.");
+
+  // 🔹 Validação de Cor
+  if (produtoAtual.cores && produtoAtual.cores.length > 0 && !produtoAtual.corSelecionada) {
+    showToast("Por favor, selecione uma cor!", "error");
+    const container = document.getElementById("coresContainer");
+    container.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  // 🔹 Validação de Torneira
+  if (produtoAtual.torneira && produtoAtual.torneira.length > 0 && !produtoAtual.torneiraSelecionada) {
+    showToast("Por favor, selecione uma torneira!", "error");
+    const sel = document.getElementById("torneiraSelect");
+    sel.focus();
+    sel.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  // 🔹 Validação de Personalização (Arte)
+  if (produtoAtual.permiteArte && !currentArteUrl) {
+    showToast("Por favor, envie sua arte antes de continuar!", "error");
+    const container = document.getElementById("arteProdutoContainer");
+    container.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
 
   const produto = {
     ...produtoAtual,
@@ -1065,9 +1141,8 @@ async function calcularFreteDetalhes() {
       card.className = "frete-card";
 
       card.innerHTML = `
-        <img src="${opcao.company.picture}" class="frete-logo" alt="${
-        opcao.name
-      }">
+        <img src="${opcao.company.picture}" class="frete-logo" alt="${opcao.name
+        }">
         <div class="frete-info">
           <h4>${opcao.name}</h4>
           <p>Valor: R$ ${valor.toFixed(2).replace(".", ",")}</p>
@@ -1220,6 +1295,21 @@ async function carregarProduto() {
 
     const produto = await resp.json();
 
+    // 🔹 Garantir que campos JSON sejam arrays/objetos (caso venham como string)
+    const parseSafe = (val) => {
+      if (typeof val === "string") {
+        try { return JSON.parse(val); } catch { return val; }
+      }
+      return val;
+    };
+
+    produto.imagem = parseSafe(produto.imagem) || [];
+    if (typeof produto.imagem === "string") produto.imagem = [produto.imagem]; // fallback
+
+    produto.cores = parseSafe(produto.cores) || [];
+    produto.torneira = parseSafe(produto.torneira) || [];
+    produto.secao = parseSafe(produto.secao) || [];
+
     produtoAtual = produto; // Salva produto atual
 
     // ================== Função central de sincronização de preço ==================
@@ -1256,9 +1346,9 @@ async function carregarProduto() {
         // Tem promoção: mostra preço normal riscado e preço promocional
         precoAntigoEl.textContent = base
           ? precoFinal.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })
+            style: "currency",
+            currency: "BRL",
+          })
           : "";
         precoNovoEl.textContent = precoPromoFinal.toLocaleString("pt-BR", {
           style: "currency",
@@ -1285,18 +1375,18 @@ async function carregarProduto() {
     initMiniaturas(produto);
 
     document.querySelector(".produto-detalhes h1").textContent = produto.nome;
-    
+
     // Lógica correta: só mostra preço antigo riscado se houver preço promocional
     const precoAntigoEl = document.querySelector(".produto-detalhes .preco .antigo");
     const precoNovoEl = document.querySelector(".produto-detalhes .preco .novo");
-    
+
     if (produto.precoPromocional) {
       // Tem promoção: mostra preço normal riscado e preço promocional
       precoAntigoEl.textContent = produto.preco
         ? produto.preco.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })
+          style: "currency",
+          currency: "BRL",
+        })
         : "";
       precoNovoEl.textContent = produto.precoPromocional.toLocaleString("pt-BR", {
         style: "currency",
@@ -1307,9 +1397,9 @@ async function carregarProduto() {
       precoAntigoEl.textContent = "";
       precoNovoEl.textContent = produto.preco
         ? produto.preco.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })
+          style: "currency",
+          currency: "BRL",
+        })
         : "";
     }
 
@@ -1357,8 +1447,8 @@ async function carregarProduto() {
       torneiraSelect.innerHTML = `
     <option value="">Selecione uma torneira</option>
     ${produto.torneira
-      .map((t) => `<option value="${t}">${t}</option>`)
-      .join("")}
+          .map((t) => `<option value="${t}">${t}</option>`)
+          .join("")}
   `;
 
       torneiraSection.style.display = "flex";
@@ -1422,7 +1512,23 @@ async function carregarProduto() {
       refilSection.style.display = "none";
     }
 
-    // Produtos relacionados
+    // Exibir Opção de Arte
+    const arteContainer = document.getElementById("arteProdutoContainer");
+    const downloadGabarito = document.getElementById("downloadGabarito");
+
+    if (produto.permiteArte) {
+      arteContainer.style.display = "block";
+      if (produto.urlGabarito) {
+        downloadGabarito.href = produto.urlGabarito;
+        downloadGabarito.style.display = "inline-flex";
+      } else {
+        downloadGabarito.style.display = "none";
+      }
+    } else {
+      arteContainer.style.display = "none";
+    }
+
+    // Carregar Relacionados
     const categorias = [
       produto.categoria,
       produto.categoria2,
@@ -1437,6 +1543,10 @@ async function carregarProduto() {
       if (!relResp.ok) continue;
       const produtosCat = await relResp.json();
       produtosCat.forEach((p) => {
+        // Safe parse image for related products
+        p.imagem = parseSafe(p.imagem) || [];
+        if (typeof p.imagem === "string") p.imagem = [p.imagem];
+
         if (p.id !== produto.id && !relacionados.find((r) => r.id === p.id))
           relacionados.push(p);
       });
@@ -1446,43 +1556,81 @@ async function carregarProduto() {
     const grid = document.querySelector(".relacionados .produtos-grid");
     grid.innerHTML = relacionados.length
       ? relacionados
-          .map(
-            (p) => `
+        .map(
+          (p) => `
       <a href="/detalhes-produto?id=${p.id}" class="produto">
         <img src="${p.imagem[0]}" alt="${p.nome}">
         <h3>${p.nome}</h3>
         <p class="preco">
-          <span class="antigo">${
-            p.precoPromocional && p.preco
+          <span class="antigo">${p.precoPromocional && p.preco
               ? p.preco.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })
+                style: "currency",
+                currency: "BRL",
+              })
               : ""
-          }</span>
-          <span class="novo">${
-            p.precoPromocional
+            }</span>
+          <span class="novo">${p.precoPromocional
               ? p.precoPromocional.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })
+                style: "currency",
+                currency: "BRL",
+              })
               : p.preco
-              ? p.preco.toLocaleString("pt-BR", {
+                ? p.preco.toLocaleString("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 })
-              : ""
-          }</span>
+                : ""
+            }</span>
         </p>
       </a>
     `
-          )
-          .join("")
+        )
+        .join("")
       : `<p>Nenhum produto relacionado encontrado.</p>`;
   } catch (err) {
     console.error("[Detalhes Produto] Erro:", err);
     alert("Produto não encontrado.");
   }
+}
+
+function initArteUpload() {
+  const fileInput = document.getElementById("uploadArteInput");
+  const fileNameDisplay = document.getElementById("nomeArquivoArte");
+
+  if (!fileInput) return;
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      currentArteUrl = null;
+      fileNameDisplay.textContent = "Nenhum arquivo selecionado";
+      return;
+    }
+
+    // Validação
+    const allowedTypes = ["application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Formato inválido! Use apenas PDF.", "error");
+      fileInput.value = "";
+      currentArteUrl = null;
+      fileNameDisplay.textContent = "Erro no formato";
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      showToast("Arquivo muito grande! Máximo 50MB.", "error");
+      fileInput.value = "";
+      currentArteUrl = null;
+      fileNameDisplay.textContent = "Arquivo muito grande";
+      return;
+    }
+
+    // Simulação de Upload (já preparando para Dropbox no futuro)
+    // Por enquanto, vamos carregar localmente ou salvar o nome
+    currentArteUrl = `uploads/temp/${file.name}`; // Mock URL
+    fileNameDisplay.textContent = file.name;
+    showToast("Arte carregada com sucesso!", "success");
+  });
 }
 
 /* ================== Inicialização ================== */
@@ -1492,5 +1640,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initMenu();
   initCart();
   initBtnTop();
+  initArteUpload();
   carregarProduto();
 });

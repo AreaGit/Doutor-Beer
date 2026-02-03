@@ -53,6 +53,11 @@ const CarrinhoItem = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+
+    arteUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     tableName: "carrinho_itens",

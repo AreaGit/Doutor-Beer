@@ -47,10 +47,10 @@ const Produto = sequelize.define("Produto", {
     allowNull: true
   },
   refil: {
-  type: DataTypes.INTEGER,
-  allowNull: true, 
-  defaultValue: null 
-},
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
+  },
   capacidade: {
     type: DataTypes.JSON,
     allowNull: true
@@ -73,6 +73,15 @@ const Produto = sequelize.define("Produto", {
   },
   peso: {
     type: DataTypes.DECIMAL,
+    allowNull: true
+  },
+  permiteArte: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  urlGabarito: {
+    type: DataTypes.STRING,
     allowNull: true
   },
 

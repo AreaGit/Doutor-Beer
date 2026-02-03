@@ -415,6 +415,86 @@ body {
   box-shadow: 0 0 0 1px rgba(249, 176, 0, 0.35);
 }
 
+/* ===== Upload de Arte ===== */
+.arte-produto-container {
+  background: #fdf2f2;
+  border: 1px dashed #f87171;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.arte-produto-container h4 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: #991b1b;
+}
+
+.arte-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-gabarito {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #374151;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-gabarito:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.upload-arte-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-upload-arte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #4b1e25;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.btn-upload-arte:hover {
+  filter: brightness(1.15);
+}
+
+.nome-arquivo-arte {
+  font-size: 0.8rem;
+  color: #4b5563;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arte-hint {
+  font-size: 0.75rem;
+  color: #7f1d1d;
+  margin: 8px 0 0;
+  opacity: 0.8;
+}
+
 /* Botões principais */
 .botoes-container {
   display: flex;

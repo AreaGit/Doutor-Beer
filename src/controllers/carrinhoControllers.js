@@ -103,7 +103,8 @@ function formatCartItem(item) {
     quantidade: item.quantidade,
     cor: item.cor || "padrao",
     torneira: item.torneira || null,
-    refil: item.refil || null
+    refil: item.refil || null,
+    arteUrl: item.arteUrl || null
   };
 }
 
@@ -174,7 +175,7 @@ exports.getCart = async (req, res) => {
 
 /* ================== POST /api/carrinho/add ================== */
 exports.addToCart = async (req, res) => {
-  const { produtoId, quantidade = 1, cor, torneira, refil } = req.body;
+  const { produtoId, quantidade = 1, cor, torneira, refil, arteUrl } = req.body;
   const usuarioId = req.session.user?.id;
 
   if (!usuarioId)
@@ -219,7 +220,8 @@ exports.addToCart = async (req, res) => {
         produtoId,
         cor: corFinal,
         torneira: torneiraFinal,
-        refil: refilFinal
+        refil: refilFinal,
+        arteUrl: arteUrl || null
       },
       include: [{ model: Produto, as: "Produto" }]
     });
@@ -236,6 +238,7 @@ exports.addToCart = async (req, res) => {
         cor: corFinal,
         torneira: torneiraFinal,
         refil: refilFinal,
+        arteUrl: arteUrl || null,
         precoFinal
       });
 
@@ -255,7 +258,7 @@ exports.addToCart = async (req, res) => {
 
 /* ================== POST /api/carrinho/update ================== */
 exports.updateCart = async (req, res) => {
-  const { produtoId, quantidade, cor, torneira, refil } = req.body;
+  const { produtoId, quantidade, cor, torneira, refil, arteUrl } = req.body;
   const usuarioId = req.session.user?.id;
 
   if (!usuarioId)
@@ -308,6 +311,7 @@ exports.updateCart = async (req, res) => {
 
     item.quantidade = quantidade;
     item.precoFinal = precoFinal;
+    if (arteUrl !== undefined) item.arteUrl = arteUrl;
     await item.save();
 
     await recomputarTotais(carrinho);

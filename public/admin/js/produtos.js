@@ -2,6 +2,47 @@
  * PRODUTOS - CADASTRO
  * ===================== */
 
+/**
+ * Inicializa a funcionalidade de "Selecionar Todos" (Todos) para grupos de chips/checkboxes.
+ * Procura por checkboxes com a classe .select-all-checkbox e o atributo data-target.
+ */
+function initSelectAllChips() {
+  const selectAllCheckboxes = document.querySelectorAll(".select-all-checkbox");
+
+  selectAllCheckboxes.forEach((allCheckbox) => {
+    const targetName = allCheckbox.dataset.target;
+    // Garante que não duplique listeners
+    if (allCheckbox.dataset.listenerBound === "true") return;
+    allCheckbox.dataset.listenerBound = "true";
+
+    // Quando o "Todos" mudar
+    allCheckbox.addEventListener("change", (e) => {
+      const isChecked = e.target.checked;
+      const targetCheckboxes = document.querySelectorAll(`input[name="${targetName}"]`);
+      targetCheckboxes.forEach((chk) => {
+        chk.checked = isChecked;
+      });
+    });
+
+    // Quando qualquer checkbox individual do grupo mudar
+    const updateAllCheckboxState = () => {
+      const targetCheckboxes = document.querySelectorAll(`input[name="${targetName}"]`);
+      const allChecked = Array.from(targetCheckboxes).every((chk) => chk.checked);
+      allCheckbox.checked = allChecked;
+    };
+
+    // Monitora as checkboxes individuais (usa delegação no container pai para eficiência)
+    const container = allCheckbox.closest(".option-chips");
+    if (container) {
+      container.addEventListener("change", (e) => {
+        if (e.target.name === targetName) {
+          updateAllCheckboxState();
+        }
+      });
+    }
+  });
+}
+
 function initProdutoCadastro() {
   const formCadastro = document.getElementById("formCadastrarProduto");
   const btnCadastrarProduto = document.getElementById("btnCadastrarProduto");
@@ -9,6 +50,9 @@ function initProdutoCadastro() {
   const previewContainer = document.getElementById("previewImagensNovo");
 
   if (!formCadastro || !btnCadastrarProduto) return;
+
+  // Inicializa a lógica de "Todos"
+  initSelectAllChips();
 
   // 🔹 Array em memória que guarda as URLs já adicionadas
   let imagensArray = [];
@@ -196,6 +240,8 @@ function initProdutoCadastro() {
         largura,
         comprimento,
         peso,
+        permiteArte: document.getElementById("permiteArteProduto").checked,
+        urlGabarito: document.getElementById("urlGabaritoProduto").value,
         imagem,
         cores,
         torneira,
@@ -222,7 +268,10 @@ function initProdutoCadastro() {
 
       document.getElementById("modalNovoProduto").style.display = "none";
       carregarProdutos();
-      
+
+      // Reseta os checkboxes de "Todos"
+      document.querySelectorAll("#modalNovoProduto .select-all-checkbox").forEach(chk => chk.checked = false);
+
       // Reload automático após ação impactante
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
@@ -343,6 +392,9 @@ function initProdutoEdicao() {
   textareaImagensEditar.addEventListener("blur", () => {
     adicionarUrlsDeTextoEditar(textareaImagensEditar.value);
   });
+
+  // Inicializa a lógica de "Todos"
+  initSelectAllChips();
 }
 
 /* =====================
@@ -390,9 +442,8 @@ function renderProdutoCard(p) {
   const checked = ativo ? "checked" : "";
 
   return `
-    <article class="product-card ${ativo ? "" : "produto-inativo"}" data-id="${
-    p.id
-  }">
+    <article class="product-card ${ativo ? "" : "produto-inativo"}" data-id="${p.id
+    }">
       <div class="product-thumb">
         <img src="${imagem}" alt="${p.nome}">
       </div>
@@ -404,9 +455,8 @@ function renderProdutoCard(p) {
           <div class="status-toggle">
             <span class="badge ${badgeClass}">${badgeText}</span>
             <label class="switch">
-              <input type="checkbox" class="toggle-status" data-id="${
-                p.id
-              }" ${checked}>
+              <input type="checkbox" class="toggle-status" data-id="${p.id
+    }" ${checked}>
               <span class="slider"></span>
             </label>
           </div>
@@ -418,11 +468,10 @@ function renderProdutoCard(p) {
         </p>
 
         <div class="product-price">
-          ${
-            precoPromo
-              ? `<span class="new">${precoPromo}</span><span class="old">${precoNormal}</span>`
-              : `<span class="new">${precoNormal}</span>`
-          }
+          ${precoPromo
+      ? `<span class="new">${precoPromo}</span><span class="old">${precoNormal}</span>`
+      : `<span class="new">${precoNormal}</span>`
+    }
         </div>
 
         <div class="product-actions">
@@ -449,10 +498,10 @@ function renderListaProdutos(produtos) {
   const produtosOrdenados = [...produtos].sort((a, b) => {
     const aAtivo = a.ativo !== false; // default true
     const bAtivo = b.ativo !== false; // default true
-    
+
     // Se ambos têm o mesmo status, mantém ordem original
     if (aAtivo === bAtivo) return 0;
-    
+
     // Ativos (true) vêm antes de inativos (false)
     return aAtivo ? -1 : 1;
   });
@@ -522,12 +571,12 @@ function renderListaProdutos(produtos) {
           badge.classList.remove("badge-danger");
           badge.classList.add("badge-success");
           card.classList.remove("produto-inativo");
-          
+
           // Se foi ativado, move para o início da lista (antes do primeiro inativo ou no início)
           const container = document.getElementById("listaProdutos");
           const cards = Array.from(container.querySelectorAll(".product-card"));
           const primeiroInativo = cards.findIndex(c => c.classList.contains("produto-inativo"));
-          
+
           if (primeiroInativo !== -1) {
             // Insere antes do primeiro inativo (no final da seção de ativos)
             container.insertBefore(card, cards[primeiroInativo]);
@@ -540,7 +589,7 @@ function renderListaProdutos(produtos) {
           badge.classList.remove("badge-success");
           badge.classList.add("badge-danger");
           card.classList.add("produto-inativo");
-          
+
           // Se foi inativado, move para o final da lista (depois de todos os outros produtos)
           const container = document.getElementById("listaProdutos");
           container.appendChild(card);
@@ -562,7 +611,7 @@ async function deletarProduto(id) {
     if (!response.ok) throw new Error("Erro ao deletar produto");
     showToast("Produto deletado com sucesso!", "success");
     carregarProdutos();
-    
+
     // Reload automático após ação impactante
     setTimeout(() => window.location.reload(), 1000);
   } catch (err) {
@@ -600,8 +649,8 @@ function abrirModalEditarProduto(id) {
       const secoes = Array.isArray(p.secao)
         ? p.secao
         : p.secao
-        ? [p.secao]
-        : [];
+          ? [p.secao]
+          : [];
       document
         .querySelectorAll("input[name='editarSecaoProduto']")
         .forEach((chk) => {
@@ -613,6 +662,8 @@ function abrirModalEditarProduto(id) {
       document.getElementById("editarLargura").value = p.largura || "";
       document.getElementById("editarComprimento").value = p.comprimento || "";
       document.getElementById("editarPeso").value = p.peso || "";
+      document.getElementById("editarPermiteArte").checked = !!p.permiteArte;
+      document.getElementById("editarUrlGabarito").value = p.urlGabarito || "";
 
       // refil
       document.getElementById("editarRefil").value =
@@ -637,6 +688,14 @@ function abrirModalEditarProduto(id) {
         .forEach((chk) => {
           chk.checked = torneiras.includes(chk.value);
         });
+
+      // Atualiza o estado dos checkboxes "Todos" no modal de edição
+      document.querySelectorAll("#modalEditarProduto .select-all-checkbox").forEach((allCheckbox) => {
+        const targetName = allCheckbox.dataset.target;
+        const targetCheckboxes = document.querySelectorAll(`input[name="${targetName}"]`);
+        const allChecked = targetCheckboxes.length > 0 && Array.from(targetCheckboxes).every((chk) => chk.checked);
+        allCheckbox.checked = allChecked;
+      });
 
       // imagens (array -> preview)
       imagensEditarArray = Array.isArray(p.imagem) ? [...p.imagem] : [];
@@ -722,6 +781,8 @@ function initEditarProdutoSubmit() {
       torneira,
       capacidade,
       refil,
+      permiteArte: document.getElementById("editarPermiteArte").checked,
+      urlGabarito: document.getElementById("editarUrlGabarito").value,
     };
 
     try {
@@ -737,7 +798,7 @@ function initEditarProdutoSubmit() {
       showToast("Produto atualizado com sucesso!", "success");
       document.getElementById("modalEditarProduto").style.display = "none";
       carregarProdutos();
-      
+
       // Reload automático após ação impactante
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {

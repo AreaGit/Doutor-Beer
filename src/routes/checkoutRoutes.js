@@ -207,6 +207,7 @@ router.get("/resumo", async (req, res) => {
         cor: i.cor,
         torneira: i.torneira,
         refil: i.refil,
+        arteUrl: i.arteUrl,
         imagem: Array.isArray(i.Produto.imagem) ? i.Produto.imagem[0] : i.Produto.imagem || null
       })),
       subtotal,                    // antes do cupom
@@ -294,7 +295,8 @@ router.post("/finalizar", async (req, res) => {
         precoUnitario: precoFinal,
         cor: item.cor || null,
         torneira: item.torneira || null,
-        refil: refilQtd
+        refil: refilQtd,
+        arteUrl: item.arteUrl || null
       };
     });
 
@@ -362,7 +364,8 @@ router.post("/finalizar", async (req, res) => {
           subtotal: item.precoUnitario * item.quantidade,
           cor: item.cor || "padrao",
           torneira: item.torneira || "padrao",
-          refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
+          refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null,
+          arteUrl: item.arteUrl || null
         }));
 
         await PedidoItem.bulkCreate(pedidoItems, { transaction: t });
@@ -394,7 +397,8 @@ router.post("/finalizar", async (req, res) => {
         subtotal: item.precoUnitario * item.quantidade,
         cor: item.cor || "padrao",
         torneira: item.torneira || "padrao",
-        refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null
+        refil: item.refil && Number(item.refil) > 1 ? Number(item.refil) : null,
+        arteUrl: item.arteUrl || null
       }));
 
       await PedidoItem.bulkCreate(pedidoItems);

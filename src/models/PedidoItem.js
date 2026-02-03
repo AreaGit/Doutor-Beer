@@ -45,6 +45,10 @@ const PedidoItem = sequelize.define("PedidoItem", {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: null
+  },
+  arteUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
   }
 }, {
   tableName: "pedido_items",

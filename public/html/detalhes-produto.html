@@ -17,7 +17,7 @@
   <div class="top-line">
     <div class="promo-container" id="promo-container">
       <p class="promo-message">🍻 Na compra de 10 Torres, ganhe um Banner de brinde!</p>
-      <p class="promo-message">🚚 Frete grátis acima de R$199,00!</p>
+      <p class="promo-message">🚚 Frete grátis acima de R$999,90!</p>
       <p class="promo-message">🔥 Veio do Marketplace? Cadastre-se no Clube De Parceiros!</p>
     </div>
   </div>
@@ -243,6 +243,24 @@
             </select>
           </div>
 
+          <!-- Upload de Arte -->
+          <div id="arteProdutoContainer" class="arte-produto-container" style="display:none;">
+            <h4>Personalização da Arte</h4>
+            <div class="arte-actions">
+              <a href="#" id="downloadGabarito" class="btn-gabarito" target="_blank">
+                <i class="fa-solid fa-download"></i> Baixar Gabarito
+              </a>
+              <div class="upload-arte-box">
+                <label for="uploadArteInput" class="btn-upload-arte">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Enviar Arte
+                </label>
+                <input type="file" id="uploadArteInput" accept=".pdf" style="display:none;">
+                <span id="nomeArquivoArte" class="nome-arquivo-arte">Nenhum arquivo selecionado</span>
+              </div>
+            </div>
+            <p class="arte-hint">Formatos: PDF (Máx 50MB)</p>
+          </div>
+
           <!-- BOTÕES PRINCIPAIS -->
           <div class="botoes-container">
             <button class="btn-carrinho">
@@ -314,7 +332,8 @@
     <section class="relacionados section-wrapper">
       <div class="relacionados-header">
         <h2>Você também pode gostar</h2>
-        <p>Descubra itens pensados para momentos especiais, perfeitos para deixar suas bebidas sempre geladas e fáceis de servir.</p>
+        <p>Descubra itens pensados para momentos especiais, perfeitos para deixar suas bebidas sempre geladas e fáceis
+          de servir.</p>
       </div>
       <div class="produtos-grid">
         <!-- preenchido via JS -->

@@ -665,6 +665,10 @@
         <div class="form-row full">
           <label>Cores disponíveis</label>
           <div class="option-chips">
+            <label class="chip chip-select-all">
+              <input type="checkbox" class="select-all-checkbox" data-target="editarCoresProduto">
+              <span>Todos</span>
+            </label>
             <label class="chip">
               <input type="checkbox" name="editarCoresProduto" value="black">
               <span>Preto</span>
@@ -694,7 +698,7 @@
               <span>Amarelo</span>
             </label>
             <label class="chip">
-              <input type="checkbox" name="coresProduto" value="orange">
+              <input type="checkbox" name="editarCoresProduto" value="orange">
               <span>Laranja</span>
             </label>
           </div>
@@ -704,6 +708,10 @@
         <div class="form-row full">
           <label>Torneiras disponíveis</label>
           <div class="option-chips">
+            <label class="chip chip-select-all">
+              <input type="checkbox" class="select-all-checkbox" data-target="editarTorneiraProduto">
+              <span>Todos</span>
+            </label>
             <label class="chip">
               <input type="checkbox" name="editarTorneiraProduto" value="Cromada">
               <span>Cromada</span>
@@ -732,6 +740,18 @@
         <div class="form-row">
           <label for="editarCapacidadeProduto">Capacidade (separada por vírgula)</label>
           <textarea id="editarCapacidadeProduto" name="capacidade" rows="1" placeholder="2.5 , 3.5"></textarea>
+        </div>
+
+        <div class="form-row">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="editarPermiteArte" name="permiteArte">
+            Permitir upload de arte
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label for="editarUrlGabarito">URL do Gabarito (link externo)</label>
+          <input type="url" id="editarUrlGabarito" name="urlGabarito" placeholder="https://dropbox.com/s/...">
         </div>
 
         <!-- Ações -->
@@ -921,13 +941,11 @@
         <div class="form-row">
           <label for="marcaProduto">Marca</label>
           <select id="marcaProduto" name="marca" class="categoria-select">
-
-            <select id="marcaProduto" name="marca" class="categoria-select">
-              <option value="">Selecione...</option>
-              <option value="">Nenhuma</option>
-              <option value="doutor_beer">Doutor Beer</option>
-              <option value="icechopp">IceChopp</option>
-            </select>
+            <option value="">Selecione...</option>
+            <option value="">Nenhuma</option>
+            <option value="doutor_beer">Doutor Beer</option>
+            <option value="icechopp">IceChopp</option>
+          </select>
         </div>
 
         <!-- Seção -->
@@ -987,6 +1005,10 @@
         <div class="form-row full">
           <label>Cores disponíveis</label>
           <div class="option-chips">
+            <label class="chip chip-select-all">
+              <input type="checkbox" class="select-all-checkbox" data-target="coresProduto">
+              <span>Todos</span>
+            </label>
             <label class="chip">
               <input type="checkbox" name="coresProduto" value="black">
               <span>Preto</span>
@@ -1022,10 +1044,27 @@
           </div>
         </div>
 
+        <!-- Opções de Arte -->
+        <div class="form-row">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="permiteArteProduto" name="permiteArte">
+            Permitir upload de arte
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label for="urlGabaritoProduto">URL do Gabarito (link externo)</label>
+          <input type="url" id="urlGabaritoProduto" name="urlGabarito" placeholder="https://dropbox.com/s/...">
+        </div>
+
         <!-- Torneiras -->
         <div class="form-row full">
           <label>Torneiras disponíveis</label>
           <div class="option-chips">
+            <label class="chip chip-select-all">
+              <input type="checkbox" class="select-all-checkbox" data-target="torneiraProduto">
+              <span>Todos</span>
+            </label>
             <label class="chip">
               <input type="checkbox" name="torneiraProduto" value="Cromada">
               <span>Cromada</span>
