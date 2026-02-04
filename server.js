@@ -49,7 +49,7 @@ app.use(session({
 app.use(express.static(path.join(__dirname, "public")));
 
 // ================= Banco =================
-sequelize.sync({ alter: true })
+sequelize.sync()
   .then(() => console.log("✅ Tabelas sincronizadas com o banco de dados"))
   .catch((err) => console.error("❌ Erro ao sincronizar as tabelas:", err));
 
