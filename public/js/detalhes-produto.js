@@ -18,17 +18,44 @@ if (promoMessages.length) {
   }, 4000);
 }
 
-function showToast(message, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
+const icons = {
+  success: "🍺",
+  error: "🚫",
+  warning: "⚠️",
+  info: "✨"
+};
 
-  setTimeout(() => toast.classList.add("show"), 10);
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+function showToast(message, type = "info", title = "") {
+  const container = document.querySelector(".toast-container");
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+
+  toast.innerHTML = `
+    <div class="icon">${icons[type] || "✨"}</div>
+
+    <div class="content">
+      ${title ? `<div class="title">${title}</div>` : ""}
+      <div class="message">${message}</div>
+    </div>
+
+    <button class="close" aria-label="Fechar toast">&times;</button>
+
+    <div class="progress"></div>
+  `;
+
+  container.appendChild(toast);
+
+  toast.querySelector(".close").addEventListener("click", () => {
+    removeToast(toast);
+  });
+
+  setTimeout(() => removeToast(toast), 5000);
+}
+
+function removeToast(toast) {
+  toast.style.animation = "toast-out .3s ease forwards";
+  setTimeout(() => toast.remove(), 300);
 }
 
 /* ================== Login do usuário ================== */
@@ -1094,6 +1121,29 @@ document.querySelector(".btn-carrinho").addEventListener("click", () => {
   animarEAdicionarAoCarrinho(produto, false);
 });
 
+/* =========================
+  FORMATAÇÃO DO CAMPO DE CEP 
+  ==========================
+*/
+
+//Formatando o campo ce CEP
+const cepInput = document.getElementById("cepInput");
+cepInput.addEventListener('input', () => {
+    let cep = cepInput.value.replace(/\D/g, ''); // Remover caracteres não numéricos
+    
+    // Verificar se o CEP tem o comprimento correto
+    if (cep.length === 8) {
+        cep = cep.replace(/(\d{5})(\d{3})/, '$1-$2'); // Formatando o CEP com traços
+        cepInput.value = cep; // Atualizar o valor do campo de CEP
+        // Preencher os outros campos com base no CEP
+        cepInput.style.color = 'green';
+        validcepInput = true
+    } else if (cep.length < 8) {
+        cepInput.style.color = 'red';
+        validcepInput = false
+    }
+});
+
 /* ================== Calcular Frete ================== */
 async function calcularFreteDetalhes() {
   try {
@@ -1599,20 +1649,19 @@ function initArteUpload() {
 
   if (!fileInput) return;
 
-  fileInput.addEventListener("change", (e) => {
+  fileInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
+
     if (!file) {
       currentArteUrl = null;
       fileNameDisplay.textContent = "Nenhum arquivo selecionado";
       return;
     }
 
-    // Validação
-    const allowedTypes = ["application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
+    // ====== VALIDAÇÕES (frontend) ======
+    if (file.type !== "application/pdf") {
       showToast("Formato inválido! Use apenas PDF.", "error");
       fileInput.value = "";
-      currentArteUrl = null;
       fileNameDisplay.textContent = "Erro no formato";
       return;
     }
@@ -1620,16 +1669,38 @@ function initArteUpload() {
     if (file.size > 50 * 1024 * 1024) {
       showToast("Arquivo muito grande! Máximo 50MB.", "error");
       fileInput.value = "";
-      currentArteUrl = null;
       fileNameDisplay.textContent = "Arquivo muito grande";
       return;
     }
 
-    // Simulação de Upload (já preparando para Dropbox no futuro)
-    // Por enquanto, vamos carregar localmente ou salvar o nome
-    currentArteUrl = `uploads/temp/${file.name}`; // Mock URL
-    fileNameDisplay.textContent = file.name;
-    showToast("Arte carregada com sucesso!", "success");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      showToast("Enviando arte...", "info");
+
+      const response = await fetch("/api/upload/arte", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro no upload");
+      }
+
+      // 🔥 Agora usamos a URL REAL do Dropbox
+      currentArteUrl = data.url;
+      fileNameDisplay.textContent = file.name;
+      showToast("Arte enviada com sucesso!", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Falha ao enviar arte.", "error");
+      fileInput.value = "";
+      fileNameDisplay.textContent = "Erro no upload";
+      currentArteUrl = null;
+    }
   });
 }
 

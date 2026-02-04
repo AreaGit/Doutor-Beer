@@ -716,6 +716,7 @@ body {
   color: var(--text);
   font-size: 0.86rem;
   outline: none;
+  padding: 12px;
 }
 
 .search-input input::placeholder {

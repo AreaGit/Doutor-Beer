@@ -45,6 +45,7 @@ button {
   top: 0;
   z-index: 1000;
   transition: all 0.3s ease;
+  margin-bottom: 45px;
 }
 
 .logo img {
@@ -55,6 +56,77 @@ button {
 
 .logo img:hover {
   transform: scale(1.02);
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 20px 30px;
+  padding: 12px 20px;
+
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), #ffcc33);
+  color: #fff;
+
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transition: 
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.4s ease;
+}
+
+/* Ícone */
+.btn-voltar i {
+  transition: transform 0.3s ease;
+}
+
+/* Hover elegante */
+.btn-voltar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  background: linear-gradient(135deg, #ffcc33, var(--primary));
+}
+
+.btn-voltar:hover i {
+  transform: translateX(-4px);
+}
+
+/* Clique */
+.btn-voltar:active {
+  transform: scale(0.97);
+}
+
+/* Foco acessível */
+.btn-voltar:focus-visible {
+  outline: 3px solid rgba(249, 176, 0, 0.6);
+  outline-offset: 4px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .btn-voltar {
+    margin: 15px auto;
+    display: flex;
+    width: fit-content;
+    font-size: 1rem;
+  }
+}
+
+/* Mobile pequeno */
+@media (max-width: 480px) {
+  .btn-voltar span {
+    display: none;
+  }
+
+  .btn-voltar {
+    padding: 12px;
+  }
 }
 
 /* CONTAINER PERFIL */

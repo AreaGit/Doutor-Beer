@@ -19,6 +19,7 @@ const asaasRoutes = require("./src/routes/asaas.routes");
 const clubeVipRoutes = require("./src/routes/clubeVipRoutes");
 const newsletterRoutes = require("./src/routes/newsletterRoutes")
 const cupomRoutes = require("./src/routes/cupomRoutes");
+const uploadRoutes = require("./src/routes/upload.routes");
 require("./src/jobs/verificarBoletos.job");
 
 // ================= Middleware =================
@@ -67,6 +68,7 @@ app.use("/asaas", asaasRoutes);
 app.use("/api/clube-vip", clubeVipRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/cupons", cupomRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ================= Middleware para Guest Cart =================
 // Opcional: se quiser adicionar um middleware global para guest cart
