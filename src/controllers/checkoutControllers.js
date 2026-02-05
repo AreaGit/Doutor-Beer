@@ -178,7 +178,7 @@ exports.confirmarPagamentoHandler = async (req, res) => {
       status: "Pago", // ou "Pendente"
       total,
       frete: frete || 0, // <-- aqui salvamos o frete
-      enderecoEntrega: JSON.stringify(enderecoEntrega),
+      enderecoEntrega: enderecoEntrega,
       metodoPagamento,
       cupom
     });
@@ -197,7 +197,13 @@ exports.confirmarPagamentoHandler = async (req, res) => {
       // 🔹 Adiciona refil extra
       const refilQtd = Number(item.refil) || 1;
       if (refilQtd > 1) {
-        precoFinal += (refilQtd - 1) * 40;
+        let extra = 0;
+        if (refilQtd === 2) extra = 5;
+        else if (refilQtd === 3) extra = 45;
+        else if (refilQtd === 4) extra = 90;
+        else if (refilQtd > 4) extra = 90 + (refilQtd - 4) * 45;
+
+        precoFinal += extra;
       }
 
       return {

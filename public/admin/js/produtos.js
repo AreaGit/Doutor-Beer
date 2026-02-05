@@ -56,6 +56,8 @@ function initProdutoCadastro() {
 
   // 🔹 Array em memória que guarda as URLs já adicionadas
   let imagensArray = [];
+  window._imagensArrayNovo = () => imagensArray;
+  window._setImagensArrayNovo = (arr) => { imagensArray = arr; };
   let dragSrcIndex = null; // índice da imagem que está sendo arrastada
 
   // ---------- PRÉ-VISUALIZAÇÃO DE IMAGENS ----------
@@ -125,6 +127,7 @@ function initProdutoCadastro() {
         });
       });
   }
+  window._renderPreviewImagensNovo = renderPreviewImagensNovo;
 
   // Adiciona URLs ao array a partir de um texto bruto
   function adicionarUrlsDeTexto(raw) {
@@ -479,6 +482,10 @@ function renderProdutoCard(p) {
             <i class="fa-regular fa-pen-to-square"></i>
             Editar
           </button>
+          <button class="btn-outline duplicar-btn">
+            <i class="fa-regular fa-copy"></i>
+            Duplicar
+          </button>
           <button class="btn-danger deletar-btn">
             <i class="fa-regular fa-trash-can"></i>
             Remover
@@ -524,6 +531,14 @@ function renderListaProdutos(produtos) {
       if (confirm("Deseja realmente deletar este produto?")) {
         await deletarProduto(produtoId);
       }
+    });
+  });
+
+  container.querySelectorAll(".duplicar-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const produtoId = btn.closest(".product-card").dataset.id;
+      abrirModalDuplicarProduto(produtoId);
     });
   });
 
@@ -716,6 +731,89 @@ function abrirModalEditarProduto(id) {
     });
 
   initEditarProdutoSubmit();
+}
+
+/**
+ * Abre o modal de NOVO produto preenchido com dados de um produto existente
+ */
+function abrirModalDuplicarProduto(id) {
+  const modal = document.getElementById("modalNovoProduto");
+  if (!modal) return;
+
+  fetch(`/api/produtos/${id}`)
+    .then((res) => res.json())
+    .then((p) => {
+      modal.style.display = "block";
+
+      // Básicos
+      document.getElementById("nomeProduto").value = p.nome ? `${p.nome} (Cópia)` : "";
+      document.getElementById("descricaoProduto").value = p.descricao || "";
+      document.getElementById("precoProduto").value = p.preco || "";
+      document.getElementById("precoPromocionalProduto").value = p.precoPromocional || "";
+
+      // Categorias
+      document.getElementById("categoriaProduto").value = p.categoria || "";
+      document.getElementById("categoria2Produto").value = p.categoria2 || "";
+      document.getElementById("categoria3Produto").value = p.categoria3 || "";
+      document.getElementById("marcaProduto").value = p.marca || "";
+
+      // Seções (chips) - name='secaoProduto'
+      const secoes = Array.isArray(p.secao) ? p.secao : (p.secao ? [p.secao] : []);
+      document.querySelectorAll("input[name='secaoProduto']").forEach((chk) => {
+        chk.checked = secoes.includes(chk.value);
+      });
+
+      // Dimensões / Peso
+      document.getElementById("alturaProduto").value = p.altura || "";
+      document.getElementById("larguraProduto").value = p.largura || "";
+      document.getElementById("comprimentoProduto").value = p.comprimento || "";
+      document.getElementById("pesoProduto").value = p.peso || "";
+      document.getElementById("permiteArteProduto").checked = !!p.permiteArte;
+      document.getElementById("urlGabaritoProduto").value = p.urlGabarito || "";
+
+      // Refil
+      document.getElementById("refilProduto").value = (p.refil === null || p.refil === undefined) ? "" : p.refil;
+
+      // Capacidade
+      const cap = Array.isArray(p.capacidade) ? p.capacidade : [];
+      document.getElementById("capacidadeProduto").value = cap.join(", ");
+
+      // Cores - name='coresProduto'
+      const cores = Array.isArray(p.cores) ? p.cores : [];
+      document.querySelectorAll("input[name='coresProduto']").forEach((chk) => {
+        chk.checked = cores.includes(chk.value);
+      });
+
+      // Torneira - name='torneiraProduto'
+      const torneiras = Array.isArray(p.torneira) ? p.torneira : [];
+      document.querySelectorAll("input[name='torneiraProduto']").forEach((chk) => {
+        chk.checked = torneiras.includes(chk.value);
+      });
+
+      // Atualiza o estado dos checkboxes "Todos" no modal de cadastro
+      document.querySelectorAll("#modalNovoProduto .select-all-checkbox").forEach((allCheckbox) => {
+        const targetName = allCheckbox.dataset.target;
+        const targetCheckboxes = document.querySelectorAll(`#modalNovoProduto input[name="${targetName}"]`);
+        const allChecked = targetCheckboxes.length > 0 && Array.from(targetCheckboxes).every((chk) => chk.checked);
+        allCheckbox.checked = allChecked;
+      });
+
+      // Imagens - usa o arrayImagens do cadastro através do setter exposto
+      if (typeof window._setImagensArrayNovo === "function") {
+        const imagensCopiadas = Array.isArray(p.imagem) ? [...p.imagem] : [];
+        window._setImagensArrayNovo(imagensCopiadas);
+
+        if (typeof window._renderPreviewImagensNovo === "function") {
+          window._renderPreviewImagensNovo();
+        }
+      }
+
+      showToast("Dados do produto copiados. Verifique e salve o novo produto.", "success");
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Erro ao carregar dados para duplicação.", "error");
+    });
 }
 
 function initEditarProdutoSubmit() {

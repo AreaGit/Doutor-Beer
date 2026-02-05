@@ -7,6 +7,7 @@ const Produto = require("../models/Produto");
 const Pedido = require("../models/Pedido");
 const PedidoItem = require("../models/PedidoItem");
 const checkoutController = require("../controllers/checkoutControllers");
+const Usuario = require("../models/Usuario");
 
 // tenta pegar sequelize a partir do index dos models (ajuste conforme sua exportação)
 let sequelize;
@@ -341,12 +342,21 @@ router.post("/finalizar", async (req, res) => {
       statusInicial = "AGUARDANDO_PAGAMENTO";
     }
 
+    // 🔹 Buscar dados do usuário para snapshot
+    const usuario = await Usuario.findByPk(usuarioIdSessao);
+
     // 🔹 Cria o pedido SALVANDO CUPOM E FRETE - usa transação se sequelize estiver disponível
     let pedido;
     if (sequelize) {
       await sequelize.transaction(async (t) => {
         pedido = await Pedido.create({
           usuarioId: usuarioIdSessao,
+          clienteNome: usuario?.nome,
+          clienteEmail: usuario?.email,
+          clienteCpf: usuario?.cpf,
+          clienteCelular: usuario?.celular,
+          clienteTelefone: usuario?.telefone,
+          clienteDataNascimento: usuario?.data_de_nascimento,
           status: statusInicial,
           frete: freteFinal,
           total,
@@ -380,6 +390,12 @@ router.post("/finalizar", async (req, res) => {
       // sem sequelize, cria sem transação (menos seguro)
       pedido = await Pedido.create({
         usuarioId: usuarioIdSessao,
+        clienteNome: usuario?.nome,
+        clienteEmail: usuario?.email,
+        clienteCpf: usuario?.cpf,
+        clienteCelular: usuario?.celular,
+        clienteTelefone: usuario?.telefone,
+        clienteDataNascimento: usuario?.data_de_nascimento,
         status: statusInicial,
         frete: freteFinal,
         total,

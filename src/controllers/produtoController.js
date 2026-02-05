@@ -292,3 +292,142 @@ exports.contarProdutosAtivos = async (req, res) => {
     res.status(500).json({ erro: "Erro ao contar produtos ativos." });
   }
 };
+
+/* ================== Importar Produtos via Excel ================== */
+exports.importarProdutos = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ erro: "Nenhum arquivo enviado." });
+    }
+
+    const xlsx = require("xlsx");
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (!data.length) {
+      return res.status(400).json({ erro: "A planilha está vazia." });
+    }
+
+    const sucessos = [];
+    const erros = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const linhaNum = i + 2; // +1 zero-indexed, +1 header row
+
+      try {
+        // Validação básica
+        if (!row.nome || !row.descricao || !row.preco) {
+          throw new Error("Campos obrigatórios ausentes (nome, descricao, preco).");
+        }
+
+        // Helper para converter string separada por vírgula em array JSON
+        const toArray = (val) => {
+          if (!val) return [];
+          if (typeof val !== "string") return [String(val)];
+          return val.split(",").map(v => v.trim()).filter(Boolean);
+        };
+
+        // Helper para converter Sim/Não em Boolean
+        const toBool = (val) => {
+          if (typeof val === "boolean") return val;
+          if (!val) return false;
+          const s = String(val).toLowerCase();
+          return s === "sim" || s === "true" || s === "s" || s === "1";
+        };
+
+        const produtoData = {
+          nome: String(row.nome).trim(),
+          descricao: String(row.descricao).trim(),
+          preco: parseFloat(row.preco),
+          precoPromocional: row.precoPromocional ? parseFloat(row.precoPromocional) : null,
+          categoria: row.categoria ? String(row.categoria).trim() : null,
+          categoria2: row.categoria2 ? String(row.categoria2).trim() : null,
+          categoria3: row.categoria3 ? String(row.categoria3).trim() : null,
+          marca: row.marca ? String(row.marca).trim() : null,
+          secao: toArray(row.secao),
+          cores: toArray(row.cores),
+          torneira: toArray(row.torneira),
+          capacidade: toArray(row.capacidade),
+          imagem: toArray(row.imagem),
+          refil: row.refil !== undefined ? parseInt(row.refil, 10) : null,
+          altura: row.altura ? parseFloat(row.altura) : null,
+          largura: row.largura ? parseFloat(row.largura) : null,
+          comprimento: row.comprimento ? parseFloat(row.comprimento) : null,
+          peso: row.peso ? parseFloat(row.peso) : null,
+          permiteArte: toBool(row.permiteArte),
+          urlGabarito: row.urlGabarito ? String(row.urlGabarito).trim() : null,
+          ativo: row.ativo !== undefined ? toBool(row.ativo) : true
+        };
+
+        const produto = await Produto.create(produtoData);
+        sucessos.push({ nome: produto.nome, id: produto.id });
+      } catch (err) {
+        erros.push({ linha: linhaNum, erro: err.message });
+      }
+    }
+
+    res.json({
+      mensagem: "Processamento concluído.",
+      total: data.length,
+      sucessos: sucessos.length,
+      erros: erros.length,
+      detalhesErros: erros
+    });
+
+  } catch (err) {
+    console.error("[ProdutoController] Erro na importação:", err);
+    res.status(500).json({ erro: "Erro ao processar a planilha." });
+  }
+};
+
+/* ================== Baixar Modelo de Planilha Excel ================== */
+exports.baixarTemplate = (req, res) => {
+  try {
+    const xlsx = require("xlsx");
+
+    const headers = [
+      "nome", "descricao", "preco", "precoPromocional", "categoria",
+      "categoria2", "categoria3", "marca", "cores", "torneira",
+      "secao", "peso", "altura", "largura", "comprimento", "imagem",
+      "refil", "permiteArte", "ativo"
+    ];
+
+    // Cria um exemplo de linha (opcional)
+    const example = {
+      nome: "Exemplo de Produto",
+      descricao: "Descrição completa do produto aqui",
+      preco: 199.90,
+      precoPromocional: 149.90,
+      categoria: "torres",
+      marca: "doutor_beer",
+      cores: "black,blue,red",
+      torneira: "Cromada,Alavanca",
+      secao: "lancamentos,mais-vendidos",
+      peso: 500,
+      altura: 30,
+      largura: 20,
+      comprimento: 20,
+      imagem: "https://i.imgur.com/vXXjFbS.jpeg",
+      refil: 2,
+      permiteArte: "Sim",
+      ativo: "Sim"
+    };
+
+    const ws = xlsx.utils.json_to_sheet([example], { header: headers });
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, "Template_Produtos");
+
+    const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    res.setHeader("Content-Disposition", 'attachment; filename="modelo_importacao_produtos.xlsx"');
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.send(buffer);
+
+  } catch (err) {
+    console.error("[ProdutoController] Erro ao gerar template:", err);
+    res.status(500).json({ erro: "Erro ao gerar modelo de planilha." });
+  }
+};

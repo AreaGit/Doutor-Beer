@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           rua: user.endereco,
           numero: user.numero,
           complemento: user.complemento,
+          bairro: user.bairro,
           cidade: user.cidade,
           estado: user.estado,
         };
@@ -139,7 +140,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         const refilQtd = Number(p.refil) || 1;
         if (refilQtd > 1) {
-          precoFinal += (refilQtd - 1) * 40;
+          let extra = 0;
+          if (refilQtd === 2) extra = 5;
+          else if (refilQtd === 3) extra = 45;
+          else if (refilQtd === 4) extra = 90;
+          else if (refilQtd > 4) extra = 90 + (refilQtd - 4) * 45;
+
+          precoFinal += extra;
         }
 
         const precoTotal = precoFinal * (p.quantidade || 1);
@@ -397,6 +404,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (data.erro) return;
 
         document.getElementById("rua").value = data.logradouro || "";
+        document.getElementById("bairro").value = data.bairro || "";
         document.getElementById("cidade").value = data.localidade || "";
         document.getElementById("estado").value = data.uf || "";
         document.getElementById("numero")?.focus();
@@ -432,6 +440,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         rua: formEndereco.rua.value,
         numero: formEndereco.numero.value,
         complemento: formEndereco.complemento.value,
+        bairro: formEndereco.bairro.value,
         cidade: formEndereco.cidade.value,
         estado: formEndereco.estado.value,
       };
@@ -522,7 +531,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
           const refilQtd = Number(p.refil) || 1;
           if (refilQtd > 1) {
-            precoFinal += (refilQtd - 1) * 40;
+            let extra = 0;
+            if (refilQtd === 2) extra = 5;
+            else if (refilQtd === 3) extra = 45;
+            else if (refilQtd === 4) extra = 90;
+            else if (refilQtd > 4) extra = 90 + (refilQtd - 4) * 45;
+
+            precoFinal += extra;
           }
 
           const precoTotal = precoFinal * (p.quantidade || 1);

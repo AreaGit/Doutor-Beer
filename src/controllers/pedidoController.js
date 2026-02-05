@@ -149,7 +149,7 @@ exports.getTodosPedidos = async (req, res) => {
         },
         {
           association: "Usuario",
-          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento"]
+          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento", "bairro", "cidade", "estado", "cep", "endereco", "numero"]
         }
       ],
       order: [["createdAt", "DESC"]]
@@ -191,13 +191,13 @@ exports.getTodosPedidos = async (req, res) => {
         total: pedido.total,
         frete: pedido.frete,
         metodoPagamento: pedido.formaPagamento || pedido.metodoPagamento,
-        enderecoEntrega: pedido.enderecoEntrega,
-        clienteNome: pedido.clienteNome,
-        clienteEmail: pedido.clienteEmail,
-        clienteCpf: pedido.clienteCpf,
-        clienteCelular: pedido.clienteCelular,
-        clienteTelefone: pedido.clienteTelefone,
-        clienteDataNascimento: pedido.clienteDataNascimento,
+        enderecoEntrega: typeof pedido.enderecoEntrega === "string" ? JSON.parse(pedido.enderecoEntrega) : (pedido.enderecoEntrega || {}),
+        clienteNome: pedido.clienteNome || pedido.Usuario?.nome,
+        clienteEmail: pedido.clienteEmail || pedido.Usuario?.email,
+        clienteCpf: pedido.clienteCpf || pedido.Usuario?.cpf,
+        clienteCelular: pedido.clienteCelular || pedido.Usuario?.celular,
+        clienteTelefone: pedido.clienteTelefone || pedido.Usuario?.telefone,
+        clienteDataNascimento: pedido.clienteDataNascimento || pedido.Usuario?.data_de_nascimento,
         Itens: itensFormatados,
         criadoEm: pedido.createdAt
       };
@@ -270,7 +270,7 @@ exports.getUltimosPedidos = async (req, res) => {
         },
         {
           association: "Usuario",
-          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento"]
+          attributes: ["id", "nome", "email", "cpf", "celular", "telefone", "data_de_nascimento", "bairro", "cidade", "estado", "cep", "endereco", "numero"]
         }
       ],
       order: [["createdAt", "DESC"]],
