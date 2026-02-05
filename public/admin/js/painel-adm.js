@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initDashboard();
   initMascarasECEPClienteModal();
   carregarUltimosPedidosDashboard();
+  initProdutoImport();
 
 });
 
@@ -108,7 +109,7 @@ function initDashboard() {
 /* MOCK CENTRAL — substituir futuramente por API */
 function getDashboardMock() {
   // CARREGAR DADOS DO BACKEND
-  
+
   return {
     resumo: {
       faturamentoMes: 42870,
@@ -145,7 +146,7 @@ async function carregarResumoDashboard() {
     // Busca produtos ativos do backend
     const resProdutos = await fetch("/api/produtos/stats/ativos");
     let produtosAtivos = 124; // valor padrão em caso de erro
-    
+
     if (resProdutos.ok) {
       const dataProdutos = await resProdutos.json();
       produtosAtivos = dataProdutos.produtosAtivos || 0;
@@ -154,7 +155,7 @@ async function carregarResumoDashboard() {
     // Busca clientes cadastrados do backend
     const resClientes = await fetch("/api/auth/stats/clientes");
     let clientesCadastrados = 892; // valor padrão em caso de erro
-    
+
     if (resClientes.ok) {
       const dataClientes = await resClientes.json();
       clientesCadastrados = dataClientes.clientesCadastrados || 0;

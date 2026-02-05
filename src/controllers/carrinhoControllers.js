@@ -210,7 +210,14 @@ exports.addToCart = async (req, res) => {
     }
 
     if (refilFinal && Number(refilFinal) > 1) {
-      precoFinal += (refilFinal - 1) * 40;
+      let extra = 0;
+      const rNum = Number(refilFinal);
+      if (rNum === 2) extra = 5;
+      else if (rNum === 3) extra = 45;
+      else if (rNum === 4) extra = 90;
+      else if (rNum > 4) extra = 90 + (rNum - 4) * 45;
+
+      precoFinal += extra;
     }
 
     // procura item igual no carrinho (mesmo produto + variações)

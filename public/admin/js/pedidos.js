@@ -286,32 +286,32 @@ function imprimirPedido(pedido) {
     <head>
       <title>Pedido #${pedido.id} - Doutor Beer</title>
       <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px 40px; color: #333; max-width: 900px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 5px 20px; color: #333; max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 2px solid #333; padding-bottom: 5px; }
         .header-left { flex: 0 0 auto; }
         .header-right { text-align: right; flex: 1; }
-        .logo img { max-height: 100px; width: auto; }
-        h2 { margin: 0 0 5px 0; font-size: 1.8rem; }
-        .meta { color: #666; font-size: 0.9rem; }
+        .logo img { max-height: 80px; width: auto; }
+        h2 { margin: 0 0 2px 0; font-size: 1.6rem; }
+        .meta { color: #666; font-size: 0.85rem; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
-        .box h3 { border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 8px; font-size: 1rem; color: #000; }
-        .box p { margin: 4px 0; line-height: 1.4; font-size: 0.9rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 40px; margin-bottom: 10px; }
+        .box h3 { border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 4px; font-size: 0.95rem; color: #000; }
+        .box p { margin: 2px 0; line-height: 1.2; font-size: 0.85rem; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th { text-align: left; background: #f8f9fa; padding: 10px 8px; border-bottom: 2px solid #333; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
-        td { padding: 8px; font-size: 0.9rem; }
+        th { text-align: left; background: #f8f9fa; padding: 6px 8px; border-bottom: 2px solid #333; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        td { padding: 4px 8px; font-size: 0.85rem; }
         
-        .totais-container { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; display: flex; justify-content: flex-end; }
+        .totais-container { margin-top: 10px; border-top: 2px solid #333; padding-top: 5px; display: flex; justify-content: flex-end; }
         .totais-table { width: 300px; }
-        .totais-table td { padding: 4px 0; text-align: right; }
+        .totais-table td { padding: 2px 0; text-align: right; }
         .totais-table .label { text-align: left; color: #666; }
-        .totais-table .final { font-size: 1.2rem; font-weight: bold; color: #000; padding-top: 8px; }
+        .totais-table .final { font-size: 1.1rem; font-weight: bold; color: #000; padding-top: 4px; }
         
         @media print {
             body { padding: 0; -webkit-print-color-adjust: exact; }
             .box { break-inside: avoid; }
-            @page { margin: 0.8cm; }
+            @page { margin: 0.5cm; }
         }
       </style>
     </head>

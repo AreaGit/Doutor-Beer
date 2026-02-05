@@ -18,13 +18,15 @@
     "express-session": "^1.18.2",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "mysql2": "^3.14.5",
     "node-cron": "^4.2.1",
     "nodemailer": "^4.0.1",
     "path": "^0.12.7",
     "qrcode": "^1.5.4",
     "sequelize": "^6.37.7",
-    "speakeasy": "^2.0.0"
+    "speakeasy": "^2.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "sequelize-cli": "^6.6.3"

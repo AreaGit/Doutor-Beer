@@ -1336,7 +1336,12 @@ async function carregarProduto() {
       // 🔹 Adiciona preço de refil
       const refil = Number(produtoAtual.refilSelecionado) || 1;
       if (refil > 1) {
-        const extra = (refil - 1) * 40;
+        let extra = 0;
+        if (refil === 2) extra = 5;
+        else if (refil === 3) extra = 45;
+        else if (refil === 4) extra = 90;
+        else if (refil > 4) extra = 90 + (refil - 4) * 45;
+
         precoFinal += extra;
         if (precoPromoFinal !== null) precoPromoFinal += extra;
       }
