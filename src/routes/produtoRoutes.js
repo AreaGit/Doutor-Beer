@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const produtoController = require("../controllers/produtoController");
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // ================= SITE PÚBLICO =================
 
@@ -23,6 +26,12 @@ router.get("/busca", produtoController.buscarProdutos);
 router.get("/stats/ativos", produtoController.contarProdutosAtivos);
 
 // ================= ADMIN =================
+
+// Importar produtos via Excel
+router.post("/import", upload.single("planilha"), produtoController.importarProdutos);
+
+// Baixar modelo de planilha
+router.get("/baixar-template", produtoController.baixarTemplate);
 
 // Criar produto
 router.post("/", produtoController.criarProduto);
